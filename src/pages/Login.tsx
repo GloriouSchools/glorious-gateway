@@ -1,11 +1,6 @@
 import { LoginForm } from "@/components/auth/LoginForm";
-import { UserRole } from "@/types/user";
 
-interface LoginPageProps {
-  onLogin: (email: string, password: string, role: UserRole) => void;
-}
-
-export function LoginPage({ onLogin }: LoginPageProps) {
+export function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-subtle p-4">
       <div className="absolute inset-0 bg-gradient-primary opacity-5" />
@@ -16,7 +11,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
           </h1>
           <p className="text-muted-foreground mt-2">Excellence in Education</p>
         </div>
-        <LoginForm onLogin={onLogin} />
+        <LoginForm />
       </div>
     </div>
   );

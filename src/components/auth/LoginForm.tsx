@@ -7,13 +7,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { UserRole } from "@/types/user";
 import { Loader2, GraduationCap, BookOpen, Shield } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
-interface LoginFormProps {
-  onLogin: (email: string, password: string, role: UserRole) => void;
-}
-
-export function LoginForm({ onLogin }: LoginFormProps) {
+export function LoginForm() {
+  const { signIn, signUp } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin");
   const [selectedRole, setSelectedRole] = useState<UserRole>("student");
@@ -38,34 +35,11 @@ export function LoginForm({ onLogin }: LoginFormProps) {
     }
     
     setIsLoading(true);
-    
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: signInData.email,
-        password: signInData.password,
-      });
-      
-      if (error) {
-        toast.error(error.message);
-        setIsLoading(false);
-        return;
-      }
-      
-      if (data.user) {
-        // Get user role from database
-        const { data: roleData } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', data.user.id)
-          .single();
-        
-        const actualRole = roleData?.role || selectedRole;
-        toast.success("Welcome back!");
-        onLogin(signInData.email, signInData.password, actualRole as UserRole);
-      }
-    } catch (error) {
-      console.error('Sign in error:', error);
-      toast.error("An unexpected error occurred");
+      await signIn(signInData.email, signInData.password);
+      toast.success("Welcome back!");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to sign in");
     } finally {
       setIsLoading(false);
     }
@@ -83,37 +57,23 @@ export function LoginForm({ onLogin }: LoginFormProps) {
       toast.error("Passwords do not match");
       return;
     }
+
+    if (signUpData.password.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
     
     setIsLoading(true);
-    
     try {
-      const redirectUrl = `${window.location.origin}/`;
-      
-      const { data, error } = await supabase.auth.signUp({
-        email: signUpData.email,
-        password: signUpData.password,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            full_name: signUpData.name,
-            role: selectedRole,
-          }
-        }
-      });
-      
-      if (error) {
-        toast.error(error.message);
-        setIsLoading(false);
-        return;
+      await signUp(signUpData.email, signUpData.password, signUpData.name, selectedRole);
+      toast.success("Account created! Please check your email for verification.");
+      setActiveTab("signin");
+    } catch (error: any) {
+      if (error.message?.includes("already registered")) {
+        toast.error("This email is already registered");
+      } else {
+        toast.error(error.message || "Failed to create account");
       }
-      
-      if (data.user) {
-        toast.success("Account created! Please check your email to verify your account.");
-        setActiveTab("signin");
-      }
-    } catch (error) {
-      console.error('Sign up error:', error);
-      toast.error("An unexpected error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -145,29 +105,11 @@ export function LoginForm({ onLogin }: LoginFormProps) {
           <TabsContent value="signin">
             <form onSubmit={handleSignIn} className="space-y-4">
               <div className="space-y-2">
-                <Label>Select Role</Label>
-                <div className="grid grid-cols-3 gap-2">
-                  {(["student", "teacher", "admin"] as UserRole[]).map((role) => (
-                    <Button
-                      key={role}
-                      type="button"
-                      variant={selectedRole === role ? "default" : "outline"}
-                      className="capitalize"
-                      onClick={() => setSelectedRole(role)}
-                    >
-                      {roleIcons[role]}
-                      <span className="ml-1">{role}</span>
-                    </Button>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="signin-email">School Email</Label>
+                <Label htmlFor="signin-email">Email</Label>
                 <Input
                   id="signin-email"
                   type="email"
-                  placeholder="johndoe@glorious.com"
+                  placeholder="johndoe@example.com"
                   value={signInData.email}
                   onChange={(e) => setSignInData({ ...signInData, email: e.target.value })}
                   disabled={isLoading}
@@ -234,11 +176,11 @@ export function LoginForm({ onLogin }: LoginFormProps) {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="signup-email">Personal Email</Label>
+                <Label htmlFor="signup-email">Email</Label>
                 <Input
                   id="signup-email"
                   type="email"
-                  placeholder="johndoe@gmail.com"
+                  placeholder="johndoe@example.com"
                   value={signUpData.email}
                   onChange={(e) => setSignUpData({ ...signUpData, email: e.target.value })}
                   disabled={isLoading}
@@ -251,6 +193,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
                 <Input
                   id="signup-password"
                   type="password"
+                  placeholder="At least 6 characters"
                   value={signUpData.password}
                   onChange={(e) => setSignUpData({ ...signUpData, password: e.target.value })}
                   disabled={isLoading}
@@ -282,7 +225,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
               </Button>
               
               <p className="text-sm text-muted-foreground text-center">
-                After signup, you'll receive your school email credentials
+                You'll receive a verification email after signup
               </p>
             </form>
           </TabsContent>
