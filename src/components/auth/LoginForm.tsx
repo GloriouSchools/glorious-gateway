@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { UserRole } from "@/types/user";
 import { Loader2, GraduationCap, BookOpen, Shield } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface LoginFormProps {
   onLogin: (email: string, password: string, role: UserRole) => void;
@@ -37,12 +38,37 @@ export function LoginForm({ onLogin }: LoginFormProps) {
     }
     
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      toast.success("Welcome back!");
-      onLogin(signInData.email, signInData.password, selectedRole);
+    
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: signInData.email,
+        password: signInData.password,
+      });
+      
+      if (error) {
+        toast.error(error.message);
+        setIsLoading(false);
+        return;
+      }
+      
+      if (data.user) {
+        // Get user role from database
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', data.user.id)
+          .single();
+        
+        const actualRole = roleData?.role || selectedRole;
+        toast.success("Welcome back!");
+        onLogin(signInData.email, signInData.password, actualRole as UserRole);
+      }
+    } catch (error) {
+      console.error('Sign in error:', error);
+      toast.error("An unexpected error occurred");
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -59,12 +85,38 @@ export function LoginForm({ onLogin }: LoginFormProps) {
     }
     
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      toast.success("Account created! Check your email for verification.");
-      setActiveTab("signin");
+    
+    try {
+      const redirectUrl = `${window.location.origin}/`;
+      
+      const { data, error } = await supabase.auth.signUp({
+        email: signUpData.email,
+        password: signUpData.password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            full_name: signUpData.name,
+            role: selectedRole,
+          }
+        }
+      });
+      
+      if (error) {
+        toast.error(error.message);
+        setIsLoading(false);
+        return;
+      }
+      
+      if (data.user) {
+        toast.success("Account created! Please check your email to verify your account.");
+        setActiveTab("signin");
+      }
+    } catch (error) {
+      console.error('Sign up error:', error);
+      toast.error("An unexpected error occurred");
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   const roleIcons = {
