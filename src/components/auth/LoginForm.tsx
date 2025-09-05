@@ -245,7 +245,43 @@ export function LoginForm() {
       }
     }
     
-    // Normal user login flow
+    // Check if this is a student account with @glorious.com email
+    if (signInData.email.endsWith('@glorious.com') && signInData.email !== 'admin@glorious.com') {
+      // Verify student credentials using the database function
+      const { data, error } = await supabase
+        .rpc('verify_student_login', {
+          input_email: signInData.email,
+          input_password: signInData.password
+        });
+      
+      if (error) {
+        toast.error(error.message || "Failed to sign in");
+        setIsLoading(false);
+        return;
+      }
+      
+      if (data && typeof data === 'object' && 'success' in data && data.success) {
+        // Store student session info
+        localStorage.setItem('studentToken', (data as any).token);
+        localStorage.setItem('studentRole', (data as any).role);
+        localStorage.setItem('studentName', (data as any).name);
+        localStorage.setItem('studentId', (data as any).student_id);
+        localStorage.setItem('studentEmail', (data as any).email);
+        
+        setIsLoading(false);
+        toast.success(`Welcome, ${(data as any).name}!`);
+        
+        // Force a page reload to trigger auth state update
+        window.location.href = '/';
+        return;
+      } else {
+        toast.error((data as any)?.message || "Invalid credentials");
+        setIsLoading(false);
+        return;
+      }
+    }
+    
+    // Normal user login flow (for teachers and other users)
     try {
       // Try to sign in
       const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({

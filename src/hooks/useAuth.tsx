@@ -40,6 +40,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     
+    // Check for student token
+    const studentToken = localStorage.getItem('studentToken');
+    const studentRole = localStorage.getItem('studentRole');
+    const studentName = localStorage.getItem('studentName');
+    const studentId = localStorage.getItem('studentId');
+    const studentEmail = localStorage.getItem('studentEmail');
+    
+    if (studentToken && studentRole === 'student') {
+      // Set student state from token (no real user object for hardcoded student)
+      setUserRole('student');
+      setUserName(studentName || 'Student');
+      setUser({ id: studentId || 'student-hardcoded', email: studentEmail || '' } as any);
+      setIsLoading(false);
+      return;
+    }
+    
     // Set up auth state listener FIRST for normal users
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
@@ -127,6 +143,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     // Clear admin session if present
     clearAdminSession();
+    
+    // Clear student session if present
+    localStorage.removeItem('studentToken');
+    localStorage.removeItem('studentRole');
+    localStorage.removeItem('studentName');
+    localStorage.removeItem('studentId');
+    localStorage.removeItem('studentEmail');
     
     // Only sign out from Supabase if there's a real session
     if (session) {
