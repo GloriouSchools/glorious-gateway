@@ -106,10 +106,43 @@ export type Database = {
           },
         ]
       }
+      student_sessions: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          student_id: string
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          student_id: string
+          token: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          student_id?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_sessions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       students: {
         Row: {
           class_id: string
           created_at: string
+          email: string | null
           id: string
           name: string
           photo_url: string | null
@@ -118,6 +151,7 @@ export type Database = {
         Insert: {
           class_id: string
           created_at?: string
+          email?: string | null
           id?: string
           name: string
           photo_url?: string | null
@@ -126,6 +160,7 @@ export type Database = {
         Update: {
           class_id?: string
           created_at?: string
+          email?: string | null
           id?: string
           name?: string
           photo_url?: string | null
@@ -253,11 +288,19 @@ export type Database = {
         }
         Returns: boolean
       }
+      validate_student_token: {
+        Args: { input_token: string }
+        Returns: Json
+      }
       validate_teacher_exists: {
         Args: { p_teacher_name: string }
         Returns: boolean
       }
       verify_admin_login: {
+        Args: { input_email: string; input_password: string }
+        Returns: Json
+      }
+      verify_student_login: {
         Args: { input_email: string; input_password: string }
         Returns: Json
       }
