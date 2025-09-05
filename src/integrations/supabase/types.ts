@@ -220,6 +220,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      verify_admin_login: {
+        Args: { input_email: string; input_password: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "student" | "teacher" | "admin"
