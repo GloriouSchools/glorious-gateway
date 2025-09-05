@@ -10,6 +10,7 @@ import { UserRole } from "@/types/user";
 import { Loader2, GraduationCap, BookOpen, Info } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { setAdminToken } from "@/lib/adminAuth";
 import { evaluatePasswordStrength } from "@/utils/passwordStrength";
 import { Progress } from "@/components/ui/progress";
 
@@ -169,11 +170,11 @@ export function LoginForm() {
           input_password: signInData.password
         });
       
-      if (data === true) {
-        // Set admin session in localStorage
-        localStorage.setItem('adminLoggedIn', 'true');
-        localStorage.setItem('userRole', 'admin');
-        localStorage.setItem('userName', 'System Administrator');
+      if (data && typeof data === 'object' && 'success' in data && data.success) {
+        // Store admin token and session info
+        setAdminToken((data as any).token);
+        localStorage.setItem('adminRole', (data as any).role);
+        localStorage.setItem('adminName', (data as any).name);
         
         setIsLoading(false);
         toast.success("Welcome back, Administrator!");

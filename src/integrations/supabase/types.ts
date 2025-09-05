@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_sessions: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          token: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          token?: string
+        }
+        Relationships: []
+      }
       classes: {
         Row: {
           created_at: string
@@ -220,9 +241,13 @@ export type Database = {
         }
         Returns: boolean
       }
+      validate_admin_token: {
+        Args: { input_token: string }
+        Returns: boolean
+      }
       verify_admin_login: {
         Args: { input_email: string; input_password: string }
-        Returns: boolean
+        Returns: Json
       }
     }
     Enums: {

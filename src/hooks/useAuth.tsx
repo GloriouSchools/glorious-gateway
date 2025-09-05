@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
 import { UserRole } from "@/types/user";
 import { toast } from "sonner";
+import { getAdminToken, clearAdminSession } from "@/lib/adminAuth";
 
 interface AuthContextType {
   user: User | null;
@@ -25,13 +26,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for admin login first
-    const adminLoggedIn = localStorage.getItem('adminLoggedIn');
-    const storedRole = localStorage.getItem('userRole');
-    const storedName = localStorage.getItem('userName');
+    // Check for admin token first
+    const adminToken = getAdminToken();
+    const storedRole = localStorage.getItem('adminRole');
+    const storedName = localStorage.getItem('adminName');
     
-    if (adminLoggedIn === 'true' && storedRole === 'admin') {
-      // Set admin state from localStorage (no real user object for hardcoded admin)
+    if (adminToken && storedRole === 'admin') {
+      // Set admin state from token (no real user object for hardcoded admin)
       setUserRole('admin');
       setUserName(storedName || 'System Administrator');
       setUser({ id: 'admin-hardcoded', email: 'admin@glorious.com' } as any);
@@ -124,10 +125,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
-    // Clear admin localStorage if present
-    localStorage.removeItem('adminLoggedIn');
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('userName');
+    // Clear admin session if present
+    clearAdminSession();
     
     // Only sign out from Supabase if there's a real session
     if (session) {
