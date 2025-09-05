@@ -187,8 +187,45 @@ export function LoginForm() {
     
     // Normal user login flow
     try {
-      await signIn(signInData.email, signInData.password);
+      // Try to sign in
+      const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: signInData.email,
+        password: signInData.password,
+      });
+
+      if (signInError) {
+        if (signInError.message?.includes('Invalid login credentials')) {
+          // Check if user exists by trying to get their profile
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('email', signInData.email)
+            .maybeSingle();
+          
+          if (!profileData) {
+            toast.error("User does not exist. Please sign up first.");
+          } else {
+            toast.error("Invalid password. Please try again.");
+          }
+        } else if (signInError.message?.includes('Email not confirmed')) {
+          toast.error("Please check your email and verify your account before signing in.");
+        } else {
+          toast.error(signInError.message || "Failed to sign in");
+        }
+        setIsLoading(false);
+        return;
+      }
+
+      // Check if email is verified
+      if (authData.user && !authData.user.email_confirmed_at) {
+        await supabase.auth.signOut();
+        toast.error("Please check your email and verify your account before signing in.");
+        setIsLoading(false);
+        return;
+      }
+
       toast.success("Welcome back!");
+      window.location.href = '/';
     } catch (error: any) {
       toast.error(error.message || "Failed to sign in");
     } finally {
@@ -234,15 +271,40 @@ export function LoginForm() {
         userName = teacher?.name || "";
       }
       
-      await signUp(signUpData.personalEmail, signUpData.password, userName, selectedRole);
+      // Try to sign up
+      const { data, error } = await supabase.auth.signUp({
+        email: signUpData.personalEmail,
+        password: signUpData.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            full_name: userName,
+            role: selectedRole,
+          },
+        },
+      });
+
+      if (error) {
+        if (error.message?.includes('already registered') || error.message?.includes('already exists')) {
+          toast.error("User already exists. Please sign in to access your school portal.");
+        } else {
+          toast.error(error.message || "Failed to create account");
+        }
+        setIsLoading(false);
+        return;
+      }
+
+      // Check if the user already existed (identities will be empty for existing users)
+      if (data.user && data.user.identities && data.user.identities.length === 0) {
+        toast.error("User already exists. Please sign in to access your school portal.");
+        setIsLoading(false);
+        return;
+      }
+
       toast.success("Account created! Please check your email for verification.");
       setActiveTab("signin");
     } catch (error: any) {
-      if (error.message?.includes("already registered")) {
-        toast.error("This email is already registered");
-      } else {
-        toast.error(error.message || "Failed to create account");
-      }
+      toast.error(error.message || "Failed to create account");
     } finally {
       setIsLoading(false);
     }
