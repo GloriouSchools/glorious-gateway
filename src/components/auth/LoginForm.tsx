@@ -321,14 +321,42 @@ export function LoginForm() {
     
     setIsLoading(true);
     try {
-      // Get the name based on role
+      // Get the name based on role and validate existence using secure functions
       let userName = "";
+      let isValidUser = false;
+      
       if (selectedRole === "student") {
         const student = students.find(s => s.id === selectedStudent);
         userName = student?.name || "";
+        
+        // Validate student exists using secure function
+        if (student) {
+          const { data: exists } = await supabase
+            .rpc('validate_student_exists', {
+              p_class_id: student.class_id,
+              p_stream_id: student.stream_id,
+              p_student_name: student.name
+            });
+          isValidUser = exists === true;
+        }
       } else if (selectedRole === "teacher") {
         const teacher = teachers.find(t => t.id === selectedTeacher);
         userName = teacher?.name || "";
+        
+        // Validate teacher exists using secure function
+        if (teacher) {
+          const { data: exists } = await supabase
+            .rpc('validate_teacher_exists', {
+              p_teacher_name: teacher.name
+            });
+          isValidUser = exists === true;
+        }
+      }
+      
+      if (!isValidUser) {
+        toast.error("Invalid user selection. Please refresh and try again.");
+        setIsLoading(false);
+        return;
       }
       
       // Try to sign up
