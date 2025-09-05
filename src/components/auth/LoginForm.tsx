@@ -7,12 +7,30 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { UserRole } from "@/types/user";
-import { Loader2, GraduationCap, BookOpen, Info } from "lucide-react";
+import { 
+  Loader2, 
+  GraduationCap, 
+  BookOpen, 
+  Info, 
+  Mail, 
+  Lock, 
+  Eye, 
+  EyeOff 
+} from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { setAdminToken } from "@/lib/adminAuth";
 import { evaluatePasswordStrength } from "@/utils/passwordStrength";
 import { Progress } from "@/components/ui/progress";
+import { Checkbox } from "@/components/ui/checkbox";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogHeader, 
+  DialogTitle,
+  DialogTrigger 
+} from "@/components/ui/dialog";
 
 interface Class {
   id: string;
@@ -46,6 +64,23 @@ export function LoginForm() {
   const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin");
   const [selectedRole, setSelectedRole] = useState<UserRole>("student");
   
+  // Password visibility states
+  const [showSignInPassword, setShowSignInPassword] = useState(false);
+  const [showSignUpPassword, setShowSignUpPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
+  // Email validation states
+  const [signInEmailError, setSignInEmailError] = useState("");
+  const [signUpEmailError, setSignUpEmailError] = useState("");
+  
+  // Remember me state
+  const [rememberMe, setRememberMe] = useState(false);
+  
+  // Password recovery dialog state
+  const [showPasswordRecovery, setShowPasswordRecovery] = useState(false);
+  const [recoveryEmail, setRecoveryEmail] = useState("");
+  const [isRecovering, setIsRecovering] = useState(false);
+  
   // Cascading dropdown states
   const [classes, setClasses] = useState<Class[]>([]);
   const [streams, setStreams] = useState<Stream[]>([]);
@@ -74,6 +109,31 @@ export function LoginForm() {
     color: "border-muted",
     percentage: 0,
   });
+  
+  // Email validation function
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+  
+  // Handle email changes with validation
+  const handleSignInEmailChange = (email: string) => {
+    setSignInData({ ...signInData, email });
+    if (email && !validateEmail(email)) {
+      setSignInEmailError("Please type a correct email address");
+    } else {
+      setSignInEmailError("");
+    }
+  };
+  
+  const handleSignUpEmailChange = (email: string) => {
+    setSignUpData({ ...signUpData, personalEmail: email });
+    if (email && !validateEmail(email)) {
+      setSignUpEmailError("Please type a correct email address");
+    } else {
+      setSignUpEmailError("");
+    }
+  };
 
   // Fetch classes on mount
   useEffect(() => {
@@ -310,6 +370,37 @@ export function LoginForm() {
     }
   };
 
+  const handlePasswordRecovery = async () => {
+    if (!recoveryEmail) {
+      toast.error("Please enter your email address");
+      return;
+    }
+    
+    if (!validateEmail(recoveryEmail)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+    
+    setIsRecovering(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(recoveryEmail, {
+        redirectTo: `${window.location.origin}/`,
+      });
+      
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success("Password recovery email sent! Please check your inbox.");
+        setShowPasswordRecovery(false);
+        setRecoveryEmail("");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to send recovery email");
+    } finally {
+      setIsRecovering(false);
+    }
+  };
+
   const roleIcons = {
     student: <GraduationCap className="h-5 w-5" />,
     teacher: <BookOpen className="h-5 w-5" />,
@@ -336,28 +427,66 @@ export function LoginForm() {
             <form onSubmit={handleSignIn} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="signin-email">Email</Label>
-                <Input
-                  id="signin-email"
-                  type="email"
-                  placeholder="Enter your email"
-                  value={signInData.email}
-                  onChange={(e) => setSignInData({ ...signInData, email: e.target.value })}
-                  disabled={isLoading}
-                  required
-                />
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="signin-email"
+                    type="email"
+                    placeholder="Enter your email"
+                    value={signInData.email}
+                    onChange={(e) => handleSignInEmailChange(e.target.value)}
+                    disabled={isLoading}
+                    className="pl-10"
+                    required
+                  />
+                </div>
+                {signInEmailError && (
+                  <p className="text-xs text-destructive">{signInEmailError}</p>
+                )}
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="signin-password">Password</Label>
-                <Input
-                  id="signin-password"
-                  type="password"
-                  placeholder="Enter your password"
-                  value={signInData.password}
-                  onChange={(e) => setSignInData({ ...signInData, password: e.target.value })}
-                  disabled={isLoading}
-                  required
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="signin-password"
+                    type={showSignInPassword ? "text" : "password"}
+                    placeholder="Enter your password"
+                    value={signInData.password}
+                    onChange={(e) => setSignInData({ ...signInData, password: e.target.value })}
+                    disabled={isLoading}
+                    className="pl-10 pr-10"
+                    required
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={() => setShowSignInPassword(!showSignInPassword)}
+                  >
+                    {showSignInPassword ? (
+                      <Eye className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="remember-me" 
+                  checked={rememberMe}
+                  onCheckedChange={(checked) => setRememberMe(checked as boolean)}
                 />
+                <Label 
+                  htmlFor="remember-me" 
+                  className="text-sm font-normal cursor-pointer"
+                >
+                  Remember Me
+                </Label>
               </div>
               
               <Button type="submit" className="w-full" disabled={isLoading}>
@@ -370,6 +499,64 @@ export function LoginForm() {
                   "Sign In"
                 )}
               </Button>
+              
+              <div className="flex items-center justify-between">
+                <Dialog open={showPasswordRecovery} onOpenChange={setShowPasswordRecovery}>
+                  <DialogTrigger asChild>
+                    <Button variant="link" className="px-0 font-normal text-sm">
+                      Forgot Password?
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Reset Password</DialogTitle>
+                      <DialogDescription>
+                        Enter your email address and we'll send you a link to reset your password.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 pt-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="recovery-email">Email</Label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            id="recovery-email"
+                            type="email"
+                            placeholder="Enter your email address"
+                            value={recoveryEmail}
+                            onChange={(e) => setRecoveryEmail(e.target.value)}
+                            disabled={isRecovering}
+                            className="pl-10"
+                          />
+                        </div>
+                      </div>
+                      <Button 
+                        onClick={handlePasswordRecovery} 
+                        className="w-full"
+                        disabled={isRecovering}
+                      >
+                        {isRecovering ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Sending...
+                          </>
+                        ) : (
+                          "Send Recovery Email"
+                        )}
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+                
+                <Button 
+                  type="button"
+                  variant="link" 
+                  className="px-0 font-normal text-sm"
+                  onClick={() => setActiveTab("signup")}
+                >
+                  Sign Up
+                </Button>
+              </div>
             </form>
           </TabsContent>
           
@@ -505,15 +692,22 @@ export function LoginForm() {
                 <>
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">Personal Email Address</Label>
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      placeholder="your.email@example.com"
-                      value={signUpData.personalEmail}
-                      onChange={(e) => setSignUpData({ ...signUpData, personalEmail: e.target.value })}
-                      disabled={isLoading}
-                      required
-                    />
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="signup-email"
+                        type="email"
+                        placeholder="your.email@example.com"
+                        value={signUpData.personalEmail}
+                        onChange={(e) => handleSignUpEmailChange(e.target.value)}
+                        disabled={isLoading}
+                        className="pl-10"
+                        required
+                      />
+                    </div>
+                    {signUpEmailError && (
+                      <p className="text-xs text-destructive">{signUpEmailError}</p>
+                    )}
                     <p className="text-xs text-muted-foreground">
                       This will be used for account verification
                     </p>
@@ -521,15 +715,32 @@ export function LoginForm() {
                   
                   <div className="space-y-2">
                     <Label htmlFor="signup-password">Password</Label>
-                    <Input
-                      id="signup-password"
-                      type="password"
-                      placeholder="Create a strong password"
-                      value={signUpData.password}
-                      onChange={(e) => setSignUpData({ ...signUpData, password: e.target.value })}
-                      disabled={isLoading}
-                      required
-                    />
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="signup-password"
+                        type={showSignUpPassword ? "text" : "password"}
+                        placeholder="Create a strong password"
+                        value={signUpData.password}
+                        onChange={(e) => setSignUpData({ ...signUpData, password: e.target.value })}
+                        disabled={isLoading}
+                        className="pl-10 pr-10"
+                        required
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                        onClick={() => setShowSignUpPassword(!showSignUpPassword)}
+                      >
+                        {showSignUpPassword ? (
+                          <Eye className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <EyeOff className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </Button>
+                    </div>
                     {signUpData.password && (
                       <div className="space-y-2">
                         <Progress value={passwordStrength.percentage} className="h-2" />
@@ -550,15 +761,32 @@ export function LoginForm() {
                   
                   <div className="space-y-2">
                     <Label htmlFor="signup-confirm">Confirm Password</Label>
-                    <Input
-                      id="signup-confirm"
-                      type="password"
-                      placeholder="Re-enter your password"
-                      value={signUpData.confirmPassword}
-                      onChange={(e) => setSignUpData({ ...signUpData, confirmPassword: e.target.value })}
-                      disabled={isLoading}
-                      required
-                    />
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="signup-confirm"
+                        type={showConfirmPassword ? "text" : "password"}
+                        placeholder="Re-enter your password"
+                        value={signUpData.confirmPassword}
+                        onChange={(e) => setSignUpData({ ...signUpData, confirmPassword: e.target.value })}
+                        disabled={isLoading}
+                        className="pl-10 pr-10"
+                        required
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      >
+                        {showConfirmPassword ? (
+                          <Eye className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <EyeOff className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 </>
               )}
