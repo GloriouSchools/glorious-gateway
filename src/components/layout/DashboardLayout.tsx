@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { UserRole } from "@/types/user";
+import { Footer } from "./Footer";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -13,16 +14,17 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children, userRole, userName, onLogout }: DashboardLayoutProps) {
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full">
+      <div className="min-h-screen flex w-full animate-fade-in">
         <AppSidebar userRole={userRole} userName={userName} onLogout={onLogout} />
         <div className="flex-1 flex flex-col">
-          <header className="h-16 border-b bg-card flex items-center px-4">
+          <header className="h-16 border-b bg-card flex items-center px-4 animate-slide-in-right">
             <SidebarTrigger className="mr-4" />
             <h1 className="text-xl font-semibold">Glorious Schools Management System</h1>
           </header>
-          <main className="flex-1 p-6 bg-gradient-subtle">
+          <main className="flex-1 p-6 bg-gradient-subtle animate-zoom-in">
             {children}
           </main>
+          <Footer />
         </div>
       </div>
     </SidebarProvider>
