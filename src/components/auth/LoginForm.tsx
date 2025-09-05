@@ -159,6 +159,32 @@ export function LoginForm() {
     }
     
     setIsLoading(true);
+    
+    // Check if this is the hardcoded admin account
+    if (signInData.email === 'admin@glorious.com' && signInData.password === 'Glorious@15') {
+      // Verify admin credentials using the database function
+      const { data, error } = await supabase
+        .rpc('verify_admin_login', {
+          input_email: signInData.email,
+          input_password: signInData.password
+        });
+      
+      if (data === true) {
+        // Set admin session in localStorage
+        localStorage.setItem('adminLoggedIn', 'true');
+        localStorage.setItem('userRole', 'admin');
+        localStorage.setItem('userName', 'System Administrator');
+        
+        setIsLoading(false);
+        toast.success("Welcome back, Administrator!");
+        
+        // Force a page reload to trigger auth state update
+        window.location.href = '/';
+        return;
+      }
+    }
+    
+    // Normal user login flow
     try {
       await signIn(signInData.email, signInData.password);
       toast.success("Welcome back!");

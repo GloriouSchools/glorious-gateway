@@ -25,7 +25,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
+    // Check for admin login first
+    const adminLoggedIn = localStorage.getItem('adminLoggedIn');
+    const storedRole = localStorage.getItem('userRole');
+    const storedName = localStorage.getItem('userName');
+    
+    if (adminLoggedIn === 'true' && storedRole === 'admin') {
+      // Set admin state from localStorage (no real user object for hardcoded admin)
+      setUserRole('admin');
+      setUserName(storedName || 'System Administrator');
+      setUser({ id: 'admin-hardcoded', email: 'admin@glorious.com' } as any);
+      setIsLoading(false);
+      return;
+    }
+    
+    // Set up auth state listener FIRST for normal users
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
@@ -110,8 +124,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    // Clear admin localStorage if present
+    localStorage.removeItem('adminLoggedIn');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userName');
+    
+    // Only sign out from Supabase if there's a real session
+    if (session) {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+    }
+    
     setUser(null);
     setSession(null);
     setUserRole(null);
