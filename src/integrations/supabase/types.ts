@@ -245,6 +245,18 @@ export type Database = {
         Args: { input_token: string }
         Returns: boolean
       }
+      validate_student_exists: {
+        Args: {
+          p_class_id: string
+          p_stream_id: string
+          p_student_name: string
+        }
+        Returns: boolean
+      }
+      validate_teacher_exists: {
+        Args: { p_teacher_name: string }
+        Returns: boolean
+      }
       verify_admin_login: {
         Args: { input_email: string; input_password: string }
         Returns: Json
