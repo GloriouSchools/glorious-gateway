@@ -57,8 +57,8 @@ export function LoginForm() {
   const [selectedTeacherClasses, setSelectedTeacherClasses] = useState<string[]>([]);
   
   const [signInData, setSignInData] = useState({
-    email: "admin@glorious.com",
-    password: "Glorious@15",
+    email: "",
+    password: "",
   });
   
   const [signUpData, setSignUpData] = useState({
@@ -250,7 +250,7 @@ export function LoginForm() {
                 <Input
                   id="signin-email"
                   type="email"
-                  placeholder="admin@glorious.com"
+                  placeholder="Enter your email"
                   value={signInData.email}
                   onChange={(e) => setSignInData({ ...signInData, email: e.target.value })}
                   disabled={isLoading}
