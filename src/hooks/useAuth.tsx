@@ -11,7 +11,6 @@ interface AuthContextType {
   userRole: UserRole | null;
   userName: string;
   isLoading: boolean;
-  isAccountSecured: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, fullName: string, role: UserRole) => Promise<void>;
   signOut: () => Promise<void>;
@@ -25,21 +24,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [userName, setUserName] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [isAccountSecured, setIsAccountSecured] = useState(false);
 
   useEffect(() => {
     // Check for admin token first
     const adminToken = getAdminToken();
     const storedRole = localStorage.getItem('adminRole');
     const storedName = localStorage.getItem('adminName');
-    const adminIsSecured = localStorage.getItem('adminIsSecured');
     
     if (adminToken && storedRole === 'admin') {
       // Set admin state from token (no real user object for hardcoded admin)
       setUserRole('admin');
       setUserName(storedName || 'System Administrator');
       setUser({ id: 'admin-hardcoded', email: 'admin@glorious.com' } as any);
-      setIsAccountSecured(adminIsSecured === 'true');
       setIsLoading(false);
       return;
     }
@@ -50,14 +46,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const studentName = localStorage.getItem('studentName');
     const studentId = localStorage.getItem('studentId');
     const studentEmail = localStorage.getItem('studentEmail');
-    const studentIsSecured = localStorage.getItem('studentIsSecured');
     
     if (studentToken && studentRole === 'student') {
       // Set student state from token (no real user object for hardcoded student)
       setUserRole('student');
       setUserName(studentName || 'Student');
       setUser({ id: studentId || 'student-hardcoded', email: studentEmail || '' } as any);
-      setIsAccountSecured(studentIsSecured === 'true');
       setIsLoading(false);
       return;
     }
@@ -176,7 +170,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       userRole,
       userName,
       isLoading,
-      isAccountSecured,
       signIn,
       signUp,
       signOut,

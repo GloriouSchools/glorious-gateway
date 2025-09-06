@@ -59,8 +59,6 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
-          is_account_secured: boolean | null
-          personal_email: string | null
           updated_at: string
         }
         Insert: {
@@ -68,8 +66,6 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
-          is_account_secured?: boolean | null
-          personal_email?: string | null
           updated_at?: string
         }
         Update: {
@@ -77,8 +73,6 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
-          is_account_secured?: boolean | null
-          personal_email?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -151,8 +145,6 @@ export type Database = {
           email: string | null
           id: string
           name: string
-          password_hash: string | null
-          personal_email: string | null
           photo_url: string | null
           stream_id: string
         }
@@ -162,8 +154,6 @@ export type Database = {
           email?: string | null
           id?: string
           name: string
-          password_hash?: string | null
-          personal_email?: string | null
           photo_url?: string | null
           stream_id: string
         }
@@ -173,8 +163,6 @@ export type Database = {
           email?: string | null
           id?: string
           name?: string
-          password_hash?: string | null
-          personal_email?: string | null
           photo_url?: string | null
           stream_id?: string
         }
@@ -236,8 +224,6 @@ export type Database = {
           created_at: string
           id: string
           name: string
-          password_hash: string | null
-          personal_email: string | null
           photo_url: string | null
           subjects: string[]
         }
@@ -245,8 +231,6 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
-          password_hash?: string | null
-          personal_email?: string | null
           photo_url?: string | null
           subjects?: string[]
         }
@@ -254,8 +238,6 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
-          password_hash?: string | null
-          personal_email?: string | null
           photo_url?: string | null
           subjects?: string[]
         }
@@ -294,14 +276,6 @@ export type Database = {
         }
         Returns: boolean
       }
-      update_student_password: {
-        Args: {
-          p_password_hash: string
-          p_personal_email: string
-          p_student_id: string
-        }
-        Returns: Json
-      }
       validate_admin_token: {
         Args: { input_token: string }
         Returns: boolean
@@ -323,10 +297,6 @@ export type Database = {
         Returns: boolean
       }
       verify_admin_login: {
-        Args: { input_email: string; input_password: string }
-        Returns: Json
-      }
-      verify_flexible_login: {
         Args: { input_email: string; input_password: string }
         Returns: Json
       }

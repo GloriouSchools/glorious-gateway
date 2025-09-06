@@ -1,9 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { 
   BookOpen, 
   ClipboardList, 
@@ -12,17 +9,10 @@ import {
   TrendingUp,
   Clock,
   CheckCircle,
-  AlertCircle,
-  AlertTriangle,
-  Shield
+  AlertCircle
 } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
-import { useState } from "react";
-import { SecureAccountForm } from "@/components/auth/SecureAccountForm";
 
 export function StudentDashboard() {
-  const { userName, user, isAccountSecured } = useAuth();
-  const [showSecureDialog, setShowSecureDialog] = useState(false);
   const stats = [
     { 
       title: "Current GPA", 
@@ -71,39 +61,9 @@ export function StudentDashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Welcome back, {userName || 'Student'}!</h2>
+        <h2 className="text-3xl font-bold tracking-tight">Welcome back, Student!</h2>
         <p className="text-muted-foreground">Here's an overview of your academic progress</p>
       </div>
-
-      {!isAccountSecured && (
-        <Alert className="border-destructive/50 bg-destructive/10">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Your account is at risk</AlertTitle>
-          <AlertDescription className="space-y-2">
-            <p>Your account is currently using default credentials which makes it vulnerable to unauthorized access.</p>
-            <Dialog open={showSecureDialog} onOpenChange={setShowSecureDialog}>
-              <DialogTrigger asChild>
-                <Button variant="destructive" size="sm" className="mt-2">
-                  <Shield className="mr-2 h-4 w-4" />
-                  Secure My Account
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-md">
-                <SecureAccountForm 
-                  userType="student"
-                  userId={user?.id}
-                  userName={userName}
-                  currentEmail={user?.email}
-                  onSuccess={() => {
-                    setShowSecureDialog(false);
-                    window.location.reload();
-                  }}
-                />
-              </DialogContent>
-            </Dialog>
-          </AlertDescription>
-        </Alert>
-      )}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => {
