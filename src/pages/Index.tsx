@@ -1,35 +1,24 @@
-import { useEffect } from "react";
-import { LoginPage } from "./Login";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { StudentDashboard } from "@/components/dashboards/StudentDashboard";
 import { TeacherDashboard } from "@/components/dashboards/TeacherDashboard";
 import { AdminDashboard } from "@/components/dashboards/AdminDashboard";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
-  const { user, userRole, userName, signOut, isLoading } = useAuth();
+  const { userRole, userName, signOut } = useAuth();
+  const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
       await signOut();
       toast.info("You have been logged out");
+      navigate("/login");
     } catch (error: any) {
       toast.error("Failed to log out");
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <LoginPage />;
-  }
 
   const renderDashboard = () => {
     switch (userRole) {

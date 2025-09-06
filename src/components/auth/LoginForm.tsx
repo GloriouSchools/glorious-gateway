@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,9 +21,12 @@ import {
   DialogTitle,
   DialogTrigger 
 } from "@/components/ui/dialog";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
   
   // Password visibility states
   const [showPassword, setShowPassword] = useState(false);
@@ -115,8 +118,16 @@ export function LoginForm() {
         setIsLoading(false);
         toast.success(`Welcome, ${name}!`);
         
-        // Force a page reload to trigger auth state update
-        window.location.href = '/';
+        // Check for redirect URL or state
+        const redirectUrl = localStorage.getItem('redirectAfterLogin');
+        const from = (location.state as any)?.from?.pathname || '/';
+        
+        if (redirectUrl) {
+          localStorage.removeItem('redirectAfterLogin');
+          navigate(redirectUrl);
+        } else {
+          navigate(from);
+        }
         return;
       } else {
         toast.error((data as any)?.message || "Invalid credentials");
