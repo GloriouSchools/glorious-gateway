@@ -9,6 +9,12 @@ import Index from "./pages/Index";
 import { LoginPage } from "./pages/Login";
 import { VerifyCallback } from "./pages/VerifyCallback";
 import NotFound from "./pages/NotFound";
+import UserProfile from "./pages/UserProfile";
+import About from "./pages/About";
+import Disclaimer from "./pages/Disclaimer";
+import Legal from "./pages/Legal";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +33,16 @@ const App = () => (
                 <Index />
               </ProtectedRoute>
             } />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <UserProfile />
+              </ProtectedRoute>
+            } />
+            <Route path="/about" element={<About />} />
+            <Route path="/disclaimer" element={<Disclaimer />} />
+            <Route path="/legal" element={<Legal />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

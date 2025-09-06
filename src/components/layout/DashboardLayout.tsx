@@ -3,6 +3,8 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { UserRole } from "@/types/user";
 import { Footer } from "./Footer";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useNavigate } from "react-router-dom";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -12,14 +14,29 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children, userRole, userName, onLogout }: DashboardLayoutProps) {
+  const navigate = useNavigate();
+  
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full animate-fade-in">
         <AppSidebar userRole={userRole} userName={userName} onLogout={onLogout} />
         <div className="flex-1 flex flex-col">
-          <header className="h-16 border-b bg-card flex items-center px-4 animate-slide-in-right">
-            <SidebarTrigger className="mr-4" />
-            <h1 className="text-xl font-semibold">Glorious Schools Management System</h1>
+          <header className="h-16 border-b bg-card flex items-center justify-between px-4 animate-slide-in-right">
+            <div className="flex items-center">
+              <SidebarTrigger className="mr-4" />
+              <h1 className="text-xl font-semibold">Glorious Schools Management System</h1>
+            </div>
+            <button
+              onClick={() => navigate('/profile')}
+              className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+            >
+              <Avatar className="h-9 w-9 cursor-pointer">
+                <AvatarImage src="/placeholder.svg" />
+                <AvatarFallback className="bg-primary text-primary-foreground">
+                  {userName?.split(' ').map(n => n[0]).join('').toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            </button>
           </header>
           <main className="flex-1 p-6 bg-gradient-subtle animate-zoom-in">
             {children}
