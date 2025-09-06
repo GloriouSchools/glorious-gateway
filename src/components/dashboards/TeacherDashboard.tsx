@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { 
   Users, 
   BookOpen, 
@@ -11,10 +13,17 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
-  BarChart
+  BarChart,
+  Shield,
+  Mail
 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { AccountVerificationForm } from "@/components/auth/AccountVerificationForm";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 export function TeacherDashboard() {
+  const { userName, isVerified, personalEmail, user } = useAuth();
+  const [showVerificationDialog, setShowVerificationDialog] = useState(false);
   const stats = [
     { 
       title: "Total Students", 

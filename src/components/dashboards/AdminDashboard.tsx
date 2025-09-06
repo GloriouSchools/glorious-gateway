@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { 
   Users, 
   GraduationCap, 
@@ -13,10 +15,17 @@ import {
   BarChart3,
   Calendar,
   Building,
-  Activity
+  Activity,
+  Shield,
+  Mail
 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { AccountVerificationForm } from "@/components/auth/AccountVerificationForm";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 export function AdminDashboard() {
+  const { userName, isVerified, personalEmail, user } = useAuth();
+  const [showVerificationDialog, setShowVerificationDialog] = useState(false);
   const stats = [
     { 
       title: "Total Students", 
@@ -87,6 +96,48 @@ export function AdminDashboard() {
           <Button className="bg-gradient-primary">Add New User</Button>
         </div>
       </div>
+
+      {/* Verification Alert */}
+      {isVerified ? (
+        <Alert className="border-success">
+          <CheckCircle className="h-4 w-4 text-success" />
+          <AlertTitle>Account Verified</AlertTitle>
+          <AlertDescription>
+            Thank you for verifying your account with your personal email: {personalEmail}. 
+            You now have full access to all administrative features.
+          </AlertDescription>
+        </Alert>
+      ) : (
+        <Alert className="border-warning">
+          <Shield className="h-4 w-4 text-warning" />
+          <AlertTitle>Limited Access</AlertTitle>
+          <AlertDescription className="space-y-3">
+            <p>Your admin account is not verified. You have limited access to administrative features.</p>
+            <p>To gain full access, please verify your account with your personal email address (gloriousschools14@gmail.com).</p>
+            <Button 
+              onClick={() => setShowVerificationDialog(true)}
+              className="gap-2"
+            >
+              <Mail className="h-4 w-4" />
+              Verify My Account
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Verification Dialog */}
+      <Dialog open={showVerificationDialog} onOpenChange={setShowVerificationDialog}>
+        <DialogContent className="sm:max-w-md">
+          <AccountVerificationForm 
+            userType="admin"
+            userId="00000000-0000-0000-0000-000000000001"
+            userName={userName}
+            onVerificationComplete={() => {
+              setShowVerificationDialog(false);
+            }}
+          />
+        </DialogContent>
+      </Dialog>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => {

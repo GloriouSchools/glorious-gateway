@@ -11,6 +11,8 @@ interface AuthContextType {
   userRole: UserRole | null;
   userName: string;
   isLoading: boolean;
+  isVerified: boolean;
+  personalEmail: string | null;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, fullName: string, role: UserRole) => Promise<void>;
   signOut: () => Promise<void>;
@@ -24,6 +26,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [userName, setUserName] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [isVerified, setIsVerified] = useState(false);
+  const [personalEmail, setPersonalEmail] = useState<string | null>(null);
 
   useEffect(() => {
     // Check for admin token first
@@ -36,6 +40,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUserRole('admin');
       setUserName(storedName || 'System Administrator');
       setUser({ id: 'admin-hardcoded', email: 'admin@glorious.com' } as any);
+      const verified = localStorage.getItem('adminVerified');
+      setIsVerified(verified === 'true');
+      const storedPersonalEmail = localStorage.getItem('adminPersonalEmail');
+      setPersonalEmail(storedPersonalEmail || null);
       setIsLoading(false);
       return;
     }
@@ -52,6 +60,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUserRole('student');
       setUserName(studentName || 'Student');
       setUser({ id: studentId || 'student-hardcoded', email: studentEmail || '' } as any);
+      const verified = localStorage.getItem('studentVerified');
+      setIsVerified(verified === 'true');
+      const storedPersonalEmail = localStorage.getItem('studentPersonalEmail');
+      setPersonalEmail(storedPersonalEmail || null);
       setIsLoading(false);
       return;
     }
@@ -143,6 +155,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     // Clear admin session if present
     clearAdminSession();
+    localStorage.removeItem('adminVerified');
+    localStorage.removeItem('adminPersonalEmail');
     
     // Clear student session if present
     localStorage.removeItem('studentToken');
@@ -150,6 +164,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('studentName');
     localStorage.removeItem('studentId');
     localStorage.removeItem('studentEmail');
+    localStorage.removeItem('studentVerified');
+    localStorage.removeItem('studentPersonalEmail');
     
     // Only sign out from Supabase if there's a real session
     if (session) {
@@ -161,6 +177,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setSession(null);
     setUserRole(null);
     setUserName("");
+    setIsVerified(false);
+    setPersonalEmail(null);
   };
 
   return (
@@ -170,6 +188,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       userRole,
       userName,
       isLoading,
+      isVerified,
+      personalEmail,
       signIn,
       signUp,
       signOut,

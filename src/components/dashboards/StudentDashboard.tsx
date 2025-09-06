@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { 
   BookOpen, 
   ClipboardList, 
@@ -9,10 +12,18 @@ import {
   TrendingUp,
   Clock,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Shield,
+  Mail
 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { AccountVerificationForm } from "@/components/auth/AccountVerificationForm";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 export function StudentDashboard() {
+  const { userName, isVerified, personalEmail, user } = useAuth();
+  const [showVerificationDialog, setShowVerificationDialog] = useState(false);
+  
   const stats = [
     { 
       title: "Current GPA", 
@@ -61,9 +72,51 @@ export function StudentDashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Welcome back, Student!</h2>
+        <h2 className="text-3xl font-bold tracking-tight">Welcome back, {userName || 'Student'}!</h2>
         <p className="text-muted-foreground">Here's an overview of your academic progress</p>
       </div>
+
+      {/* Verification Alert */}
+      {isVerified ? (
+        <Alert className="border-success">
+          <CheckCircle className="h-4 w-4 text-success" />
+          <AlertTitle>Account Verified</AlertTitle>
+          <AlertDescription>
+            Thank you for verifying your account with your personal email: {personalEmail}. 
+            You now have full access to all dashboard features.
+          </AlertDescription>
+        </Alert>
+      ) : (
+        <Alert className="border-warning">
+          <Shield className="h-4 w-4 text-warning" />
+          <AlertTitle>Limited Access</AlertTitle>
+          <AlertDescription className="space-y-3">
+            <p>Your account is not verified. You have limited access to dashboard features.</p>
+            <p>To gain full access, please verify your account with your personal email address.</p>
+            <Button 
+              onClick={() => setShowVerificationDialog(true)}
+              className="gap-2"
+            >
+              <Mail className="h-4 w-4" />
+              Verify My Account
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Verification Dialog */}
+      <Dialog open={showVerificationDialog} onOpenChange={setShowVerificationDialog}>
+        <DialogContent className="sm:max-w-md">
+          <AccountVerificationForm 
+            userType="student"
+            userId={user?.id}
+            userName={userName}
+            onVerificationComplete={() => {
+              setShowVerificationDialog(false);
+            }}
+          />
+        </DialogContent>
+      </Dialog>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => {
