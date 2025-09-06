@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_profiles: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_verified: boolean | null
+          personal_email: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_verified?: boolean | null
+          personal_email?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_verified?: boolean | null
+          personal_email?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       admin_sessions: {
         Row: {
           created_at: string
@@ -59,6 +83,8 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          is_account_secured: boolean | null
+          personal_email: string | null
           updated_at: string
         }
         Insert: {
@@ -66,6 +92,8 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
+          is_account_secured?: boolean | null
+          personal_email?: string | null
           updated_at?: string
         }
         Update: {
@@ -73,6 +101,8 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          is_account_secured?: boolean | null
+          personal_email?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -144,7 +174,10 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          is_verified: boolean | null
           name: string
+          password_hash: string | null
+          personal_email: string | null
           photo_url: string | null
           stream_id: string
         }
@@ -153,7 +186,10 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          is_verified?: boolean | null
           name: string
+          password_hash?: string | null
+          personal_email?: string | null
           photo_url?: string | null
           stream_id: string
         }
@@ -162,7 +198,10 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          is_verified?: boolean | null
           name?: string
+          password_hash?: string | null
+          personal_email?: string | null
           photo_url?: string | null
           stream_id?: string
         }
@@ -223,21 +262,30 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_verified: boolean | null
           name: string
+          password_hash: string | null
+          personal_email: string | null
           photo_url: string | null
           subjects: string[]
         }
         Insert: {
           created_at?: string
           id?: string
+          is_verified?: boolean | null
           name: string
+          password_hash?: string | null
+          personal_email?: string | null
           photo_url?: string | null
           subjects?: string[]
         }
         Update: {
           created_at?: string
           id?: string
+          is_verified?: boolean | null
           name?: string
+          password_hash?: string | null
+          personal_email?: string | null
           photo_url?: string | null
           subjects?: string[]
         }
@@ -276,6 +324,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      update_student_password: {
+        Args: {
+          p_password_hash: string
+          p_personal_email: string
+          p_student_id: string
+        }
+        Returns: Json
+      }
       validate_admin_token: {
         Args: { input_token: string }
         Returns: boolean
@@ -300,8 +356,20 @@ export type Database = {
         Args: { input_email: string; input_password: string }
         Returns: Json
       }
+      verify_flexible_login: {
+        Args: { input_email: string; input_password: string }
+        Returns: Json
+      }
       verify_student_login: {
         Args: { input_email: string; input_password: string }
+        Returns: Json
+      }
+      verify_user_account: {
+        Args: {
+          p_personal_email: string
+          p_user_id: string
+          p_user_type: string
+        }
         Returns: Json
       }
     }
