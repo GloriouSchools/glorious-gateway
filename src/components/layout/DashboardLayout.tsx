@@ -33,8 +33,8 @@ export function DashboardLayout({ children, userRole, userName, onLogout }: Dash
             >
               <Avatar className="h-9 w-9 cursor-pointer">
                 <AvatarImage src={defaultAvatar} />
-                <AvatarFallback className="bg-primary text-primary-foreground">
-                  {userName?.split(' ').map(n => n[0]).join('').toUpperCase()}
+                <AvatarFallback>
+                  <img src={defaultAvatar} alt="User avatar" className="h-full w-full object-cover" />
                 </AvatarFallback>
               </Avatar>
             </button>

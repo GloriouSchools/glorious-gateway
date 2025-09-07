@@ -31,8 +31,8 @@ export default function UserProfile() {
             <div className="flex items-center space-x-4">
               <Avatar className="h-20 w-20">
                 <AvatarImage src={defaultAvatar} />
-                <AvatarFallback className="text-xl bg-primary text-primary-foreground">
-                  {userName?.split(' ').map(n => n[0]).join('').toUpperCase()}
+                <AvatarFallback>
+                  <img src={defaultAvatar} alt="User avatar" className="h-full w-full object-cover" />
                 </AvatarFallback>
               </Avatar>
               <div>

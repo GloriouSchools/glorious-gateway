@@ -29,6 +29,8 @@ export function DangerZone({ personalEmail, userId, userRole }: DangerZoneProps)
     confirmPassword: ""
   });
 
+  const [emailError, setEmailError] = useState("");
+
   const [passwordStrength, setPasswordStrength] = useState({
     score: 0,
     feedback: [] as string[],
@@ -51,7 +53,28 @@ export function DangerZone({ personalEmail, userId, userRole }: DangerZoneProps)
     }
   };
 
+  const handleEmailChange = (value: string) => {
+    setFormData(prev => ({ ...prev, personalEmail: value }));
+    
+    if (value) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(value)) {
+        setEmailError("Please enter a valid email address");
+      } else {
+        setEmailError("");
+      }
+    } else {
+      setEmailError("");
+    }
+  };
+
   const handleSaveChanges = async () => {
+    // Validate email if it's changed
+    if (formData.personalEmail && emailError) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
@@ -146,10 +169,13 @@ export function DangerZone({ personalEmail, userId, userRole }: DangerZoneProps)
               id="personalEmail"
               type="email"
               value={formData.personalEmail}
-              onChange={(e) => setFormData(prev => ({ ...prev, personalEmail: e.target.value }))}
+              onChange={(e) => handleEmailChange(e.target.value)}
               placeholder="Enter your personal email"
               className="font-mono"
             />
+            {emailError && (
+              <p className="text-xs text-destructive mt-1">{emailError}</p>
+            )}
             <p className="text-xs text-muted-foreground">
               A verification link will be sent to this email address
             </p>
@@ -268,7 +294,7 @@ export function DangerZone({ personalEmail, userId, userRole }: DangerZoneProps)
         <div className="flex justify-end">
           <Button 
             onClick={handleSaveChanges}
-            disabled={isLoading}
+            disabled={isLoading || !!emailError}
             variant="destructive"
           >
             {isLoading ? "Saving..." : "Save Security Changes"}

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function About() {
   return (
-    <div className="min-h-screen bg-gradient-subtle">
+    <div className="min-h-screen bg-gradient-subtle animate-page-in">
       <div className="max-w-4xl mx-auto px-6 py-12">
         <Link to="/" className="inline-flex items-center text-primary hover:text-primary-hover mb-6">
           <ArrowLeft className="mr-2 h-4 w-4" />
@@ -13,41 +13,70 @@ export default function About() {
         
         <Card>
           <CardHeader>
-            <CardTitle className="text-3xl">About Glorious Schools</CardTitle>
+            <CardTitle className="text-3xl">About Glorious Kindergarten & Primary School</CardTitle>
           </CardHeader>
           <CardContent className="prose prose-gray max-w-none">
+            <p className="text-lg text-muted-foreground mb-6">
+              Welcome to Glorious Kindergarten & Primary School, located in Lugala, Masanafu, Bukuluugi, Kampala, Uganda. 
+              Our school motto "We Will Always Shine" reflects our commitment to nurturing bright, confident, and capable 
+              young minds who will excel in all aspects of life.
+            </p>
+
             <h2 className="text-xl font-semibold mb-4">Our Mission</h2>
             <p className="text-muted-foreground mb-6">
-              At Glorious Schools, we are committed to providing exceptional education that empowers students to reach their full potential. Our mission is to create a nurturing environment where academic excellence meets character development.
+              To provide comprehensive, quality education from kindergarten through primary levels, empowering our 
+              students with strong academic foundations and moral values. We believe in creating an inclusive 
+              learning environment where every child can discover their potential and shine brightly in their future endeavors.
             </p>
 
             <h2 className="text-xl font-semibold mb-4">Our Vision</h2>
             <p className="text-muted-foreground mb-6">
-              To be a leading educational institution that shapes future leaders, innovators, and responsible global citizens through comprehensive education and values-based learning.
+              To be the beacon of educational excellence in Uganda, producing well-rounded individuals who will 
+              always shine in their academic pursuits, professional careers, and personal lives. We envision our 
+              students as future leaders who will make positive contributions to society.
             </p>
 
             <h2 className="text-xl font-semibold mb-4">Core Values</h2>
             <ul className="list-disc pl-6 text-muted-foreground mb-6 space-y-2">
-              <li><strong>Excellence:</strong> Striving for the highest standards in all academic and extracurricular activities</li>
-              <li><strong>Integrity:</strong> Fostering honesty, transparency, and ethical behavior</li>
-              <li><strong>Innovation:</strong> Embracing creativity and modern teaching methodologies</li>
-              <li><strong>Diversity:</strong> Celebrating differences and promoting inclusivity</li>
-              <li><strong>Community:</strong> Building strong relationships among students, teachers, and parents</li>
+              <li>Excellence in academics and extracurricular activities</li>
+              <li>Integrity and ethical behavior in all aspects</li>
+              <li>Respect for diversity and individual differences</li>
+              <li>Innovation and continuous improvement in teaching methods</li>
+              <li>Strong partnership between school, parents, and community</li>
+              <li>Nurturing environment that encourages growth and development</li>
             </ul>
 
-            <h2 className="text-xl font-semibold mb-4">Our History</h2>
-            <p className="text-muted-foreground mb-6">
-              Founded in 2010, Glorious Schools has grown from a small institution with 50 students to a thriving educational community serving over 1,000 students. Our journey has been marked by continuous improvement, academic achievements, and the success of our alumni who have gone on to make significant contributions in various fields.
-            </p>
+            <h2 className="text-xl font-semibold mb-4">Why Choose Glorious Kindergarten & Primary School?</h2>
+            <ul className="list-disc pl-6 text-muted-foreground mb-6 space-y-2">
+              <li>Experienced and dedicated teaching staff</li>
+              <li>Safe and nurturing learning environment</li>
+              <li>Comprehensive curriculum following Uganda's education standards</li>
+              <li>Strong emphasis on both academic and moral development</li>
+              <li>Affordable quality education</li>
+              <li>Regular parent-teacher communication</li>
+              <li>Extracurricular activities for holistic development</li>
+            </ul>
 
-            <h2 className="text-xl font-semibold mb-4">Academic Programs</h2>
-            <p className="text-muted-foreground mb-6">
-              We offer comprehensive educational programs from primary through secondary levels, with specialized streams in Sciences, Arts, and Commerce. Our curriculum is designed to meet national standards while incorporating international best practices.
-            </p>
+            <h2 className="text-xl font-semibold mb-4">Contact Information</h2>
+            <div className="text-muted-foreground mb-6">
+              <p className="mb-2">
+                <strong>Location:</strong> Lugala, Masanafu, Bukuluugi, Kampala, Uganda
+              </p>
+              <p className="mb-2">
+                <strong>Phone:</strong> +256 772 907 220 / 020 090 0124
+              </p>
+              <p className="mb-2">
+                <strong>Email:</strong> gloriousschools14@gmail.com
+              </p>
+              <p className="mb-4">
+                <strong>Operating Hours:</strong><br />
+                Monday - Friday: 08:00 AM - 04:00 PM<br />
+                Saturday - Sunday: 08:00 AM - 12:00 PM
+              </p>
+            </div>
 
-            <h2 className="text-xl font-semibold mb-4">Facilities</h2>
-            <p className="text-muted-foreground">
-              Our campus features state-of-the-art facilities including modern classrooms, science laboratories, computer labs, a well-stocked library, sports facilities, and creative arts studios. We continuously invest in infrastructure to provide the best learning environment for our students.
+            <p className="text-center text-lg font-medium italic text-primary">
+              "We Will Always Shine" - Our commitment to your child's bright future.
             </p>
           </CardContent>
         </Card>

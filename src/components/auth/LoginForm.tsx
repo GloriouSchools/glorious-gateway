@@ -115,19 +115,22 @@ export function LoginForm() {
         }
         // Add teacher handling later if needed
         
-        setIsLoading(false);
         toast.success(`Welcome, ${name}!`);
         
-        // Check for redirect URL or state
-        const redirectUrl = localStorage.getItem('redirectAfterLogin');
-        const from = (location.state as any)?.from?.pathname || '/';
+        // Navigate to appropriate dashboard based on role
+        setTimeout(() => {
+          if (role === 'admin') {
+            navigate('/admin');
+          } else if (role === 'teacher') {
+            navigate('/teacher');
+          } else if (role === 'student') {
+            navigate('/student');
+          } else {
+            navigate('/');
+          }
+        }, 100);
         
-        if (redirectUrl) {
-          localStorage.removeItem('redirectAfterLogin');
-          navigate(redirectUrl);
-        } else {
-          navigate(from);
-        }
+        setIsLoading(false);
         return;
       } else {
         toast.error((data as any)?.message || "Invalid credentials");

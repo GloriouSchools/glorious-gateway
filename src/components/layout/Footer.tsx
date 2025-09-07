@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from "lucide-react";
+import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin, Clock } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -94,17 +94,27 @@ export function Footer() {
               <li className="flex items-start space-x-2">
                 <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
                 <span className="text-sm text-muted-foreground">
-                  123 Education Street<br />
-                  Knowledge City, KC 12345
+                  Lugala, Masanafu, Bukuluugi<br />
+                  Kampala, Uganda
+                </span>
+              </li>
+              <li className="flex items-start space-x-2">
+                <Phone className="h-4 w-4 text-muted-foreground mt-0.5" />
+                <span className="text-sm text-muted-foreground">
+                  +256 772 907 220<br />
+                  020 090 0124
+                </span>
+              </li>
+              <li className="flex items-start space-x-2">
+                <Clock className="h-4 w-4 text-muted-foreground mt-0.5" />
+                <span className="text-sm text-muted-foreground">
+                  Mon-Fri: 08:00 AM - 04:00 PM<br />
+                  Sat-Sun: 08:00 AM - 12:00 PM
                 </span>
               </li>
               <li className="flex items-center space-x-2">
-                <Phone className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">+1 (555) 123-4567</span>
-              </li>
-              <li className="flex items-center space-x-2">
                 <Mail className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">info@glorious.com</span>
+                <span className="text-sm text-muted-foreground">gloriousschools14@gmail.com</span>
               </li>
             </ul>
           </div>

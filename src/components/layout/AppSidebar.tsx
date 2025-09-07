@@ -27,7 +27,8 @@ import {
   SidebarMenuItem,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import defaultAvatar from "@/assets/default-avatar.png";
 import { UserRole } from "@/types/user";
 
 interface AppSidebarProps {
@@ -39,7 +40,7 @@ interface AppSidebarProps {
 export function AppSidebar({ userRole, userName, onLogout }: AppSidebarProps) {
   const getMenuItems = () => {
     const commonItems = [
-      { title: "Dashboard", icon: Home, url: "/dashboard" },
+      { title: "Dashboard", icon: Home, url: `/${userRole}` },
     ];
 
     switch (userRole) {
@@ -91,8 +92,9 @@ export function AppSidebar({ userRole, userName, onLogout }: AppSidebarProps) {
         <div className="p-4 border-b">
           <div className="flex items-center gap-3">
             <Avatar>
-              <AvatarFallback className="bg-gradient-primary text-white">
-                {initials}
+              <AvatarImage src={defaultAvatar} />
+              <AvatarFallback>
+                <img src={defaultAvatar} alt="User avatar" className="h-full w-full object-cover" />
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
