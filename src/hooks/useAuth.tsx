@@ -44,8 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsVerified(verified === 'true');
       const storedPersonalEmail = localStorage.getItem('adminPersonalEmail');
       setPersonalEmail(storedPersonalEmail || null);
-      // Delay setting loading to false to ensure state is propagated
-      setTimeout(() => setIsLoading(false), 0);
+      setIsLoading(false);
       return;
     }
     
@@ -167,6 +166,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('studentEmail');
     localStorage.removeItem('studentVerified');
     localStorage.removeItem('studentPersonalEmail');
+    localStorage.removeItem('studentClass');
+    localStorage.removeItem('studentStream');
     
     // Only sign out from Supabase if there's a real session
     if (session) {
