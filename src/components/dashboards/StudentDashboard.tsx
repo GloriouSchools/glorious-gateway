@@ -89,16 +89,16 @@ export function StudentDashboard() {
       ) : (
         <Alert className="border-warning">
           <Shield className="h-4 w-4 text-warning" />
-          <AlertTitle>Limited Access</AlertTitle>
+          <AlertTitle>Account Security Warning</AlertTitle>
           <AlertDescription className="space-y-3">
-            <p>Your account is not verified. You have limited access to dashboard features.</p>
-            <p>To gain full access, please verify your account with your personal email address.</p>
+            <p>You may have limited access to the dashboard and are at risk of losing your account to unauthorized users.</p>
+            <p>To secure your account, please go to your User Profile and add a personal email address or change your password.</p>
             <Button 
-              onClick={() => setShowVerificationDialog(true)}
+              onClick={() => window.location.href = '/profile'}
               className="gap-2"
             >
-              <Mail className="h-4 w-4" />
-              Verify My Account
+              <Shield className="h-4 w-4" />
+              Go to Settings
             </Button>
           </AlertDescription>
         </Alert>

@@ -1,8 +1,29 @@
 import { Link } from "react-router-dom";
 import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
+  const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    try {
+      // Simulate API call - in production, this would call your backend
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      toast.success("Thank you for subscribing! You'll receive our newsletter at " + email);
+      setEmail("");
+    } catch (error) {
+      toast.error("Failed to subscribe. Please try again later.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <footer className="w-full bg-gradient-dark border-t border-border">
@@ -94,17 +115,21 @@ export function Footer() {
             <p className="text-sm text-muted-foreground">
               Subscribe to our newsletter for updates and educational resources.
             </p>
-            <form className="space-y-2">
+            <form className="space-y-2" onSubmit={handleNewsletterSubmit}>
               <input
                 type="email"
                 placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-3 py-2 text-sm rounded-md bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary"
+                required
               />
               <button
                 type="submit"
-                className="w-full px-3 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary-hover transition-colors"
+                disabled={isSubmitting}
+                className="w-full px-3 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary-hover transition-colors disabled:opacity-50"
               >
-                Subscribe
+                {isSubmitting ? "Subscribing..." : "Subscribe"}
               </button>
             </form>
           </div>

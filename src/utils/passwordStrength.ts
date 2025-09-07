@@ -1,37 +1,67 @@
 export interface PasswordStrength {
-  score: number; // 0-4
-  label: string;
-  color: string;
-  percentage: number;
+  score: number; // 0-4 (weak, medium, strong)
+  feedback: string[];
+  level: 'weak' | 'medium' | 'strong';
+  color: string; // For UI feedback
 }
 
-export function evaluatePasswordStrength(password: string): PasswordStrength {
+export function checkPasswordStrength(password: string): PasswordStrength {
+  const feedback: string[] = [];
   let score = 0;
   
-  if (!password) {
-    return { score: 0, label: "Enter password", color: "border-muted", percentage: 0 };
+  // Check minimum length
+  if (password.length >= 8) {
+    score++;
+  } else {
+    feedback.push("Use at least 8 characters");
   }
   
-  // Length checks
-  if (password.length >= 8) score++;
-  if (password.length >= 12) score++;
+  // Check for uppercase letters
+  if (/[A-Z]/.test(password)) {
+    score++;
+  } else {
+    feedback.push("Include at least one uppercase letter");
+  }
   
-  // Character type checks
-  if (/[a-z]/.test(password)) score++;
-  if (/[A-Z]/.test(password)) score++;
-  if (/[0-9]/.test(password)) score++;
-  if (/[^A-Za-z0-9]/.test(password)) score++;
+  // Check for numbers
+  if (/[0-9]/.test(password)) {
+    score++;
+  } else {
+    feedback.push("Include at least one number");
+  }
   
-  // Calculate final score (0-4)
-  const finalScore = Math.min(Math.floor(score / 1.5), 4);
+  // Check for special characters
+  if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+    score++;
+  } else {
+    feedback.push("Include at least one special character (!@#$%^&*)");
+  }
   
-  const strengthLevels: Record<number, PasswordStrength> = {
-    0: { score: 0, label: "Very Weak", color: "bg-destructive", percentage: 20 },
-    1: { score: 1, label: "Weak", color: "bg-destructive", percentage: 40 },
-    2: { score: 2, label: "Medium", color: "bg-orange-500", percentage: 60 },
-    3: { score: 3, label: "Strong", color: "bg-green-500", percentage: 80 },
-    4: { score: 4, label: "Very Strong", color: "bg-green-600", percentage: 100 },
+  // Determine strength level
+  let level: 'weak' | 'medium' | 'strong';
+  let color: string;
+  
+  if (score <= 1) {
+    level = 'weak';
+    color = 'hsl(var(--destructive))';
+  } else if (score <= 2) {
+    level = 'medium';
+    color = 'hsl(var(--warning))';
+  } else {
+    level = 'strong';
+    color = 'hsl(var(--success))';
+  }
+  
+  // Provide encouraging feedback for strong passwords
+  if (score >= 4) {
+    feedback.length = 0;
+    feedback.push("Excellent password strength!");
+  }
+  
+  return {
+    score,
+    feedback,
+    level,
+    color
   };
-  
-  return strengthLevels[finalScore];
 }

@@ -5,6 +5,7 @@ import { UserRole } from "@/types/user";
 import { Footer } from "./Footer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
+import defaultAvatar from "@/assets/default-avatar.png";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -31,7 +32,7 @@ export function DashboardLayout({ children, userRole, userName, onLogout }: Dash
               className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
             >
               <Avatar className="h-9 w-9 cursor-pointer">
-                <AvatarImage src="/placeholder.svg" />
+                <AvatarImage src={defaultAvatar} />
                 <AvatarFallback className="bg-primary text-primary-foreground">
                   {userName?.split(' ').map(n => n[0]).join('').toUpperCase()}
                 </AvatarFallback>
