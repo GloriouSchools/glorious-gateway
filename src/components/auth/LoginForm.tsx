@@ -23,7 +23,11 @@ import {
 } from "@/components/ui/dialog";
 import { useNavigate, useLocation } from "react-router-dom";
 
-export function LoginForm() {
+interface LoginFormProps {
+  schoolLogo: string;
+}
+
+export function LoginForm({ schoolLogo }: LoginFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -117,17 +121,9 @@ export function LoginForm() {
         
         toast.success(`Welcome, ${name}!`);
         
-        // Navigate to appropriate dashboard based on role
+        // Navigate to dashboard
         setTimeout(() => {
-          if (role === 'admin') {
-            navigate('/admin');
-          } else if (role === 'teacher') {
-            navigate('/teacher');
-          } else if (role === 'student') {
-            navigate('/student');
-          } else {
-            navigate('/');
-          }
+          navigate('/');
         }, 100);
         
         setIsLoading(false);
@@ -178,6 +174,13 @@ export function LoginForm() {
   return (
     <Card className="w-full max-w-md shadow-lg">
       <CardHeader className="space-y-1">
+        <div className="mb-4 flex justify-center">
+          <img 
+            src={schoolLogo} 
+            alt="Glorious Kindergarten & Primary School" 
+            className="h-24 w-24 object-contain"
+          />
+        </div>
         <CardTitle className="text-2xl font-bold text-center">
           Glorious Schools Portal
         </CardTitle>

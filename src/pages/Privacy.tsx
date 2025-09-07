@@ -130,11 +130,12 @@ export default function Privacy() {
             </p>
             <p>
               Data Protection Officer<br />
-              Glorious Schools<br />
-              123 Education Street<br />
-              Knowledge City, KC 12345<br />
-              Email: privacy@glorious.com<br />
-              Phone: +1 (555) 123-4569
+              Glorious Kindergarten & Primary School<br />
+              Lugala, Masanafu, Bukuluugi<br />
+              Kampala, Uganda<br />
+              Email: gloriousschools14@gmail.com<br />
+              Phone: +256 772 907 220<br />
+              Phone: 020 090 0124
             </p>
 
             <h2 className="text-xl font-semibold text-foreground">14. Complaints</h2>

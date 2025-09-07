@@ -1,5 +1,6 @@
 import { LoginForm } from "@/components/auth/LoginForm";
 import { Footer } from "@/components/layout/Footer";
+import { CookieConsent } from "@/components/CookieConsent";
 import schoolLogo from "@/assets/school-logo.png";
 
 export function LoginPage() {
@@ -16,17 +17,11 @@ export function LoginPage() {
       >
         <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
         <div className="relative z-10 w-full max-w-md animate-zoom-in">
-          <div className="mb-6 flex justify-center animate-scale-in">
-            <img 
-              src={schoolLogo} 
-              alt="Glorious Kindergarten & Primary School" 
-              className="h-32 w-32 object-contain"
-            />
-          </div>
-          <LoginForm />
+          <LoginForm schoolLogo={schoolLogo} />
         </div>
       </div>
       <Footer />
+      <CookieConsent />
     </div>
   );
 }

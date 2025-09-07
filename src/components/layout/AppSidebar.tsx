@@ -46,7 +46,7 @@ export function AppSidebar({ userRole, userName, onLogout }: AppSidebarProps) {
     switch (userRole) {
       case "student":
         return [
-          ...commonItems,
+          { title: "Dashboard", icon: Home, url: "/" },
           { title: "My Courses", icon: BookOpen, url: "/courses" },
           { title: "Assignments", icon: ClipboardList, url: "/assignments" },
           { title: "Grades", icon: Award, url: "/grades" },
@@ -57,7 +57,7 @@ export function AppSidebar({ userRole, userName, onLogout }: AppSidebarProps) {
         ];
       case "teacher":
         return [
-          ...commonItems,
+          { title: "Dashboard", icon: Home, url: "/" },
           { title: "My Classes", icon: GraduationCap, url: "/classes" },
           { title: "Students", icon: Users, url: "/students" },
           { title: "Assignments", icon: ClipboardList, url: "/assignments" },
@@ -69,7 +69,7 @@ export function AppSidebar({ userRole, userName, onLogout }: AppSidebarProps) {
         ];
       case "admin":
         return [
-          ...commonItems,
+          { title: "Dashboard", icon: Home, url: "/" },
           { title: "Students", icon: GraduationCap, url: "/students" },
           { title: "Teachers", icon: Users, url: "/teachers" },
           { title: "Courses", icon: BookOpen, url: "/courses" },
@@ -79,7 +79,7 @@ export function AppSidebar({ userRole, userName, onLogout }: AppSidebarProps) {
           { title: "Settings", icon: Settings, url: "/settings" },
         ];
       default:
-        return commonItems;
+        return [{ title: "Dashboard", icon: Home, url: "/" }];
     }
   };
 

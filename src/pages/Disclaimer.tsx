@@ -58,7 +58,13 @@ export default function Disclaimer() {
 
             <h2 className="text-xl font-semibold text-foreground">Contact Information</h2>
             <p>
-              If you have any questions about this disclaimer, please contact the school administration at info@glorious.com or call +1 (555) 123-4567.
+              If you have any questions about this disclaimer, please contact the school administration at:<br /><br />
+              Glorious Kindergarten & Primary School<br />
+              Lugala, Masanafu, Bukuluugi<br />
+              Kampala, Uganda<br />
+              Email: gloriousschools14@gmail.com<br />
+              Phone: +256 772 907 220<br />
+              Phone: 020 090 0124
             </p>
 
             <p className="text-sm italic">
