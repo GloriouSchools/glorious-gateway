@@ -97,8 +97,6 @@ export function LoginForm({ schoolLogo }: LoginFormProps) {
         const name = (data as any).name;
         const isVerified = (data as any).is_verified;
         const personalEmail = (data as any).personal_email;
-        const className = (data as any).class_name;
-        const streamName = (data as any).stream_name;
         
         if (role === 'admin') {
           localStorage.setItem('adminToken', token);
@@ -118,22 +116,13 @@ export function LoginForm({ schoolLogo }: LoginFormProps) {
           if (personalEmail) {
             localStorage.setItem('studentPersonalEmail', personalEmail);
           }
-          if (className) {
-            localStorage.setItem('studentClass', className);
-          }
-          if (streamName) {
-            localStorage.setItem('studentStream', streamName);
-          }
         }
         // Add teacher handling later if needed
         
         toast.success(`Welcome, ${name}!`);
         
-        // Navigate after a brief delay to ensure state is updated
-        setTimeout(() => {
-          navigate('/', { replace: true });
-        }, 100);
-        
+        // Force a page reload to ensure auth state is properly initialized
+        window.location.href = '/';
         return;
       } else {
         toast.error((data as any)?.message || "Invalid credentials");

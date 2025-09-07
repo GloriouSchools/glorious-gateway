@@ -44,7 +44,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsVerified(verified === 'true');
       const storedPersonalEmail = localStorage.getItem('adminPersonalEmail');
       setPersonalEmail(storedPersonalEmail || null);
-      setIsLoading(false);
+      // Delay setting loading to false to ensure state is propagated
+      setTimeout(() => setIsLoading(false), 0);
       return;
     }
     
@@ -56,7 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const studentEmail = localStorage.getItem('studentEmail');
     
     if (studentToken && studentRole === 'student') {
-      // Set student state from token
+      // Set student state from token (no real user object for hardcoded student)
       setUserRole('student');
       setUserName(studentName || 'Student');
       setUser({ id: studentId || 'student-hardcoded', email: studentEmail || '' } as any);
@@ -64,7 +65,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsVerified(verified === 'true');
       const storedPersonalEmail = localStorage.getItem('studentPersonalEmail');
       setPersonalEmail(storedPersonalEmail || null);
-      setIsLoading(false);
+      // Delay setting loading to false to ensure state is propagated
+      setTimeout(() => setIsLoading(false), 0);
       return;
     }
     
@@ -166,8 +168,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('studentEmail');
     localStorage.removeItem('studentVerified');
     localStorage.removeItem('studentPersonalEmail');
-    localStorage.removeItem('studentClass');
-    localStorage.removeItem('studentStream');
     
     // Only sign out from Supabase if there's a real session
     if (session) {

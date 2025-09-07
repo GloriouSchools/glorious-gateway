@@ -2,8 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useNavigate } from "react-router-dom";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { 
   Users, 
   BookOpen, 
@@ -15,13 +14,16 @@ import {
   XCircle,
   AlertCircle,
   BarChart,
-  AlertTriangle
+  Shield,
+  Mail
 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { AccountVerificationForm } from "@/components/auth/AccountVerificationForm";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 export function TeacherDashboard() {
-  const navigate = useNavigate();
-  const personalEmail = localStorage.getItem('teacherPersonalEmail');
-  const isVerified = localStorage.getItem('teacherVerified') === 'true';
+  const { userName, isVerified, personalEmail, user } = useAuth();
+  const [showVerificationDialog, setShowVerificationDialog] = useState(false);
   const stats = [
     { 
       title: "Total Students", 
@@ -83,30 +85,34 @@ export function TeacherDashboard() {
         <p className="text-muted-foreground">Manage your classes and track student progress</p>
       </div>
 
-      {!isVerified && !personalEmail && (
-        <Alert className="border-warning bg-warning/10 animate-slide-down">
-          <AlertTriangle className="h-4 w-4 text-warning" />
-          <AlertDescription className="flex items-center justify-between">
-            <div>
-              <p className="font-semibold mb-1">Account Security Warning</p>
-              <p className="text-sm">
-                You may have limited access to the dashboard and are at risk of losing your account to unauthorized users.
-              </p>
-              <p className="text-sm mt-1">
-                To secure your account, please go to your User Profile and add a personal email address or change your password.
-              </p>
-            </div>
-            <Button 
-              variant="outline" 
-              className="ml-4"
-              onClick={() => navigate('/profile')}
+      {!isVerified && (
+        <Alert className="border-warning bg-warning/10">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Account Verification Required</AlertTitle>
+          <AlertDescription className="space-y-2">
+            <p>Your account has limited access. Please verify your personal email address to unlock all features.</p>
+            <Button
+              size="sm"
+              onClick={() => setShowVerificationDialog(true)}
+              className="mt-2"
             >
-              Go to Settings
+              <Shield className="mr-2 h-4 w-4" />
+              Verify My Account
             </Button>
           </AlertDescription>
         </Alert>
       )}
 
+      {isVerified && personalEmail && (
+        <Alert className="border-success bg-success/10">
+          <CheckCircle className="h-4 w-4 text-success" />
+          <AlertTitle>Account Verified</AlertTitle>
+          <AlertDescription>
+            Thank you for verifying your account! You now have full access to all dashboard features.
+            Your personal email ({personalEmail}) has been verified.
+          </AlertDescription>
+        </Alert>
+      )}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => {
@@ -225,6 +231,11 @@ export function TeacherDashboard() {
         </CardContent>
       </Card>
 
+      <Dialog open={showVerificationDialog} onOpenChange={setShowVerificationDialog}>
+        <DialogContent className="max-w-md">
+          <AccountVerificationForm userType="teacher" />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

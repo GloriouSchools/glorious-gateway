@@ -2,8 +2,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { User, Mail, Phone, Calendar, MapPin } from "lucide-react";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 
 interface PersonalInfoProps {
   userName: string;
@@ -12,62 +10,7 @@ interface PersonalInfoProps {
   personalEmail: string | null;
 }
 
-interface StudentDetails {
-  className: string;
-  streamName: string;
-}
-
 export function PersonalInfo({ userName, userRole, userEmail, personalEmail }: PersonalInfoProps) {
-  const [studentDetails, setStudentDetails] = useState<StudentDetails | null>(null);
-  
-  useEffect(() => {
-    const fetchStudentDetails = async () => {
-      if (userRole === 'student' && userEmail) {
-        try {
-          const { data, error } = await supabase
-            .from('students')
-            .select(`
-              name,
-              email,
-              class_id,
-              stream_id
-            `)
-            .eq('email', userEmail)
-            .single();
-            
-          if (data && !error) {
-            // Fetch class and stream names
-            const { data: classData } = await supabase
-              .from('classes')
-              .select('name')
-              .eq('id', data.class_id)
-              .single();
-              
-            const { data: streamData } = await supabase
-              .from('streams')
-              .select('name')
-              .eq('id', data.stream_id)
-              .single();
-            
-            setStudentDetails({
-              className: classData?.name || localStorage.getItem('studentClass') || 'Not set',
-              streamName: streamData?.name || localStorage.getItem('studentStream') || 'Not set'
-            });
-          } else {
-            // Fallback to localStorage
-            setStudentDetails({
-              className: localStorage.getItem('studentClass') || 'Not set',
-              streamName: localStorage.getItem('studentStream') || 'Not set'
-            });
-          }
-        } catch (error) {
-          console.error('Error fetching student details:', error);
-        }
-      }
-    };
-    
-    fetchStudentDetails();
-  }, [userRole, userEmail]);
   return (
     <Card>
       <CardHeader>
@@ -90,11 +33,11 @@ export function PersonalInfo({ userName, userRole, userEmail, personalEmail }: P
             <>
               <div className="space-y-2">
                 <Label htmlFor="class">Class</Label>
-                <Input id="class" value={studentDetails?.className || "Loading..."} disabled />
+                <Input id="class" value="Form 4" disabled />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="stream">Stream</Label>
-                <Input id="stream" value={studentDetails?.streamName || "Loading..."} disabled />
+                <Input id="stream" value="Science" disabled />
               </div>
             </>
           )}
