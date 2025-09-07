@@ -29,16 +29,35 @@ export function PersonalInfo({ userName, userRole, userEmail, personalEmail }: P
             .select(`
               name,
               email,
-              classes:class_id (name),
-              streams:stream_id (name)
+              class_id,
+              stream_id
             `)
             .eq('email', userEmail)
             .single();
             
           if (data && !error) {
+            // Fetch class and stream names
+            const { data: classData } = await supabase
+              .from('classes')
+              .select('name')
+              .eq('id', data.class_id)
+              .single();
+              
+            const { data: streamData } = await supabase
+              .from('streams')
+              .select('name')
+              .eq('id', data.stream_id)
+              .single();
+            
             setStudentDetails({
-              className: data.classes?.name || '',
-              streamName: data.streams?.name || ''
+              className: classData?.name || localStorage.getItem('studentClass') || 'Not set',
+              streamName: streamData?.name || localStorage.getItem('studentStream') || 'Not set'
+            });
+          } else {
+            // Fallback to localStorage
+            setStudentDetails({
+              className: localStorage.getItem('studentClass') || 'Not set',
+              streamName: localStorage.getItem('studentStream') || 'Not set'
             });
           }
         } catch (error) {

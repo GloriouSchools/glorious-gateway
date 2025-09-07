@@ -97,6 +97,8 @@ export function LoginForm({ schoolLogo }: LoginFormProps) {
         const name = (data as any).name;
         const isVerified = (data as any).is_verified;
         const personalEmail = (data as any).personal_email;
+        const className = (data as any).class_name;
+        const streamName = (data as any).stream_name;
         
         if (role === 'admin') {
           localStorage.setItem('adminToken', token);
@@ -115,6 +117,12 @@ export function LoginForm({ schoolLogo }: LoginFormProps) {
           localStorage.setItem('studentVerified', String(isVerified));
           if (personalEmail) {
             localStorage.setItem('studentPersonalEmail', personalEmail);
+          }
+          if (className) {
+            localStorage.setItem('studentClass', className);
+          }
+          if (streamName) {
+            localStorage.setItem('studentStream', streamName);
           }
         }
         // Add teacher handling later if needed
