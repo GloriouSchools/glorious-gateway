@@ -44,7 +44,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsVerified(verified === 'true');
       const storedPersonalEmail = localStorage.getItem('adminPersonalEmail');
       setPersonalEmail(storedPersonalEmail || null);
-      setIsLoading(false);
+      // Delay setting loading to false to ensure state is propagated
+      setTimeout(() => setIsLoading(false), 0);
       return;
     }
     
@@ -64,7 +65,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsVerified(verified === 'true');
       const storedPersonalEmail = localStorage.getItem('studentPersonalEmail');
       setPersonalEmail(storedPersonalEmail || null);
-      setIsLoading(false);
+      // Delay setting loading to false to ensure state is propagated
+      setTimeout(() => setIsLoading(false), 0);
       return;
     }
     
