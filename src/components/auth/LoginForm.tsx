@@ -121,8 +121,9 @@ export function LoginForm({ schoolLogo }: LoginFormProps) {
         
         toast.success(`Welcome, ${name}!`);
         
-        // Force a page reload to ensure auth state is properly initialized
-        window.location.href = '/';
+        // Navigate smoothly without page reload
+        navigate('/');
+        setIsLoading(false);
         return;
       } else {
         toast.error((data as any)?.message || "Invalid credentials");

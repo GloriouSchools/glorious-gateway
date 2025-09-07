@@ -26,6 +26,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarFooter,
+  SidebarHeader,
+  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import defaultAvatar from "@/assets/default-avatar.png";
@@ -88,8 +90,8 @@ export function AppSidebar({ userRole, userName, onLogout }: AppSidebarProps) {
 
   return (
     <Sidebar className="border-r">
-      <SidebarContent>
-        <div className="p-4 border-b">
+      <SidebarHeader className="border-b">
+        <div className="flex items-center justify-between p-2">
           <div className="flex items-center gap-3">
             <Avatar>
               <AvatarImage src={defaultAvatar} />
@@ -102,7 +104,10 @@ export function AppSidebar({ userRole, userName, onLogout }: AppSidebarProps) {
               <p className="text-xs text-muted-foreground capitalize">{userRole}</p>
             </div>
           </div>
+          <SidebarTrigger className="h-8 w-8" />
         </div>
+      </SidebarHeader>
+      <SidebarContent>
 
         <SidebarGroup>
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>

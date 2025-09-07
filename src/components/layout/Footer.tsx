@@ -94,7 +94,7 @@ export function Footer() {
 
           {/* Contact Info */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-foreground">Contact Us</h3>
+            <h3 className="text-lg font-semibold text-foreground">Get in Touch</h3>
             <ul className="space-y-2">
               <li className="flex items-start space-x-2">
                 <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
@@ -106,8 +106,8 @@ export function Footer() {
               <li className="flex items-start space-x-2">
                 <Phone className="h-4 w-4 text-muted-foreground mt-0.5" />
                 <span className="text-sm text-muted-foreground">
-                  +256 772 907 220<br />
-                  020 090 0124
+                  <a href="tel:+256772907220" className="hover:text-primary transition-colors">+256 772 907 220</a><br />
+                  <a href="tel:0200900124" className="hover:text-primary transition-colors">020 090 0124</a>
                 </span>
               </li>
               <li className="flex items-start space-x-2">
@@ -119,7 +119,9 @@ export function Footer() {
               </li>
               <li className="flex items-center space-x-2">
                 <Mail className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">gloriousschools14@gmail.com</span>
+                <a href="mailto:gloriousschools14@gmail.com" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  gloriousschools14@gmail.com
+                </a>
               </li>
             </ul>
           </div>
@@ -155,17 +157,12 @@ export function Footer() {
             <p className="text-sm text-muted-foreground">
               © {currentYear} Glorious Schools. All rights reserved.
             </p>
-            <p className="text-sm text-muted-foreground flex items-center gap-1">
-              Created with{" "}
-              <span className="inline-block animate-pulse-heart text-primary">❤️</span>{" "}
-              by{" "}
-              <a
-                href="https://fresh-teacher.github.io"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:text-primary-hover underline transition-colors"
-              >
-                Fresh Teacher
+            <p className="text-sm text-muted-foreground">
+              Developed by: 
+              <a href="tel:+256750687790" className="hover:text-primary transition-colors ml-1">0750687790</a> / 
+              <a href="tel:+256786812837" className="hover:text-primary transition-colors ml-1">0786812837</a> | 
+              <a href="mailto:paulmutumbajesse@gmail.com" className="hover:text-primary transition-colors ml-1">
+                paulmutumbajesse@gmail.com
               </a>
             </p>
           </div>

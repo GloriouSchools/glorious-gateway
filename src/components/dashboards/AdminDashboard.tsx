@@ -1,8 +1,8 @@
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useNavigate } from "react-router-dom";
 import { 
   Users, 
   GraduationCap, 
@@ -16,16 +16,13 @@ import {
   Calendar,
   Building,
   Activity,
-  Shield,
-  Mail
+  AlertTriangle
 } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
-import { AccountVerificationForm } from "@/components/auth/AccountVerificationForm";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 export function AdminDashboard() {
-  const { userName, isVerified, personalEmail, user } = useAuth();
-  const [showVerificationDialog, setShowVerificationDialog] = useState(false);
+  const navigate = useNavigate();
+  const personalEmail = localStorage.getItem('adminPersonalEmail');
+  const isVerified = localStorage.getItem('adminVerified') === 'true';
   const stats = [
     { 
       title: "Total Students", 
@@ -97,47 +94,30 @@ export function AdminDashboard() {
         </div>
       </div>
 
-      {/* Verification Alert */}
-      {isVerified ? (
-        <Alert className="border-success">
-          <CheckCircle className="h-4 w-4 text-success" />
-          <AlertTitle>Account Verified</AlertTitle>
-          <AlertDescription>
-            Thank you for verifying your account with your personal email: {personalEmail}. 
-            You now have full access to all administrative features.
-          </AlertDescription>
-        </Alert>
-      ) : (
-        <Alert className="border-warning">
-          <Shield className="h-4 w-4 text-warning" />
-          <AlertTitle>Limited Access</AlertTitle>
-          <AlertDescription className="space-y-3">
-            <p>Your admin account is not verified. You have limited access to administrative features.</p>
-            <p>To gain full access, please verify your account with your personal email address (gloriousschools14@gmail.com).</p>
+      {!isVerified && !personalEmail && (
+        <Alert className="border-warning bg-warning/10 animate-slide-down">
+          <AlertTriangle className="h-4 w-4 text-warning" />
+          <AlertDescription className="flex items-center justify-between">
+            <div>
+              <p className="font-semibold mb-1">Account Security Warning</p>
+              <p className="text-sm">
+                You may have limited access to the dashboard and are at risk of losing your account to unauthorized users.
+              </p>
+              <p className="text-sm mt-1">
+                To secure your account, please go to your User Profile and add a personal email address or change your password.
+              </p>
+            </div>
             <Button 
-              onClick={() => setShowVerificationDialog(true)}
-              className="gap-2"
+              variant="outline" 
+              className="ml-4"
+              onClick={() => navigate('/profile')}
             >
-              <Mail className="h-4 w-4" />
-              Verify My Account
+              Go to Settings
             </Button>
           </AlertDescription>
         </Alert>
       )}
 
-      {/* Verification Dialog */}
-      <Dialog open={showVerificationDialog} onOpenChange={setShowVerificationDialog}>
-        <DialogContent className="sm:max-w-md">
-          <AccountVerificationForm 
-            userType="admin"
-            userId="00000000-0000-0000-0000-000000000001"
-            userName={userName}
-            onVerificationComplete={() => {
-              setShowVerificationDialog(false);
-            }}
-          />
-        </DialogContent>
-      </Dialog>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => {
