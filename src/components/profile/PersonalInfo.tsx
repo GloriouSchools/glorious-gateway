@@ -2,6 +2,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { User, Mail, Phone, Calendar, MapPin } from "lucide-react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PersonalInfoProps {
   userName: string;
@@ -10,7 +12,43 @@ interface PersonalInfoProps {
   personalEmail: string | null;
 }
 
+interface StudentDetails {
+  className: string;
+  streamName: string;
+}
+
 export function PersonalInfo({ userName, userRole, userEmail, personalEmail }: PersonalInfoProps) {
+  const [studentDetails, setStudentDetails] = useState<StudentDetails | null>(null);
+  
+  useEffect(() => {
+    const fetchStudentDetails = async () => {
+      if (userRole === 'student' && userEmail) {
+        try {
+          const { data, error } = await supabase
+            .from('students')
+            .select(`
+              name,
+              email,
+              classes:class_id (name),
+              streams:stream_id (name)
+            `)
+            .eq('email', userEmail)
+            .single();
+            
+          if (data && !error) {
+            setStudentDetails({
+              className: data.classes?.name || '',
+              streamName: data.streams?.name || ''
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching student details:', error);
+        }
+      }
+    };
+    
+    fetchStudentDetails();
+  }, [userRole, userEmail]);
   return (
     <Card>
       <CardHeader>
@@ -33,11 +71,11 @@ export function PersonalInfo({ userName, userRole, userEmail, personalEmail }: P
             <>
               <div className="space-y-2">
                 <Label htmlFor="class">Class</Label>
-                <Input id="class" value="Form 4" disabled />
+                <Input id="class" value={studentDetails?.className || "Loading..."} disabled />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="stream">Stream</Label>
-                <Input id="stream" value="Science" disabled />
+                <Input id="stream" value={studentDetails?.streamName || "Loading..."} disabled />
               </div>
             </>
           )}

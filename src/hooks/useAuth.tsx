@@ -57,7 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const studentEmail = localStorage.getItem('studentEmail');
     
     if (studentToken && studentRole === 'student') {
-      // Set student state from token (no real user object for hardcoded student)
+      // Set student state from token
       setUserRole('student');
       setUserName(studentName || 'Student');
       setUser({ id: studentId || 'student-hardcoded', email: studentEmail || '' } as any);
@@ -65,8 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsVerified(verified === 'true');
       const storedPersonalEmail = localStorage.getItem('studentPersonalEmail');
       setPersonalEmail(storedPersonalEmail || null);
-      // Delay setting loading to false to ensure state is propagated
-      setTimeout(() => setIsLoading(false), 0);
+      setIsLoading(false);
       return;
     }
     

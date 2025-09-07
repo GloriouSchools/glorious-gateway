@@ -121,9 +121,11 @@ export function LoginForm({ schoolLogo }: LoginFormProps) {
         
         toast.success(`Welcome, ${name}!`);
         
-        // Navigate smoothly without page reload
-        navigate('/');
-        setIsLoading(false);
+        // Navigate after a brief delay to ensure state is updated
+        setTimeout(() => {
+          navigate('/', { replace: true });
+        }, 100);
+        
         return;
       } else {
         toast.error((data as any)?.message || "Invalid credentials");
