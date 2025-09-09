@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
 import { 
   BookOpen, 
   ClipboardList, 
@@ -14,15 +15,28 @@ import {
   CheckCircle,
   AlertCircle,
   Shield,
-  Mail
+  Mail,
+  Loader2
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { AccountVerificationForm } from "@/components/auth/AccountVerificationForm";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 export function StudentDashboard() {
-  const { userName, isVerified, personalEmail, user } = useAuth();
+  const { userName, isVerified, personalEmail, user, isLoading } = useAuth();
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
+
+  // Show loading state while authentication is being resolved
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+          <p className="text-muted-foreground">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
   
   const stats = [
     { 
@@ -76,33 +90,6 @@ export function StudentDashboard() {
         <p className="text-muted-foreground">Here's an overview of your academic progress</p>
       </div>
 
-      {/* Verification Alert */}
-      {isVerified ? (
-        <Alert className="border-success">
-          <CheckCircle className="h-4 w-4 text-success" />
-          <AlertTitle>Account Verified</AlertTitle>
-          <AlertDescription>
-            Thank you for verifying your account with your personal email: {personalEmail}. 
-            You now have full access to all dashboard features.
-          </AlertDescription>
-        </Alert>
-      ) : (
-        <Alert className="border-warning">
-          <Shield className="h-4 w-4 text-warning" />
-          <AlertTitle>Account Security Warning</AlertTitle>
-          <AlertDescription className="space-y-3">
-            <p>You may have limited access to the dashboard and are at risk of losing your account to unauthorized users.</p>
-            <p>To secure your account, please go to your User Profile and add a personal email address or change your password.</p>
-            <Button 
-              onClick={() => window.location.href = '/profile'}
-              className="gap-2"
-            >
-              <Shield className="h-4 w-4" />
-              Go to Settings
-            </Button>
-          </AlertDescription>
-        </Alert>
-      )}
 
       {/* Verification Dialog */}
       <Dialog open={showVerificationDialog} onOpenChange={setShowVerificationDialog}>

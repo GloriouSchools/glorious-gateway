@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Users, 
   BookOpen, 
@@ -15,15 +16,28 @@ import {
   AlertCircle,
   BarChart,
   Shield,
-  Mail
+  Mail,
+  Loader2
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { AccountVerificationForm } from "@/components/auth/AccountVerificationForm";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 export function TeacherDashboard() {
-  const { userName, isVerified, personalEmail, user } = useAuth();
+  const { userName, isVerified, personalEmail, user, isLoading } = useAuth();
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
+
+  // Show loading state while authentication is being resolved
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+          <p className="text-muted-foreground">Loading teacher dashboard...</p>
+        </div>
+      </div>
+    );
+  }
   const stats = [
     { 
       title: "Total Students", 
@@ -85,34 +99,6 @@ export function TeacherDashboard() {
         <p className="text-muted-foreground">Manage your classes and track student progress</p>
       </div>
 
-      {!isVerified && (
-        <Alert className="border-warning bg-warning/10">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Account Verification Required</AlertTitle>
-          <AlertDescription className="space-y-2">
-            <p>Your account has limited access. Please verify your personal email address to unlock all features.</p>
-            <Button
-              size="sm"
-              onClick={() => setShowVerificationDialog(true)}
-              className="mt-2"
-            >
-              <Shield className="mr-2 h-4 w-4" />
-              Verify My Account
-            </Button>
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {isVerified && personalEmail && (
-        <Alert className="border-success bg-success/10">
-          <CheckCircle className="h-4 w-4 text-success" />
-          <AlertTitle>Account Verified</AlertTitle>
-          <AlertDescription>
-            Thank you for verifying your account! You now have full access to all dashboard features.
-            Your personal email ({personalEmail}) has been verified.
-          </AlertDescription>
-        </Alert>
-      )}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => {

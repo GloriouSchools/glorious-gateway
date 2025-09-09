@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Users, 
   GraduationCap, 
@@ -17,15 +18,28 @@ import {
   Building,
   Activity,
   Shield,
-  Mail
+  Mail,
+  Loader2
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { AccountVerificationForm } from "@/components/auth/AccountVerificationForm";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 export function AdminDashboard() {
-  const { userName, isVerified, personalEmail, user } = useAuth();
+  const { userName, isVerified, personalEmail, user, isLoading } = useAuth();
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
+
+  // Show loading state while authentication is being resolved
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+          <p className="text-muted-foreground">Loading admin dashboard...</p>
+        </div>
+      </div>
+    );
+  }
   const stats = [
     { 
       title: "Total Students", 
@@ -97,33 +111,6 @@ export function AdminDashboard() {
         </div>
       </div>
 
-      {/* Verification Alert */}
-      {isVerified ? (
-        <Alert className="border-success">
-          <CheckCircle className="h-4 w-4 text-success" />
-          <AlertTitle>Account Verified</AlertTitle>
-          <AlertDescription>
-            Thank you for verifying your account with your personal email: {personalEmail}. 
-            You now have full access to all administrative features.
-          </AlertDescription>
-        </Alert>
-      ) : (
-        <Alert className="border-warning">
-          <Shield className="h-4 w-4 text-warning" />
-          <AlertTitle>Limited Access</AlertTitle>
-          <AlertDescription className="space-y-3">
-            <p>Your admin account is not verified. You have limited access to administrative features.</p>
-            <p>To gain full access, please verify your account with your personal email address (gloriousschools14@gmail.com).</p>
-            <Button 
-              onClick={() => setShowVerificationDialog(true)}
-              className="gap-2"
-            >
-              <Mail className="h-4 w-4" />
-              Verify My Account
-            </Button>
-          </AlertDescription>
-        </Alert>
-      )}
 
       {/* Verification Dialog */}
       <Dialog open={showVerificationDialog} onOpenChange={setShowVerificationDialog}>
@@ -150,17 +137,6 @@ export function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stat.value}</div>
-                <div className="flex items-center text-xs">
-                  {stat.trend === "up" ? (
-                    <TrendingUp className="h-3 w-3 text-success mr-1" />
-                  ) : (
-                    <TrendingDown className="h-3 w-3 text-destructive mr-1" />
-                  )}
-                  <span className={stat.trend === "up" ? "text-success" : "text-destructive"}>
-                    {stat.change}
-                  </span>
-                  <span className="text-muted-foreground ml-1">from last month</span>
-                </div>
               </CardContent>
             </Card>
           );

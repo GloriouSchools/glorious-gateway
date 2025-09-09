@@ -10,6 +10,7 @@ interface AuthContextType {
   session: Session | null;
   userRole: UserRole | null;
   userName: string;
+  photoUrl: string | null;
   isLoading: boolean;
   isVerified: boolean;
   personalEmail: string | null;
@@ -25,6 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [userName, setUserName] = useState("");
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isVerified, setIsVerified] = useState(false);
   const [personalEmail, setPersonalEmail] = useState<string | null>(null);
@@ -44,7 +46,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsVerified(verified === 'true');
       const storedPersonalEmail = localStorage.getItem('adminPersonalEmail');
       setPersonalEmail(storedPersonalEmail || null);
-      setIsLoading(false);
+      // Delay setting loading to false to ensure state is propagated
+      setTimeout(() => setIsLoading(false), 0);
+      return;
+    }
+    
+    // Check for teacher token
+    const teacherToken = localStorage.getItem('teacherToken');
+    const teacherRole = localStorage.getItem('teacherRole');
+    const teacherName = localStorage.getItem('teacherName');
+    const teacherId = localStorage.getItem('teacherId');
+    const teacherEmail = localStorage.getItem('teacherEmail');
+    
+    if (teacherToken && teacherRole === 'teacher') {
+      // Set teacher state from token (no real user object for hardcoded teacher)
+      setUserRole('teacher');
+      setUserName(teacherName || 'Teacher');
+      setUser({ id: teacherId || 'teacher-hardcoded', email: teacherEmail || '' } as any);
+      const verified = localStorage.getItem('teacherVerified');
+      setIsVerified(verified === 'true');
+      const storedPersonalEmail = localStorage.getItem('teacherPersonalEmail');
+      setPersonalEmail(storedPersonalEmail || null);
+      // Delay setting loading to false to ensure state is propagated
+      setTimeout(() => setIsLoading(false), 0);
       return;
     }
     
@@ -64,7 +88,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsVerified(verified === 'true');
       const storedPersonalEmail = localStorage.getItem('studentPersonalEmail');
       setPersonalEmail(storedPersonalEmail || null);
-      setIsLoading(false);
+      const storedPhotoUrl = localStorage.getItem('studentPhotoUrl');
+      setPhotoUrl(storedPhotoUrl || null);
+      // Delay setting loading to false to ensure state is propagated
+      setTimeout(() => setIsLoading(false), 0);
       return;
     }
     
@@ -101,25 +128,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchUserProfile = async (userId: string) => {
     try {
-      // Fetch profile
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('full_name')
+      // For students, fetch from students table
+      const { data: student, error: studentError } = await supabase
+        .from('students')
+        .select('name, photo_url')
         .eq('id', userId)
         .single();
 
-      if (profileError) throw profileError;
-      setUserName(profile?.full_name || "");
+      if (!studentError && student) {
+        setUserName(student.name || "");
+        setUserRole('student');
+        setPhotoUrl(student.photo_url || null);
+        return;
+      }
 
-      // Fetch role
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId)
+      // For teachers, fetch from teachers table
+      const { data: teacher, error: teacherError } = await supabase
+        .from('teachers')
+        .select('name')
+        .eq('id', userId)
         .single();
 
-      if (roleError && roleError.code !== 'PGRST116') throw roleError;
-      setUserRole(roleData?.role as UserRole || 'student');
+      if (!teacherError && teacher) {
+        setUserName(teacher.name || "");
+        setUserRole('teacher');
+        return;
+      }
+
+      // For admins, fetch from admins table
+      const { data: admin, error: adminError } = await supabase
+        .from('admins')
+        .select('name')
+        .eq('id', userId)
+        .single();
+
+      if (!adminError && admin) {
+        setUserName(admin.name || "");
+        setUserRole('admin');
+        return;
+      }
     } catch (error) {
       console.error('Error fetching user profile:', error);
     }
@@ -158,6 +205,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('adminVerified');
     localStorage.removeItem('adminPersonalEmail');
     
+    // Clear teacher session if present
+    localStorage.removeItem('teacherToken');
+    localStorage.removeItem('teacherRole');
+    localStorage.removeItem('teacherName');
+    localStorage.removeItem('teacherId');
+    localStorage.removeItem('teacherEmail');
+    localStorage.removeItem('teacherVerified');
+    localStorage.removeItem('teacherPersonalEmail');
+    
     // Clear student session if present
     localStorage.removeItem('studentToken');
     localStorage.removeItem('studentRole');
@@ -166,6 +222,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('studentEmail');
     localStorage.removeItem('studentVerified');
     localStorage.removeItem('studentPersonalEmail');
+    localStorage.removeItem('studentPhotoUrl');
     
     // Only sign out from Supabase if there's a real session
     if (session) {
@@ -177,6 +234,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setSession(null);
     setUserRole(null);
     setUserName("");
+    setPhotoUrl(null);
     setIsVerified(false);
     setPersonalEmail(null);
   };
@@ -187,6 +245,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       session,
       userRole,
       userName,
+      photoUrl,
       isLoading,
       isVerified,
       personalEmail,

@@ -34,10 +34,11 @@ import { UserRole } from "@/types/user";
 interface AppSidebarProps {
   userRole: UserRole;
   userName: string;
+  photoUrl?: string | null;
   onLogout: () => void;
 }
 
-export function AppSidebar({ userRole, userName, onLogout }: AppSidebarProps) {
+export function AppSidebar({ userRole, userName, photoUrl, onLogout }: AppSidebarProps) {
   const getMenuItems = () => {
     const commonItems = [
       { title: "Dashboard", icon: Home, url: `/${userRole}` },
@@ -92,7 +93,7 @@ export function AppSidebar({ userRole, userName, onLogout }: AppSidebarProps) {
         <div className="p-4 border-b">
           <div className="flex items-center gap-3">
             <Avatar>
-              <AvatarImage src={defaultAvatar} />
+              <AvatarImage src={photoUrl || defaultAvatar} />
               <AvatarFallback>
                 <img src={defaultAvatar} alt="User avatar" className="h-full w-full object-cover" />
               </AvatarFallback>

@@ -1,15 +1,14 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useNavigate } from "react-router-dom";
-import { PersonalInfo } from "@/components/profile/PersonalInfo";
+import { PersonalInfo } from "@/components/profile/PersonalInfoWithDatabase";
 import { DangerZone } from "@/components/profile/DangerZone";
-import defaultAvatar from "@/assets/default-avatar.png";
+import { PhotoDialog } from "@/components/ui/photo-dialog";
 
 export default function UserProfile() {
-  const { userRole, userName, signOut, personalEmail, user } = useAuth();
+  const { userRole, userName, photoUrl, signOut, personalEmail, user } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -23,18 +22,13 @@ export default function UserProfile() {
   };
 
   return (
-    <DashboardLayout userRole={userRole || "student"} userName={userName} onLogout={handleLogout}>
+    <DashboardLayout userRole={userRole || "student"} userName={userName} photoUrl={photoUrl} onLogout={handleLogout}>
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Profile Header */}
         <Card>
           <CardHeader>
             <div className="flex items-center space-x-4">
-              <Avatar className="h-20 w-20">
-                <AvatarImage src={defaultAvatar} />
-                <AvatarFallback>
-                  <img src={defaultAvatar} alt="User avatar" className="h-full w-full object-cover" />
-                </AvatarFallback>
-              </Avatar>
+              <PhotoDialog photoUrl={photoUrl} userName={userName} />
               <div>
                 <CardTitle className="text-2xl">{userName}</CardTitle>
                 <CardDescription className="capitalize">{userRole} Account</CardDescription>

@@ -1,13 +1,13 @@
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { StudentDashboard } from "@/components/dashboards/StudentDashboard";
 import { TeacherDashboard } from "@/components/dashboards/TeacherDashboard";
-import { AdminDashboard } from "@/components/dashboards/AdminDashboard";
+import { AdminDashboard } from "@/components/dashboards/AdminDashboardWithDatabase";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
 const Index = () => {
-  const { userRole, userName, signOut } = useAuth();
+  const { userRole, userName, photoUrl, signOut } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -34,7 +34,7 @@ const Index = () => {
   };
 
   return (
-    <DashboardLayout userRole={userRole || "student"} userName={userName} onLogout={handleLogout}>
+    <DashboardLayout userRole={userRole || "student"} userName={userName} photoUrl={photoUrl} onLogout={handleLogout}>
       {renderDashboard()}
     </DashboardLayout>
   );

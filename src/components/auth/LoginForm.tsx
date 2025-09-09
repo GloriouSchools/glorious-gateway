@@ -80,8 +80,8 @@ export function LoginForm({ schoolLogo }: LoginFormProps) {
       // Use the flexible login function that handles all user types
       const { data, error } = await supabase
         .rpc('verify_flexible_login', {
-          input_email: signInData.email,
-          input_password: signInData.password
+          p_identifier: signInData.email,
+          p_password: signInData.password
         });
       
       if (error) {
@@ -106,6 +106,16 @@ export function LoginForm({ schoolLogo }: LoginFormProps) {
           if (personalEmail) {
             localStorage.setItem('adminPersonalEmail', personalEmail);
           }
+        } else if (role === 'teacher') {
+          localStorage.setItem('teacherToken', token);
+          localStorage.setItem('teacherRole', role);
+          localStorage.setItem('teacherName', name);
+          localStorage.setItem('teacherId', (data as any).teacher_id);
+          localStorage.setItem('teacherEmail', (data as any).email);
+          localStorage.setItem('teacherVerified', String(isVerified));
+          if (personalEmail) {
+            localStorage.setItem('teacherPersonalEmail', personalEmail);
+          }
         } else if (role === 'student') {
           localStorage.setItem('studentToken', token);
           localStorage.setItem('studentRole', role);
@@ -116,17 +126,15 @@ export function LoginForm({ schoolLogo }: LoginFormProps) {
           if (personalEmail) {
             localStorage.setItem('studentPersonalEmail', personalEmail);
           }
+          if ((data as any).photo_url) {
+            localStorage.setItem('studentPhotoUrl', (data as any).photo_url);
+          }
         }
-        // Add teacher handling later if needed
         
         toast.success(`Welcome, ${name}!`);
         
-        // Navigate to dashboard
-        setTimeout(() => {
-          navigate('/');
-        }, 100);
-        
-        setIsLoading(false);
+        // Force a page reload to ensure auth state is properly initialized
+        window.location.href = '/';
         return;
       } else {
         toast.error((data as any)?.message || "Invalid credentials");

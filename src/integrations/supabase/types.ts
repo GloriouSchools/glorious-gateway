@@ -14,95 +14,59 @@ export type Database = {
   }
   public: {
     Tables: {
-      admin_profiles: {
+      admins: {
         Row: {
           created_at: string | null
+          email: string
           id: string
           is_verified: boolean | null
+          name: string
+          password_hash: string
           personal_email: string | null
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
+          email: string
           id?: string
           is_verified?: boolean | null
+          name: string
+          password_hash: string
           personal_email?: string | null
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
+          email?: string
           id?: string
           is_verified?: boolean | null
+          name?: string
+          password_hash?: string
           personal_email?: string | null
           updated_at?: string | null
-        }
-        Relationships: []
-      }
-      admin_sessions: {
-        Row: {
-          created_at: string
-          expires_at: string
-          id: string
-          token: string
-        }
-        Insert: {
-          created_at?: string
-          expires_at?: string
-          id?: string
-          token: string
-        }
-        Update: {
-          created_at?: string
-          expires_at?: string
-          id?: string
-          token?: string
         }
         Relationships: []
       }
       classes: {
         Row: {
           created_at: string
+          description: string | null
           id: string
           name: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          name: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          name?: string
-        }
-        Relationships: []
-      }
-      profiles: {
-        Row: {
-          created_at: string
-          email: string | null
-          full_name: string | null
-          id: string
-          is_account_secured: boolean | null
-          personal_email: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
-          email?: string | null
-          full_name?: string | null
-          id: string
-          is_account_secured?: boolean | null
-          personal_email?: string | null
+          description?: string | null
+          id?: string
+          name: string
           updated_at?: string
         }
         Update: {
           created_at?: string
-          email?: string | null
-          full_name?: string | null
+          description?: string | null
           id?: string
-          is_account_secured?: boolean | null
-          personal_email?: string | null
+          name?: string
           updated_at?: string
         }
         Relationships: []
@@ -111,20 +75,26 @@ export type Database = {
         Row: {
           class_id: string
           created_at: string
+          description: string | null
           id: string
           name: string
+          updated_at: string
         }
         Insert: {
           class_id: string
           created_at?: string
+          description?: string | null
           id?: string
           name: string
+          updated_at?: string
         }
         Update: {
           class_id?: string
           created_at?: string
+          description?: string | null
           id?: string
           name?: string
+          updated_at?: string
         }
         Relationships: [
           {
@@ -136,176 +106,96 @@ export type Database = {
           },
         ]
       }
-      student_sessions: {
-        Row: {
-          created_at: string
-          expires_at: string
-          id: string
-          student_id: string
-          token: string
-        }
-        Insert: {
-          created_at?: string
-          expires_at?: string
-          id?: string
-          student_id: string
-          token: string
-        }
-        Update: {
-          created_at?: string
-          expires_at?: string
-          id?: string
-          student_id?: string
-          token?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "student_sessions_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       students: {
         Row: {
-          class_id: string
-          created_at: string
+          class_id: string | null
+          created_at: string | null
           email: string | null
-          id: string
+          id: string | null
           is_verified: boolean | null
-          name: string
+          name: string | null
           password_hash: string | null
           personal_email: string | null
           photo_url: string | null
-          stream_id: string
+          stream_id: string | null
         }
         Insert: {
-          class_id: string
-          created_at?: string
+          class_id?: string | null
+          created_at?: string | null
           email?: string | null
-          id?: string
+          id?: string | null
           is_verified?: boolean | null
-          name: string
+          name?: string | null
           password_hash?: string | null
           personal_email?: string | null
           photo_url?: string | null
-          stream_id: string
+          stream_id?: string | null
         }
         Update: {
-          class_id?: string
-          created_at?: string
+          class_id?: string | null
+          created_at?: string | null
           email?: string | null
-          id?: string
+          id?: string | null
           is_verified?: boolean | null
-          name?: string
+          name?: string | null
           password_hash?: string | null
           personal_email?: string | null
           photo_url?: string | null
-          stream_id?: string
+          stream_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "students_class_id_fkey"
-            columns: ["class_id"]
-            isOneToOne: false
-            referencedRelation: "classes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "students_stream_id_fkey"
-            columns: ["stream_id"]
-            isOneToOne: false
-            referencedRelation: "streams"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      teacher_classes: {
-        Row: {
-          class_id: string
-          created_at: string
-          id: string
-          teacher_id: string
-        }
-        Insert: {
-          class_id: string
-          created_at?: string
-          id?: string
-          teacher_id: string
-        }
-        Update: {
-          class_id?: string
-          created_at?: string
-          id?: string
-          teacher_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "teacher_classes_class_id_fkey"
-            columns: ["class_id"]
-            isOneToOne: false
-            referencedRelation: "classes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "teacher_classes_teacher_id_fkey"
-            columns: ["teacher_id"]
-            isOneToOne: false
-            referencedRelation: "teachers"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       teachers: {
         Row: {
-          created_at: string
+          created_at: string | null
+          email: string
           id: string
           is_verified: boolean | null
           name: string
           password_hash: string | null
           personal_email: string | null
-          photo_url: string | null
-          subjects: string[]
+          teacher_id: string
+          updated_at: string | null
         }
         Insert: {
-          created_at?: string
+          created_at?: string | null
+          email: string
           id?: string
           is_verified?: boolean | null
           name: string
           password_hash?: string | null
           personal_email?: string | null
-          photo_url?: string | null
-          subjects?: string[]
+          teacher_id: string
+          updated_at?: string | null
         }
         Update: {
-          created_at?: string
+          created_at?: string | null
+          email?: string
           id?: string
           is_verified?: boolean | null
           name?: string
           password_hash?: string | null
           personal_email?: string | null
-          photo_url?: string | null
-          subjects?: string[]
+          teacher_id?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
       user_roles: {
         Row: {
-          created_at: string
+          created_at: string | null
           id: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Insert: {
-          created_at?: string
+          created_at?: string | null
           id?: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Update: {
-          created_at?: string
+          created_at?: string | null
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
@@ -317,6 +207,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_table_count: {
+        Args: { table_name: string }
+        Returns: number
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -324,44 +218,12 @@ export type Database = {
         }
         Returns: boolean
       }
-      update_student_password: {
-        Args: {
-          p_password_hash: string
-          p_personal_email: string
-          p_student_id: string
-        }
-        Returns: Json
-      }
-      validate_admin_token: {
-        Args: { input_token: string }
-        Returns: boolean
-      }
-      validate_student_exists: {
-        Args: {
-          p_class_id: string
-          p_stream_id: string
-          p_student_name: string
-        }
-        Returns: boolean
-      }
-      validate_student_token: {
-        Args: { input_token: string }
-        Returns: Json
-      }
-      validate_teacher_exists: {
-        Args: { p_teacher_name: string }
-        Returns: boolean
-      }
-      verify_admin_login: {
-        Args: { input_email: string; input_password: string }
+      test_admin_access: {
+        Args: { p_email: string }
         Returns: Json
       }
       verify_flexible_login: {
-        Args: { input_email: string; input_password: string }
-        Returns: Json
-      }
-      verify_student_login: {
-        Args: { input_email: string; input_password: string }
+        Args: { p_identifier: string; p_password: string }
         Returns: Json
       }
       verify_user_account: {
@@ -370,11 +232,11 @@ export type Database = {
           p_user_id: string
           p_user_type: string
         }
-        Returns: Json
+        Returns: undefined
       }
     }
     Enums: {
-      app_role: "student" | "teacher" | "admin"
+      app_role: "admin" | "teacher" | "student"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -502,7 +364,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["student", "teacher", "admin"],
+      app_role: ["admin", "teacher", "student"],
     },
   },
 } as const
