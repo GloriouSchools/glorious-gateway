@@ -22,15 +22,30 @@ export function VerifyCallback() {
           const { userType, userId, personalEmail } = JSON.parse(pendingVerification);
           
           try {
-            // Call the database function to update the verification status
-            const { error } = await supabase.rpc('verify_user_account', {
-              p_user_type: userType,
-              p_user_id: userId,
-              p_personal_email: personalEmail
-            });
+            // Update verification status to true (personal email was already set)
+            let updateError = null;
+            if (userType === 'student') {
+              const { error } = await supabase
+                .from('students')
+                .update({ is_verified: true })
+                .eq('id', userId);
+              updateError = error;
+            } else if (userType === 'teacher') {
+              const { error } = await supabase
+                .from('teachers')
+                .update({ is_verified: true })
+                .eq('id', userId);
+              updateError = error;
+            } else if (userType === 'admin') {
+              const { error } = await supabase
+                .from('admins')
+                .update({ is_verified: true })
+                .eq('id', userId);
+              updateError = error;
+            }
             
-            if (error) {
-              console.error('Verification error:', error);
+            if (updateError) {
+              console.error('Verification error:', updateError);
               toast.error("Failed to verify account. Please try again.");
             } else {
               // Clear the pending verification
@@ -43,8 +58,10 @@ export function VerifyCallback() {
               } else if (userType === 'student') {
                 localStorage.setItem('studentVerified', 'true');
                 localStorage.setItem('studentPersonalEmail', personalEmail);
+              } else if (userType === 'teacher') {
+                localStorage.setItem('teacherVerified', 'true');
+                localStorage.setItem('teacherPersonalEmail', personalEmail);
               }
-              // Teacher handling can be added later
               
               toast.success("Your account has been successfully verified!");
             }

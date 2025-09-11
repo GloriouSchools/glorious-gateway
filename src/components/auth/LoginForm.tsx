@@ -50,6 +50,31 @@ export function LoginForm({ schoolLogo }: LoginFormProps) {
     email: "",
     password: "",
   });
+
+  // Clear form data when component mounts or on logout for security
+  useEffect(() => {
+    const clearFormData = () => {
+      setSignInData({
+        email: "",
+        password: "",
+      });
+      setRecoveryEmail("");
+      setEmailError("");
+      setShowPassword(false);
+      setRememberMe(false);
+    };
+
+    // Clear on mount
+    clearFormData();
+
+    // Listen for logout event
+    const handleClearFormData = () => clearFormData();
+    window.addEventListener('clearFormData', handleClearFormData);
+
+    return () => {
+      window.removeEventListener('clearFormData', handleClearFormData);
+    };
+  }, []);
   
   // Email validation function
   const validateEmail = (email: string) => {
@@ -92,49 +117,62 @@ export function LoginForm({ schoolLogo }: LoginFormProps) {
       
       if (data && typeof data === 'object' && 'success' in data && data.success) {
         // Store session info based on role
-        const role = (data as any).role;
-        const token = (data as any).token;
-        const name = (data as any).name;
-        const isVerified = (data as any).is_verified;
-        const personalEmail = (data as any).personal_email;
+        const userType = (data as any).user_type;
+        const userData = (data as any).user_data;
+        const name = userData.name;
+        const isVerified = userData.is_verified;
+        const personalEmail = userData.personal_email;
+        const photoUrl = userData.photo_url;
+        const email = userData.email;
+        const userId = userData.id;
         
-        if (role === 'admin') {
-          localStorage.setItem('adminToken', token);
-          localStorage.setItem('adminRole', role);
+        if (userType === 'admin') {
+          localStorage.setItem('adminToken', 'admin-token-' + userId);
+          localStorage.setItem('adminRole', 'admin');
           localStorage.setItem('adminName', name);
           localStorage.setItem('adminVerified', String(isVerified));
+          localStorage.setItem('adminId', userId);
+          localStorage.setItem('adminEmail', email);
           if (personalEmail) {
             localStorage.setItem('adminPersonalEmail', personalEmail);
           }
-        } else if (role === 'teacher') {
-          localStorage.setItem('teacherToken', token);
-          localStorage.setItem('teacherRole', role);
+        } else if (userType === 'teacher') {
+          localStorage.setItem('teacherToken', 'teacher-token-' + userId);
+          localStorage.setItem('teacherRole', 'teacher');
           localStorage.setItem('teacherName', name);
-          localStorage.setItem('teacherId', (data as any).teacher_id);
-          localStorage.setItem('teacherEmail', (data as any).email);
+          localStorage.setItem('teacherId', userData.teacher_id || userId);
+          localStorage.setItem('teacherEmail', email);
           localStorage.setItem('teacherVerified', String(isVerified));
           if (personalEmail) {
             localStorage.setItem('teacherPersonalEmail', personalEmail);
           }
-        } else if (role === 'student') {
-          localStorage.setItem('studentToken', token);
-          localStorage.setItem('studentRole', role);
+        } else if (userType === 'student') {
+          localStorage.setItem('studentToken', 'student-token-' + userId);
+          localStorage.setItem('studentRole', 'student');
           localStorage.setItem('studentName', name);
-          localStorage.setItem('studentId', (data as any).student_id);
-          localStorage.setItem('studentEmail', (data as any).email);
+          localStorage.setItem('studentId', userId);
+          localStorage.setItem('studentEmail', email);
           localStorage.setItem('studentVerified', String(isVerified));
           if (personalEmail) {
             localStorage.setItem('studentPersonalEmail', personalEmail);
           }
-          if ((data as any).photo_url) {
-            localStorage.setItem('studentPhotoUrl', (data as any).photo_url);
+          if (photoUrl) {
+            localStorage.setItem('studentPhotoUrl', photoUrl);
           }
         }
         
         toast.success(`Welcome, ${name}!`);
         
+        // Check for redirect path and navigate there
+        const redirectPath = localStorage.getItem('redirectAfterLogin');
+        localStorage.removeItem('redirectAfterLogin'); // Clean up
+        
         // Force a page reload to ensure auth state is properly initialized
-        window.location.href = '/';
+        if (redirectPath && redirectPath !== '/login') {
+          window.location.href = redirectPath;
+        } else {
+          window.location.href = '/';
+        }
         return;
       } else {
         toast.error((data as any)?.message || "Invalid credentials");

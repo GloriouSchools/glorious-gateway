@@ -1,10 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
+import { 
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
 import { 
   BookOpen, 
   ClipboardList, 
@@ -16,15 +24,58 @@ import {
   AlertCircle,
   Shield,
   Mail,
-  Loader2
+  Loader2,
+  Vote
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { AccountVerificationForm } from "@/components/auth/AccountVerificationForm";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useNavigate } from "react-router-dom";
+
+// Import election images
+import election1 from "@/assets/election-1.jpg";
+import election2 from "@/assets/election-2.jpg";
+import election3 from "@/assets/election-3.jpg";
+import election4 from "@/assets/election-4.jpg";
 
 export function StudentDashboard() {
   const { userName, isVerified, personalEmail, user, isLoading } = useAuth();
+  const navigate = useNavigate();
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [carouselApi, setCarouselApi] = useState<any>(null);
+
+  useEffect(() => {
+    if (!carouselApi) return;
+
+    carouselApi.on("select", () => {
+      setCurrentSlide(carouselApi.selectedScrollSnap());
+    });
+  }, [carouselApi]);
+
+  // Election carousel data
+  const electionSlides = [
+    {
+      image: election1,
+      title: "🗳️ Election Time!",
+      text: "At Glorious, democracy is the power of the pupils for the pupils by the pupils."
+    },
+    {
+      image: election2,
+      title: "Your Voice Matters",
+      text: "At Glorious, we believe in democracy so pupils exercise their rights of choosing their own leaders."
+    },
+    {
+      image: election3,
+      title: "Make Every Vote Count",
+      text: "Every election you don't participate in is a vote lost."
+    },
+    {
+      image: election4,
+      title: "#PupilPower ✊",
+      text: "Democracy thrives when every student participates in shaping their future."
+    }
+  ];
 
   // Show loading state while authentication is being resolved
   if (isLoading) {
@@ -88,6 +139,83 @@ export function StudentDashboard() {
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Welcome back, {userName || 'Student'}!</h2>
         <p className="text-muted-foreground">Here's an overview of your academic progress</p>
+      </div>
+
+      {/* Election Carousel */}
+      <div className="relative overflow-hidden rounded-xl animate-fade-in">
+        <Carousel 
+          className="w-full" 
+          opts={{ align: "start", loop: true }}
+          plugins={[Autoplay({ delay: 4000 })]}
+          setApi={setCarouselApi}
+        >
+          <CarouselContent>
+            {electionSlides.map((slide, index) => (
+              <CarouselItem key={index}>
+                <div className="relative h-72 md:h-96 overflow-hidden rounded-xl">
+                  {/* Background Image */}
+                  <img 
+                    src={slide.image} 
+                    alt={`Election slide ${index + 1}`}
+                    className="absolute inset-0 w-full h-full object-cover object-center"
+                  />
+                  
+                  {/* Gradient Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/70 to-black/50"></div>
+                  
+                  {/* Content Overlay */}
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full space-y-4 md:space-y-6 px-6 md:px-12">
+                      {/* Centered Heading */}
+                      <div className="flex items-center justify-center gap-2 md:gap-3">
+                        <Vote className="h-6 w-6 md:h-8 md:w-8 text-white animate-pulse" />
+                        <h3 className="text-xl md:text-3xl font-bold text-white animate-fade-in">
+                          {slide.title}
+                        </h3>
+                        <Vote className="h-6 w-6 md:h-8 md:w-8 text-white animate-pulse" />
+                      </div>
+                      
+                      {/* Centered Text */}
+                      <div className="max-w-2xl mx-auto text-center">
+                        <p className="text-sm md:text-lg text-white/90 font-medium leading-relaxed animate-fade-in">
+                          {slide.text}
+                        </p>
+                      </div>
+                      
+                      {/* Centered Button */}
+                      <div className="pt-2 md:pt-4 text-center">
+                        <Button 
+                          size="lg" 
+                          className="bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 hover:from-orange-600 hover:via-orange-700 hover:to-orange-800 text-white border-0 shadow-lg hover:shadow-xl animate-pulse font-bold text-sm md:text-lg px-6 md:px-10 py-2 md:py-3 transition-all duration-500"
+                          onClick={() => navigate('/electoral')}
+                        >
+                          <Vote className="h-4 w-4 md:h-5 md:w-5 mr-2" />
+                          VOTE NOW
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+        </Carousel>
+        
+        {/* Dot Indicators */}
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+          {electionSlides.map((_, index) => (
+            <button
+              key={index}
+              className={`w-2 h-2 md:w-3 md:h-3 rounded-full transition-all duration-300 ${
+                currentSlide === index 
+                  ? 'bg-white shadow-lg' 
+                  : 'bg-white/40 hover:bg-white/70'
+              }`}
+              onClick={() => carouselApi?.scrollTo(index)}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
+        </div>
       </div>
 
 

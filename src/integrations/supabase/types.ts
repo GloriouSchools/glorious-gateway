@@ -10,38 +10,38 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "13.0.4"
+    PostgrestVersion: "13.0.5"
   }
   public: {
     Tables: {
       admins: {
         Row: {
           created_at: string | null
-          email: string
-          id: string
+          email: string | null
+          id: string | null
           is_verified: boolean | null
-          name: string
-          password_hash: string
+          name: string | null
+          password_hash: string | null
           personal_email: string | null
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
-          email: string
-          id?: string
+          email?: string | null
+          id?: string | null
           is_verified?: boolean | null
-          name: string
-          password_hash: string
+          name?: string | null
+          password_hash?: string | null
           personal_email?: string | null
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
-          email?: string
-          id?: string
+          email?: string | null
+          id?: string | null
           is_verified?: boolean | null
-          name?: string
-          password_hash?: string
+          name?: string | null
+          password_hash?: string | null
           personal_email?: string | null
           updated_at?: string | null
         }
@@ -49,62 +49,60 @@ export type Database = {
       }
       classes: {
         Row: {
-          created_at: string
+          class_code: string | null
+          created_at: string | null
           description: string | null
-          id: string
-          name: string
-          updated_at: string
+          id: string | null
+          name: string | null
+          updated_at: string | null
         }
         Insert: {
-          created_at?: string
+          class_code?: string | null
+          created_at?: string | null
           description?: string | null
-          id?: string
-          name: string
-          updated_at?: string
+          id?: string | null
+          name?: string | null
+          updated_at?: string | null
         }
         Update: {
-          created_at?: string
+          class_code?: string | null
+          created_at?: string | null
           description?: string | null
-          id?: string
-          name?: string
-          updated_at?: string
+          id?: string | null
+          name?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
       streams: {
         Row: {
-          class_id: string
-          created_at: string
+          class_id: string | null
+          created_at: string | null
           description: string | null
-          id: string
-          name: string
-          updated_at: string
+          id: string | null
+          name: string | null
+          stream_code: string | null
+          updated_at: string | null
         }
         Insert: {
-          class_id: string
-          created_at?: string
+          class_id?: string | null
+          created_at?: string | null
           description?: string | null
-          id?: string
-          name: string
-          updated_at?: string
+          id?: string | null
+          name?: string | null
+          stream_code?: string | null
+          updated_at?: string | null
         }
         Update: {
-          class_id?: string
-          created_at?: string
+          class_id?: string | null
+          created_at?: string | null
           description?: string | null
-          id?: string
-          name?: string
-          updated_at?: string
+          id?: string | null
+          name?: string | null
+          stream_code?: string | null
+          updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "streams_class_id_fkey"
-            columns: ["class_id"]
-            isOneToOne: false
-            referencedRelation: "classes"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       students: {
         Row: {
@@ -118,6 +116,7 @@ export type Database = {
           personal_email: string | null
           photo_url: string | null
           stream_id: string | null
+          student_id: string | null
         }
         Insert: {
           class_id?: string | null
@@ -130,6 +129,7 @@ export type Database = {
           personal_email?: string | null
           photo_url?: string | null
           stream_id?: string | null
+          student_id?: string | null
         }
         Update: {
           class_id?: string | null
@@ -142,63 +142,64 @@ export type Database = {
           personal_email?: string | null
           photo_url?: string | null
           stream_id?: string | null
+          student_id?: string | null
         }
         Relationships: []
       }
       teachers: {
         Row: {
+          classesTaught: string | null
+          contactNumber: number | null
           created_at: string | null
-          email: string
+          email: string | null
           id: string
           is_verified: boolean | null
-          name: string
+          name: string | null
+          nationality: string | null
           password_hash: string | null
           personal_email: string | null
-          teacher_id: string
+          photo_url: string | null
+          sex: string | null
+          subjectsTaught: string | null
+          teacher_code: string | null
+          teacher_id: string | null
           updated_at: string | null
         }
         Insert: {
+          classesTaught?: string | null
+          contactNumber?: number | null
           created_at?: string | null
-          email: string
+          email?: string | null
           id?: string
           is_verified?: boolean | null
-          name: string
+          name?: string | null
+          nationality?: string | null
           password_hash?: string | null
           personal_email?: string | null
-          teacher_id: string
+          photo_url?: string | null
+          sex?: string | null
+          subjectsTaught?: string | null
+          teacher_code?: string | null
+          teacher_id?: string | null
           updated_at?: string | null
         }
         Update: {
+          classesTaught?: string | null
+          contactNumber?: number | null
           created_at?: string | null
-          email?: string
+          email?: string | null
           id?: string
           is_verified?: boolean | null
-          name?: string
+          name?: string | null
+          nationality?: string | null
           password_hash?: string | null
           personal_email?: string | null
-          teacher_id?: string
+          photo_url?: string | null
+          sex?: string | null
+          subjectsTaught?: string | null
+          teacher_code?: string | null
+          teacher_id?: string | null
           updated_at?: string | null
-        }
-        Relationships: []
-      }
-      user_roles: {
-        Row: {
-          created_at: string | null
-          id: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id?: string
         }
         Relationships: []
       }
@@ -207,36 +208,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_table_count: {
-        Args: { table_name: string }
-        Returns: number
+      generate_class_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
+      generate_stream_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
-      test_admin_access: {
-        Args: { p_email: string }
-        Returns: Json
+      generate_student_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_teacher_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       verify_flexible_login: {
         Args: { p_identifier: string; p_password: string }
         Returns: Json
       }
-      verify_user_account: {
-        Args: {
-          p_personal_email: string
-          p_user_id: string
-          p_user_type: string
-        }
-        Returns: undefined
-      }
     }
     Enums: {
-      app_role: "admin" | "teacher" | "student"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -363,8 +357,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      app_role: ["admin", "teacher", "student"],
-    },
+    Enums: {},
   },
 } as const

@@ -34,7 +34,8 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   if (!user || !userRole) {
-    // Save the attempted location for redirect after login
+    // Store the current path for redirect after login
+    localStorage.setItem('redirectAfterLogin', location.pathname + location.search);
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

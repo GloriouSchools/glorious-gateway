@@ -33,21 +33,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Check for admin token first
-    const adminToken = getAdminToken();
-    const storedRole = localStorage.getItem('adminRole');
-    const storedName = localStorage.getItem('adminName');
+    const adminToken = localStorage.getItem('adminToken');
+    const adminRole = localStorage.getItem('adminRole');
+    const adminName = localStorage.getItem('adminName');
+    const adminId = localStorage.getItem('adminId');
+    const adminEmail = localStorage.getItem('adminEmail');
     
-    if (adminToken && storedRole === 'admin') {
-      // Set admin state from token (no real user object for hardcoded admin)
+    if (adminToken && adminRole === 'admin') {
+      // Set admin state from localStorage
       setUserRole('admin');
-      setUserName(storedName || 'System Administrator');
-      setUser({ id: 'admin-hardcoded', email: 'admin@glorious.com' } as any);
+      setUserName(adminName || 'System Administrator');
+      setUser({ id: adminId || 'admin-hardcoded', email: adminEmail || 'admin@glorious.com' } as any);
       const verified = localStorage.getItem('adminVerified');
       setIsVerified(verified === 'true');
       const storedPersonalEmail = localStorage.getItem('adminPersonalEmail');
       setPersonalEmail(storedPersonalEmail || null);
-      // Delay setting loading to false to ensure state is propagated
-      setTimeout(() => setIsLoading(false), 0);
+      setIsLoading(false);
       return;
     }
     
@@ -59,7 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const teacherEmail = localStorage.getItem('teacherEmail');
     
     if (teacherToken && teacherRole === 'teacher') {
-      // Set teacher state from token (no real user object for hardcoded teacher)
+      // Set teacher state from localStorage
       setUserRole('teacher');
       setUserName(teacherName || 'Teacher');
       setUser({ id: teacherId || 'teacher-hardcoded', email: teacherEmail || '' } as any);
@@ -67,8 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsVerified(verified === 'true');
       const storedPersonalEmail = localStorage.getItem('teacherPersonalEmail');
       setPersonalEmail(storedPersonalEmail || null);
-      // Delay setting loading to false to ensure state is propagated
-      setTimeout(() => setIsLoading(false), 0);
+      setIsLoading(false);
       return;
     }
     
@@ -80,7 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const studentEmail = localStorage.getItem('studentEmail');
     
     if (studentToken && studentRole === 'student') {
-      // Set student state from token (no real user object for hardcoded student)
+      // Set student state from localStorage
       setUserRole('student');
       setUserName(studentName || 'Student');
       setUser({ id: studentId || 'student-hardcoded', email: studentEmail || '' } as any);
@@ -90,8 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setPersonalEmail(storedPersonalEmail || null);
       const storedPhotoUrl = localStorage.getItem('studentPhotoUrl');
       setPhotoUrl(storedPhotoUrl || null);
-      // Delay setting loading to false to ensure state is propagated
-      setTimeout(() => setIsLoading(false), 0);
+      setIsLoading(false);
       return;
     }
     
@@ -145,26 +144,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // For teachers, fetch from teachers table
       const { data: teacher, error: teacherError } = await supabase
         .from('teachers')
-        .select('name')
+        .select('name, photo_url, personal_email, is_verified')
         .eq('id', userId)
         .single();
 
       if (!teacherError && teacher) {
         setUserName(teacher.name || "");
         setUserRole('teacher');
+        setPhotoUrl(teacher.photo_url || null);
+        setPersonalEmail(teacher.personal_email || null);
+        setIsVerified(teacher.is_verified || false);
         return;
       }
 
       // For admins, fetch from admins table
       const { data: admin, error: adminError } = await supabase
         .from('admins')
-        .select('name')
+        .select('name, personal_email, is_verified')
         .eq('id', userId)
         .single();
 
       if (!adminError && admin) {
         setUserName(admin.name || "");
         setUserRole('admin');
+        setPersonalEmail(admin.personal_email || null);
+        setIsVerified(admin.is_verified || false);
         return;
       }
     } catch (error) {
@@ -204,6 +208,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     clearAdminSession();
     localStorage.removeItem('adminVerified');
     localStorage.removeItem('adminPersonalEmail');
+    localStorage.removeItem('adminId');
+    localStorage.removeItem('adminEmail');
     
     // Clear teacher session if present
     localStorage.removeItem('teacherToken');
@@ -224,6 +230,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('studentPersonalEmail');
     localStorage.removeItem('studentPhotoUrl');
     
+    // Clear any pending verification data
+    localStorage.removeItem('pendingVerification');
+    
     // Only sign out from Supabase if there's a real session
     if (session) {
       const { error } = await supabase.auth.signOut();
@@ -237,6 +246,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setPhotoUrl(null);
     setIsVerified(false);
     setPersonalEmail(null);
+    
+    // Clear any remaining form data in memory for security
+    const event = new CustomEvent('clearFormData');
+    window.dispatchEvent(event);
   };
 
   return (

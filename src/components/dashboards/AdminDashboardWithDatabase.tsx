@@ -25,6 +25,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { AccountVerificationForm } from "@/components/auth/AccountVerificationForm";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 interface DatabaseStats {
   totalStudents: number;
@@ -38,6 +39,7 @@ export function AdminDashboard() {
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
   const [stats, setStats] = useState<DatabaseStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchDashboardStats();
@@ -47,28 +49,42 @@ export function AdminDashboard() {
     try {
       setStatsLoading(true);
       
-      // Simple direct count queries - bypass RLS temporarily for admin dashboard
-      const [studentsResult, teachersResult, classesResult, streamsResult] = await Promise.allSettled([
+      console.log('Fetching dashboard stats...');
+      
+      // Use count queries instead of selecting all records to avoid the 1000 row limit
+      const [studentsResult, teachersResult, classesResult, streamsResult] = await Promise.all([
         supabase.from('students').select('*', { count: 'exact', head: true }),
         supabase.from('teachers').select('*', { count: 'exact', head: true }),
         supabase.from('classes').select('*', { count: 'exact', head: true }),
         supabase.from('streams').select('*', { count: 'exact', head: true })
       ]);
 
+      console.log('Stats results:', {
+        students: studentsResult,
+        teachers: teachersResult,
+        classes: classesResult,
+        streams: streamsResult
+      });
+
+      // Check for errors and set counts using the count property
+      if (studentsResult.error) console.error('Students query error:', studentsResult.error);
+      if (teachersResult.error) console.error('Teachers query error:', teachersResult.error);
+      if (classesResult.error) console.error('Classes query error:', classesResult.error);
+      if (streamsResult.error) console.error('Streams query error:', streamsResult.error);
+
       setStats({
-        totalStudents: studentsResult.status === 'fulfilled' ? (studentsResult.value.count || 0) : 1090,
-        totalTeachers: teachersResult.status === 'fulfilled' ? (teachersResult.value.count || 0) : 4,
-        totalClasses: classesResult.status === 'fulfilled' ? (classesResult.value.count || 0) : 7,
-        totalStreams: streamsResult.status === 'fulfilled' ? (streamsResult.value.count || 0) : 20
+        totalStudents: studentsResult.count || 0,
+        totalTeachers: teachersResult.count || 0,
+        totalClasses: classesResult.count || 0,
+        totalStreams: streamsResult.count || 0
       });
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
-      // Use hardcoded values as fallback since we know the data exists
       setStats({
-        totalStudents: 1090,
-        totalTeachers: 4,
-        totalClasses: 7,
-        totalStreams: 20
+        totalStudents: 0,
+        totalTeachers: 0,
+        totalClasses: 0,
+        totalStreams: 0
       });
     } finally {
       setStatsLoading(false);
@@ -94,7 +110,8 @@ export function AdminDashboard() {
       icon: GraduationCap, 
       change: "+12%",
       trend: "up",
-      color: "text-primary" 
+      color: "text-primary",
+      route: "/admin/students"
     },
     { 
       title: "Total Teachers", 
@@ -102,7 +119,8 @@ export function AdminDashboard() {
       icon: Users, 
       change: "+5%",
       trend: "up",
-      color: "text-secondary" 
+      color: "text-secondary",
+      route: "/admin/teachers"
     },
     { 
       title: "Total Classes", 
@@ -110,7 +128,8 @@ export function AdminDashboard() {
       icon: BookOpen, 
       change: "+8%",
       trend: "up",
-      color: "text-success" 
+      color: "text-success",
+      route: "/admin/classes"
     },
     { 
       title: "Total Streams", 
@@ -118,9 +137,14 @@ export function AdminDashboard() {
       icon: Building, 
       change: "+2%",
       trend: "up",
-      color: "text-warning" 
+      color: "text-warning",
+      route: "/admin/streams"
     },
   ] : [];
+
+  const handleCardClick = (route: string) => {
+    navigate(route);
+  };
 
   const recentActivities = [
     { action: "New student enrolled", user: "John Doe", time: "2 minutes ago", type: "student" },
@@ -192,13 +216,20 @@ export function AdminDashboard() {
           dashboardStats.map((stat) => {
             const Icon = stat.icon;
             return (
-              <Card key={stat.title}>
+              <Card 
+                key={stat.title} 
+                className="cursor-pointer hover:shadow-md transition-shadow hover:scale-105 transform duration-200"
+                onClick={() => handleCardClick(stat.route)}
+              >
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
                   <Icon className={`h-4 w-4 ${stat.color}`} />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{stat.value}</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Click to view details
+                  </p>
                 </CardContent>
               </Card>
             );

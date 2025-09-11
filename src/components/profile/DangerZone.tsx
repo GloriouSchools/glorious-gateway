@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +28,39 @@ export function DangerZone({ personalEmail, userId, userRole }: DangerZoneProps)
     newPassword: "",
     confirmPassword: ""
   });
+
+  // Clear fields when component mounts for security
+  React.useEffect(() => {
+    setFormData({
+      personalEmail: "",
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: ""
+    });
+
+    // Listen for logout event to clear form data
+    const handleClearFormData = () => {
+      setFormData({
+        personalEmail: "",
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: ""
+      });
+      setEmailError("");
+      setPasswordStrength({
+        score: 0,
+        feedback: [],
+        level: 'weak',
+        color: 'hsl(var(--destructive))'
+      });
+    };
+
+    window.addEventListener('clearFormData', handleClearFormData);
+
+    return () => {
+      window.removeEventListener('clearFormData', handleClearFormData);
+    };
+  }, []);
 
   const [emailError, setEmailError] = useState("");
 
@@ -81,101 +114,136 @@ export function DangerZone({ personalEmail, userId, userRole }: DangerZoneProps)
 
     setIsLoading(true);
     try {
-      // Send verification email using Supabase auth
-      const { error } = await supabase.auth.updateUser({
-        email: formData.personalEmail
-      });
-      
-      if (error) {
-        console.error('Email verification error:', error);
-        toast.error("Failed to send verification email: " + error.message);
-        return;
-      }
-      
-      // Update database record with new email
+      // First update the personal email in database immediately
       if (userRole === 'student') {
         const { error } = await supabase
           .from('students')
-          .update({ personal_email: formData.personalEmail })
+          .update({ personal_email: formData.personalEmail, is_verified: false })
           .eq('id', userId);
         
         if (error) throw error;
       } else if (userRole === 'teacher') {
         const { error } = await supabase
           .from('teachers')
-          .update({ personal_email: formData.personalEmail })
+          .update({ personal_email: formData.personalEmail, is_verified: false })
           .eq('id', userId);
         
         if (error) throw error;
       } else if (userRole === 'admin') {
         const { error } = await supabase
           .from('admins')
-          .update({ personal_email: formData.personalEmail })
+          .update({ personal_email: formData.personalEmail, is_verified: false })
           .eq('id', userId);
         
         if (error) throw error;
       }
+
+      // Store pending verification data for the callback
+      const pendingData = {
+        userType: userRole,
+        userId: userId,
+        personalEmail: formData.personalEmail
+      };
+      localStorage.setItem('pendingVerification', JSON.stringify(pendingData));
       
-      toast.success("Verification email sent! Please check your email to confirm the change.");
+      // Sign up the new email to trigger verification
+      const { error } = await supabase.auth.signUp({
+        email: formData.personalEmail,
+        password: 'temporary-verification-password',
+        options: {
+          emailRedirectTo: `${window.location.origin}/verify-callback`
+        }
+      });
+      
+      if (error) {
+        console.error('Email verification error:', error);
+        toast.error("Failed to send verification email: " + error.message);
+        localStorage.removeItem('pendingVerification');
+        return;
+      }
+      
+      toast.success("Personal email updated and verification email sent! Please check your email to verify.");
       setFormData(prev => ({ ...prev, personalEmail: "" }));
+      
+      // Refresh page to show updated data
+      window.location.reload();
     } catch (error: any) {
       console.error('Error updating email:', error);
       toast.error("Failed to update email: " + error.message);
+      localStorage.removeItem('pendingVerification');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleChangePassword = async () => {
+    console.log('🔥 handleChangePassword called!');
+    console.log('Form data:', {
+      newPassword: formData.newPassword,
+      confirmPassword: formData.confirmPassword,
+      currentPassword: formData.currentPassword
+    });
+    console.log('Password strength score:', passwordStrength.score);
+    console.log('UserId:', userId);
+    console.log('UserRole:', userRole);
+    
     if (!formData.newPassword) {
+      console.log('❌ No new password provided');
       toast.error("Please enter a new password");
       return;
     }
 
     if (formData.newPassword !== formData.confirmPassword) {
+      console.log('❌ Passwords do not match');
       toast.error("New passwords do not match");
       return;
     }
     
     if (passwordStrength.score < 3) {
+      console.log('❌ Password too weak, score:', passwordStrength.score);
       toast.error("Please create a stronger password");
       return;
     }
 
     setIsLoading(true);
     try {
-      // Update auth password
-      const { error: authError } = await supabase.auth.updateUser({
-        password: formData.newPassword
-      });
+      console.log('Starting password update for user:', userId, 'role:', userRole);
+      console.log('New password length:', formData.newPassword.length);
       
-      if (authError) {
-        console.error('Password update error:', authError);
-        toast.error("Failed to update password: " + authError.message);
-        return;
-      }
-      
-      // Update database record
+      // Update database record directly (no Supabase auth needed since using custom auth)
       if (userRole === 'student') {
-        const { error } = await supabase
+        console.log('Updating student password');
+        const { error, data } = await supabase
           .from('students')
           .update({ password_hash: formData.newPassword })
-          .eq('id', userId);
+          .eq('id', userId)
+          .select();
         
-        if (error) throw error;
+        console.log('Student update result:', { error, data });
+        if (error) {
+          console.error('❌ Student update error:', error);
+          throw error;
+        }
+        console.log('✅ Student password updated successfully:', data);
       } else if (userRole === 'teacher') {
-        const { error } = await supabase
+        console.log('Updating teacher password');
+        const { error, data } = await supabase
           .from('teachers')
           .update({ password_hash: formData.newPassword })
-          .eq('id', userId);
+          .eq('id', userId)
+          .select();
         
+        console.log('Teacher update result:', { error, data });
         if (error) throw error;
       } else if (userRole === 'admin') {
-        const { error } = await supabase
+        console.log('Updating admin password');
+        const { error, data } = await supabase
           .from('admins')
           .update({ password_hash: formData.newPassword })
-          .eq('id', userId);
+          .eq('id', userId)
+          .select();
         
+        console.log('Admin update result:', { error, data });
         if (error) throw error;
       }
       
@@ -251,6 +319,15 @@ export function DangerZone({ personalEmail, userId, userRole }: DangerZoneProps)
             <p className="text-xs text-muted-foreground">
               A verification link will be sent to this email address
             </p>
+          </div>
+          <div className="flex justify-start mt-3">
+            <Button 
+              onClick={handleVerifyEmail}
+              disabled={isLoading || !formData.personalEmail || !!emailError}
+              variant="outline"
+            >
+              {isLoading ? "Sending..." : "Verify Email"}
+            </Button>
           </div>
         </div>
 
@@ -359,26 +436,19 @@ export function DangerZone({ personalEmail, userId, userRole }: DangerZoneProps)
               <li>• Include at least one special character (!@#$%^&*)</li>
             </ul>
           </div>
+
+          <div className="flex justify-start mt-3">
+            <Button 
+              onClick={handleChangePassword}
+              disabled={isLoading || !formData.newPassword || formData.newPassword !== formData.confirmPassword || passwordStrength.score < 3}
+              variant="destructive"
+            >
+              {isLoading ? "Updating..." : "Change Password"}
+            </Button>
+          </div>
         </div>
 
         <Separator />
-
-        <div className="flex justify-end gap-3">
-          <Button 
-            onClick={handleVerifyEmail}
-            disabled={isLoading || !formData.personalEmail || !!emailError}
-            variant="outline"
-          >
-            {isLoading ? "Sending..." : "Verify Email"}
-          </Button>
-          <Button 
-            onClick={handleChangePassword}
-            disabled={isLoading || !formData.newPassword || formData.newPassword !== formData.confirmPassword || passwordStrength.score < 3}
-            variant="destructive"
-          >
-            {isLoading ? "Updating..." : "Change Password"}
-          </Button>
-        </div>
       </CardContent>
     </Card>
   );

@@ -5,7 +5,6 @@ import { UserRole } from "@/types/user";
 import { Footer } from "./Footer";
 import { useNavigate } from "react-router-dom";
 import { UserAvatarDropdown } from "@/components/ui/user-avatar-dropdown";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -29,7 +28,6 @@ export function DashboardLayout({ children, userRole, userName, photoUrl, onLogo
               <h1 className="text-xl font-semibold">Glorious Schools Management System</h1>
             </div>
             <div className="flex items-center space-x-2">
-              <ThemeToggle />
               <UserAvatarDropdown 
                 userName={userName} 
                 photoUrl={photoUrl} 

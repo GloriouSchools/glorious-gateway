@@ -18,6 +18,14 @@ import Legal from "./pages/Legal";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Cookies from "./pages/Cookies";
+import StudentsList from "./pages/admin/StudentsList";
+import TeachersList from "./pages/admin/TeachersList";
+import ClassesList from "./pages/admin/ClassesList";
+import StreamsList from "./pages/admin/StreamsList";
+import Electoral from "./pages/Electoral";
+import Apply from "./pages/electoral/Apply";
+import ApplicationStatus from "./pages/electoral/ApplicationStatus";
+import Candidates from "./pages/electoral/Candidates";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +56,42 @@ const App = () => (
                   <UserProfile />
                 </ProtectedRoute>
               } />
+              <Route path="/admin/students" element={
+                <ProtectedRoute>
+                  <StudentsList />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/teachers" element={
+                <ProtectedRoute>
+                  <TeachersList />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/classes" element={
+                <ProtectedRoute>
+                  <ClassesList />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/streams" element={
+                <ProtectedRoute>
+                  <StreamsList />
+                </ProtectedRoute>
+              } />
+              <Route path="/electoral" element={
+                <ProtectedRoute>
+                  <Electoral />
+                </ProtectedRoute>
+              } />
+              <Route path="/electoral/apply" element={
+                <ProtectedRoute>
+                  <Apply />
+                </ProtectedRoute>
+              } />
+              <Route path="/electoral/status" element={
+                <ProtectedRoute>
+                  <ApplicationStatus />
+                </ProtectedRoute>
+              } />
+              <Route path="/electoral/candidates/:position" element={<Candidates />} />
               <Route path="/about" element={<About />} />
               <Route path="/disclaimer" element={<Disclaimer />} />
               <Route path="/legal" element={<Legal />} />

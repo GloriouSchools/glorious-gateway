@@ -10,7 +10,7 @@ $$;
 
 -- Create user_roles table if it doesn't exist
 CREATE TABLE IF NOT EXISTS public.user_roles (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(), 
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL,
   role app_role NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
