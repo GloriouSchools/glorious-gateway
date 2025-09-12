@@ -26,6 +26,8 @@ import Electoral from "./pages/Electoral";
 import Apply from "./pages/electoral/Apply";
 import ApplicationStatus from "./pages/electoral/ApplicationStatus";
 import Candidates from "./pages/electoral/Candidates";
+import LiveResults from "./pages/electoral/LiveResults";
+import Vote from "./pages/electoral/Vote";
 
 const queryClient = new QueryClient();
 
@@ -92,6 +94,16 @@ const App = () => (
                 </ProtectedRoute>
               } />
               <Route path="/electoral/candidates/:position" element={<Candidates />} />
+              <Route path="/electoral/vote" element={
+                <ProtectedRoute>
+                  <Vote />
+                </ProtectedRoute>
+              } />
+              <Route path="/electoral/results" element={
+                <ProtectedRoute>
+                  <LiveResults />
+                </ProtectedRoute>
+              } />
               <Route path="/about" element={<About />} />
               <Route path="/disclaimer" element={<Disclaimer />} />
               <Route path="/legal" element={<Legal />} />

@@ -15,11 +15,13 @@ import {
   ArrowRight
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { populateDummyElectoralData, clearDummyElectoralData, checkDummyDataExists } from "@/utils/dummyElectoralData";
 
 export default function Electoral() {
   const navigate = useNavigate();
   const { user, userName } = useAuth();
   const [hasApplication, setHasApplication] = useState(false);
+  const [dummyDataCount, setDummyDataCount] = useState(0);
 
   const positionMappings = {
     "head_prefect": { title: "HEAD PREFECT", eligibleClasses: "P4-P5" },
@@ -47,7 +49,12 @@ export default function Electoral() {
       }
     };
     
+    const checkDummyData = () => {
+      setDummyDataCount(checkDummyDataExists());
+    };
+    
     checkApplication();
+    checkDummyData();
   }, [user, userName]);
 
   // Countdown timer state
@@ -241,6 +248,55 @@ export default function Electoral() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Dummy Data Management - For Testing */}
+        <div className="max-w-2xl mx-auto">
+          <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950/20">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2 text-blue-800 dark:text-blue-200">
+                🧪 Testing Tools
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-sm text-blue-700 dark:text-blue-300">
+                Use these tools to add dummy candidate data for testing the voting system.
+              </p>
+              <div className="flex items-center justify-between">
+                <span className="text-sm">
+                  Current dummy candidates: <Badge variant="secondary">{dummyDataCount}</Badge>
+                </span>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      const count = populateDummyElectoralData();
+                      setDummyDataCount(checkDummyDataExists());
+                      // Trigger a custom event to refresh other components
+                      window.dispatchEvent(new Event('storage'));
+                    }}
+                    className="text-blue-700 border-blue-300 hover:bg-blue-100"
+                  >
+                    Add Dummy Data
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      clearDummyElectoralData();
+                      setDummyDataCount(0);
+                      // Trigger a custom event to refresh other components
+                      window.dispatchEvent(new Event('storage'));
+                    }}
+                    className="text-red-700 border-red-300 hover:bg-red-100"
+                  >
+                    Clear Dummy Data
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Main Action Cards - Above the fold */}
