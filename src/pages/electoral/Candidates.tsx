@@ -10,6 +10,8 @@ import { ArrowLeft, Search, Filter, Users } from "lucide-react";
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Application {
   id: string;
@@ -29,6 +31,11 @@ export default function Candidates() {
   const { position } = useParams<{ position: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { userName, userRole, photoUrl } = useAuth();
+  
+  const handleLogout = () => {
+    navigate('/login');
+  };
   
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
@@ -89,37 +96,32 @@ export default function Candidates() {
   const positionTitle = positionTitles[position as keyof typeof positionTitles] || position?.replace(/_/g, ' ').toUpperCase();
 
   useEffect(() => {
-    // For now, load from localStorage until database table is created
     const loadApplications = async () => {
       try {
         setLoading(true);
-        const apps: Application[] = [];
         
-        // Get all localStorage keys that match our application pattern
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key && key.startsWith('electoral_application_')) {
-            const appData = localStorage.getItem(key);
-            if (appData) {
-              const parsedApp = JSON.parse(appData);
-              if (parsedApp.position === position) {
-                apps.push({
-                  id: key,
-                  student_name: parsedApp.student_name,
-                  student_email: parsedApp.student_email || 'No email provided',
-                  student_photo: parsedApp.student_photo,
-                  position: parsedApp.position,
-                  class_name: parsedApp.class,
-                  stream_name: parsedApp.stream,
-                  status: parsedApp.status,
-                  submitted_at: parsedApp.submitted_at
-                });
-              }
-            }
-          }
-        }
+        // Load applications from database
+        const { data: applicationsData, error } = await supabase
+          .from('electoral_applications')
+          .select('*')
+          .eq('position', position)
+          .order('submitted_at', { ascending: false });
         
-        setApplications(apps.sort((a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime()));
+        if (error) throw error;
+        
+        const apps: Application[] = applicationsData?.map(app => ({
+          id: app.id,
+          student_name: app.student_name,
+          student_email: app.student_email,
+          student_photo: app.student_photo,
+          position: app.position,
+          class_name: app.class_name,
+          stream_name: app.stream_name,
+          status: app.status,
+          submitted_at: app.submitted_at
+        })) || [];
+        
+        setApplications(apps);
       } catch (error) {
         console.error('Error loading applications:', error);
         toast({
@@ -170,9 +172,15 @@ export default function Candidates() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto space-y-6">
+    <DashboardLayout 
+      userRole={userRole} 
+      userName={userName || ''} 
+      photoUrl={photoUrl} 
+      onLogout={handleLogout}
+    >
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-6xl mx-auto space-y-6">
           
           {/* Header */}
           <div className="flex items-center gap-4 mb-6">
@@ -349,8 +357,9 @@ export default function Candidates() {
               )}
             </CardContent>
           </Card>
+          </div>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

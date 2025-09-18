@@ -1,6 +1,6 @@
 /**
  * Generates a school email address from a student's name
- * Handles duplicate names by adding random numbers
+ * Uses first two names only and handles duplicates with incremental numbers
  */
 export function generateSchoolEmail(fullName: string, existingEmails: string[] = []): string {
   // Clean and format the name
@@ -15,12 +15,9 @@ export function generateSchoolEmail(fullName: string, existingEmails: string[] =
   if (nameParts.length === 1) {
     // Single name
     baseEmail = nameParts[0];
-  } else if (nameParts.length === 2) {
-    // First and last name
-    baseEmail = nameParts.join('');
   } else {
-    // Multiple names - use first and last
-    baseEmail = nameParts[0] + nameParts[nameParts.length - 1];
+    // Use only first two names, ignore all additional names
+    baseEmail = nameParts[0] + nameParts[1];
   }
   
   // Remove any special characters
@@ -31,46 +28,23 @@ export function generateSchoolEmail(fullName: string, existingEmails: string[] =
   let counter = 1;
   
   while (existingEmails.includes(email)) {
-    // Add random 3-digit number if duplicate
-    const randomNum = Math.floor(Math.random() * 900) + 100;
-    email = `${baseEmail}${randomNum}@glorious.com`;
+    // Add incremental number if duplicate (1, 2, 3, etc.)
+    email = `${baseEmail}${counter}@glorious.com`;
     counter++;
-    
-    // Fallback to incremental numbers if still duplicate after 10 attempts
-    if (counter > 10) {
-      email = `${baseEmail}${Date.now()}@glorious.com`;
-      break;
-    }
   }
   
   return email;
 }
 
 /**
- * Generates a secure random password
+ * Generates a 4-digit password with leading zeros (0001-9999)
  */
-export function generateSecurePassword(length: number = 12): string {
-  const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  const lowercase = 'abcdefghijklmnopqrstuvwxyz';
-  const numbers = '0123456789';
-  const symbols = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+export function generateSecurePassword(): string {
+  // Generate a random number between 1 and 9999
+  const randomNum = Math.floor(Math.random() * 9999) + 1;
   
-  const allChars = uppercase + lowercase + numbers + symbols;
-  let password = '';
-  
-  // Ensure at least one character from each category
-  password += uppercase[Math.floor(Math.random() * uppercase.length)];
-  password += lowercase[Math.floor(Math.random() * lowercase.length)];
-  password += numbers[Math.floor(Math.random() * numbers.length)];
-  password += symbols[Math.floor(Math.random() * symbols.length)];
-  
-  // Fill the rest randomly
-  for (let i = password.length; i < length; i++) {
-    password += allChars[Math.floor(Math.random() * allChars.length)];
-  }
-  
-  // Shuffle the password
-  return password.split('').sort(() => Math.random() - 0.5).join('');
+  // Convert to 4-digit string with leading zeros
+  return randomNum.toString().padStart(4, '0');
 }
 
 /**

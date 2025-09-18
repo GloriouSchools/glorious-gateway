@@ -18,11 +18,16 @@ import {
   ArrowLeft,
   Loader2,
   BookOpen,
-  Users
+  Users,
+  FileText
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Class {
   id: string;
@@ -39,10 +44,24 @@ interface ClassWithCounts extends Class {
 
 export default function ClassesList() {
   const navigate = useNavigate();
+  const { userName, photoUrl } = useAuth();
   const [classes, setClasses] = useState<ClassWithCounts[]>([]);
   const [filteredClasses, setFilteredClasses] = useState<ClassWithCounts[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  
+  const handleLogout = () => {
+    navigate('/login');
+  };
+
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   useEffect(() => {
     fetchClasses();
@@ -50,7 +69,7 @@ export default function ClassesList() {
 
   useEffect(() => {
     filterClasses();
-  }, [classes, searchTerm]);
+  }, [classes, debouncedSearchTerm]);
 
   const fetchClasses = async () => {
     try {
@@ -103,40 +122,41 @@ export default function ClassesList() {
     let filtered = classes;
 
     // Search filter
-    if (searchTerm) {
+    if (debouncedSearchTerm) {
       filtered = filtered.filter(classItem =>
-        classItem.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        classItem.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        classItem.id?.toLowerCase().includes(searchTerm.toLowerCase())
+        classItem.name?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+        classItem.description?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+        classItem.id?.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
       );
     }
 
     setFilteredClasses(filtered);
   };
 
-  const exportToCSV = () => {
-    const headers = ['ID', 'Name', 'Description', 'Students', 'Streams', 'Created At', 'Updated At'];
-    const csvData = filteredClasses.map(classItem => [
-      classItem.id,
-      classItem.name || '',
-      classItem.description || '',
-      classItem.studentCount,
-      classItem.streamCount,
-      new Date(classItem.created_at).toLocaleDateString(),
-      new Date(classItem.updated_at).toLocaleDateString()
+  const downloadPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(20);
+    doc.text('Classes Report', 20, 20);
+    doc.setFontSize(12);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 30);
+    doc.text(`Total Classes: ${filteredClasses.length}`, 20, 40);
+
+    const tableData = filteredClasses.map(classItem => [
+      classItem.name || 'No Name',
+      classItem.description || 'No Description',
+      classItem.studentCount.toString(),
+      classItem.streamCount.toString()
     ]);
 
-    const csvContent = [headers, ...csvData]
-      .map(row => row.map(field => `"${field}"`).join(','))
-      .join('\n');
+    (doc as any).autoTable({
+      head: [['Class Name', 'Description', 'Students', 'Streams']],
+      body: tableData,
+      startY: 50,
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [59, 130, 246] },
+    });
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'classes.csv';
-    a.click();
-    window.URL.revokeObjectURL(url);
+    doc.save('classes-report.pdf');
   };
 
   if (loading) {
@@ -151,57 +171,47 @@ export default function ClassesList() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => navigate('/')}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
-          </Button>
+    <DashboardLayout 
+      userRole="admin" 
+      userName={userName} 
+      photoUrl={photoUrl} 
+      onLogout={handleLogout}
+    >
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Classes List</h1>
             <p className="text-muted-foreground">
               Total: {filteredClasses.length} of {classes.length} classes
             </p>
           </div>
-        </div>
-        <div className="flex gap-2">
-          <Button onClick={exportToCSV} variant="outline" className="gap-2">
-            <Download className="h-4 w-4" />
-            Export CSV
+          <Button onClick={downloadPDF} className="gap-2">
+            <FileText className="h-4 w-4" />
+            Download PDF
           </Button>
         </div>
-      </div>
 
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            Search Classes
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-4 flex-wrap">
-            <div className="flex-1 min-w-64">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by name, description, or ID..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+        {/* Search */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Filter className="h-5 w-5" />
+              Search Classes
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name, description, or ID..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
       {/* Classes Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -318,6 +328,7 @@ export default function ClassesList() {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }

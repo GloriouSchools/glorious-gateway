@@ -4,18 +4,25 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CheckCircle, Clock, Edit } from "lucide-react";
+import { ArrowLeft, CheckCircle, Clock, Edit, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
+import { ApplicationPreview } from "@/components/electoral";
 
 interface Application {
   id: string;
   student_name: string;
+  student_email: string;
+  student_photo?: string | null;
   position: string;
-  class: string;
-  stream: string;
+  class_name: string;
+  stream_name: string;
+  experience?: string;
+  qualifications?: string;
+  why_apply?: string;
   status: 'pending' | 'confirmed' | 'rejected';
   submitted_at: string;
+  created_at?: string;
 }
 
 export default function ApplicationStatus() {
@@ -23,6 +30,7 @@ export default function ApplicationStatus() {
   const navigate = useNavigate();
   const [application, setApplication] = useState<Application | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     fetchApplication();
@@ -35,10 +43,18 @@ export default function ApplicationStatus() {
     }
 
     try {
-      const storedApplication = localStorage.getItem(`electoral_application_${user?.id || userName}`);
-      if (storedApplication) {
-        const data = JSON.parse(storedApplication);
-        setApplication(data);
+      const { data, error } = await supabase
+        .from('electoral_applications')
+        .select('*')
+        .eq('student_id', user?.id || userName)
+        .single();
+      
+      if (data && !error) {
+        setApplication({
+          ...data,
+          status: data.status as 'pending' | 'confirmed' | 'rejected',
+          submitted_at: data.created_at || data.submitted_at
+        });
       }
     } catch (error) {
       console.error('Error fetching application:', error);
@@ -157,22 +173,33 @@ export default function ApplicationStatus() {
                 <label className="text-sm font-medium text-muted-foreground">
                   Class
                 </label>
-                <p className="font-medium">{application.class}</p>
+                <p className="font-medium">{application.class_name}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
                   Stream
                 </label>
-                <p className="font-medium">{application.stream}</p>
+                <p className="font-medium">{application.stream_name}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
                   Submitted On
                 </label>
                 <p className="font-medium">
-                  {new Date(application.submitted_at).toLocaleDateString()}
+                  {new Date(application.created_at || application.submitted_at).toLocaleDateString()}
                 </p>
               </div>
+            </div>
+
+            <div className="mt-6 flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setShowPreview(!showPreview)}
+                className="flex items-center gap-2"
+              >
+                <FileText className="h-4 w-4" />
+                {showPreview ? 'Hide' : 'View'} Application
+              </Button>
             </div>
 
             {application.status === 'pending' && (
@@ -236,6 +263,15 @@ export default function ApplicationStatus() {
             )}
           </CardContent>
         </Card>
+
+        {showPreview && application && (
+          <div className="mt-8">
+            <ApplicationPreview 
+              application={application}
+              showActions={true}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

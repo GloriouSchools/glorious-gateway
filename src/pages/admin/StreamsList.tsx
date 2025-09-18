@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,11 +26,16 @@ import {
   Loader2,
   Building,
   Users,
-  BookOpen
+  BookOpen,
+  FileText
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Stream {
   id: string;
@@ -48,12 +53,26 @@ interface StreamWithCounts extends Stream {
 
 export default function StreamsList() {
   const navigate = useNavigate();
+  const { userName, photoUrl } = useAuth();
   const [streams, setStreams] = useState<StreamWithCounts[]>([]);
   const [filteredStreams, setFilteredStreams] = useState<StreamWithCounts[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterClass, setFilterClass] = useState("all");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [filterType, setFilterType] = useState("all");
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
+  
+  const handleLogout = () => {
+    navigate('/login');
+  };
+
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   useEffect(() => {
     fetchStreams();
@@ -61,7 +80,7 @@ export default function StreamsList() {
 
   useEffect(() => {
     filterStreams();
-  }, [streams, searchTerm, filterClass]);
+  }, [streams, debouncedSearchTerm, filterType]);
 
   const fetchStreams = async () => {
     try {
@@ -121,47 +140,63 @@ export default function StreamsList() {
     let filtered = streams;
 
     // Search filter
-    if (searchTerm) {
+    if (debouncedSearchTerm) {
       filtered = filtered.filter(stream =>
-        stream.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        stream.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        stream.id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        stream.className?.toLowerCase().includes(searchTerm.toLowerCase())
+        stream.name?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+        stream.description?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+        stream.id?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+        stream.className?.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
       );
     }
 
-    // Class filter
-    if (filterClass !== "all") {
-      filtered = filtered.filter(stream => stream.class_id === filterClass);
+    // Advanced filters
+    if (filterType !== "all") {
+      const [filterCategory, filterValue] = filterType.split("-");
+      
+      if (filterCategory === "class") {
+        filtered = filtered.filter(stream => stream.class_id === filterValue);
+      }
     }
 
     setFilteredStreams(filtered);
   };
 
-  const exportToCSV = () => {
-    const headers = ['ID', 'Name', 'Description', 'Class', 'Students', 'Created At', 'Updated At'];
-    const csvData = filteredStreams.map(stream => [
-      stream.id,
-      stream.name || '',
-      stream.description || '',
-      stream.className || '',
-      stream.studentCount,
-      new Date(stream.created_at).toLocaleDateString(),
-      new Date(stream.updated_at).toLocaleDateString()
+  const downloadPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(20);
+    doc.text('Streams Report', 20, 20);
+    doc.setFontSize(12);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 30);
+    doc.text(`Total Streams: ${filteredStreams.length}`, 20, 40);
+
+    const tableData = filteredStreams.map(stream => [
+      stream.name || 'No Name',
+      stream.className || 'No Class',
+      stream.description || 'No Description',
+      stream.studentCount.toString()
     ]);
 
-    const csvContent = [headers, ...csvData]
-      .map(row => row.map(field => `"${field}"`).join(','))
-      .join('\n');
+    (doc as any).autoTable({
+      head: [['Stream Name', 'Class', 'Description', 'Students']],
+      body: tableData,
+      startY: 50,
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [59, 130, 246] },
+    });
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'streams.csv';
-    a.click();
-    window.URL.revokeObjectURL(url);
+    doc.save('streams-report.pdf');
   };
+
+  const filterOptions = useMemo(() => {
+    const classOptions = classes.map(classItem => ({
+      value: `class-${classItem.id}`,
+      label: classItem.name
+    }));
+
+    return [
+      { label: "Class", options: classOptions }
+    ];
+  }, [classes]);
 
   if (loading) {
     return (
@@ -175,70 +210,66 @@ export default function StreamsList() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => navigate('/')}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
-          </Button>
+    <DashboardLayout 
+      userRole="admin" 
+      userName={userName} 
+      photoUrl={photoUrl} 
+      onLogout={handleLogout}
+    >
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Streams List</h1>
             <p className="text-muted-foreground">
               Total: {filteredStreams.length} of {streams.length} streams
             </p>
           </div>
-        </div>
-        <div className="flex gap-2">
-          <Button onClick={exportToCSV} variant="outline" className="gap-2">
-            <Download className="h-4 w-4" />
-            Export CSV
+          <Button onClick={downloadPDF} className="gap-2">
+            <FileText className="h-4 w-4" />
+            Download PDF
           </Button>
         </div>
-      </div>
 
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            Filters & Search
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-4 flex-wrap">
-            <div className="flex-1 min-w-64">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by name, description, class, or ID..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+        {/* Filters */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Filter className="h-5 w-5" />
+              Search & Filters
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by name, description, class, or ID..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
               </div>
+              <Select value={filterType} onValueChange={setFilterType}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="All Filters" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Streams</SelectItem>
+                  {filterOptions.map((group) => (
+                    group.options.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <Select value={filterClass} onValueChange={setFilterClass}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Filter by class" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Classes</SelectItem>
-                {classes.map(classItem => (
-                  <SelectItem key={classItem.id} value={classItem.id}>
-                    {classItem.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
       {/* Streams Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -361,6 +392,7 @@ export default function StreamsList() {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }

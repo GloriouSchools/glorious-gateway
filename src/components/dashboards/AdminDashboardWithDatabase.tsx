@@ -19,7 +19,8 @@ import {
   Activity,
   Shield,
   Mail,
-  Loader2
+  Loader2,
+  Vote
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { AccountVerificationForm } from "@/components/auth/AccountVerificationForm";
@@ -236,6 +237,40 @@ export function AdminDashboard() {
           })
         )}
       </div>
+
+      {/* Electoral Applications Management */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <Vote className="h-5 w-5" />
+              Electoral Applications
+            </span>
+            <Button size="sm" variant="outline" onClick={() => navigate('/admin/electoral')}>
+              Manage Applications
+            </Button>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground mb-4">
+            Review and manage student applications for leadership positions
+          </p>
+          <div className="grid md:grid-cols-3 gap-4">
+            <div className="text-center p-4 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg">
+              <p className="text-2xl font-bold text-yellow-600">-</p>
+              <p className="text-sm text-yellow-700 dark:text-yellow-400">Pending Review</p>
+            </div>
+            <div className="text-center p-4 bg-green-50 dark:bg-green-950/20 rounded-lg">
+              <p className="text-2xl font-bold text-green-600">-</p>
+              <p className="text-sm text-green-700 dark:text-green-400">Confirmed</p>
+            </div>
+            <div className="text-center p-4 bg-red-50 dark:bg-red-950/20 rounded-lg">
+              <p className="text-2xl font-bold text-red-600">-</p>
+              <p className="text-sm text-red-700 dark:text-red-400">Rejected</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card>

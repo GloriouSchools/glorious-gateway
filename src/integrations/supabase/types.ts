@@ -49,7 +49,6 @@ export type Database = {
       }
       classes: {
         Row: {
-          class_code: string | null
           created_at: string | null
           description: string | null
           id: string | null
@@ -57,7 +56,6 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          class_code?: string | null
           created_at?: string | null
           description?: string | null
           id?: string | null
@@ -65,7 +63,6 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
-          class_code?: string | null
           created_at?: string | null
           description?: string | null
           id?: string | null
@@ -74,32 +71,179 @@ export type Database = {
         }
         Relationships: []
       }
-      streams: {
+      electoral_applications: {
         Row: {
-          class_id: string | null
+          age: string | null
+          class_name: string | null
+          class_teacher_name: string | null
+          class_teacher_tel: string | null
+          created_at: string | null
+          experience: string | null
+          id: string | null
+          parent_name: string | null
+          parent_tel: string | null
+          position: string | null
+          qualifications: string | null
+          sex: string | null
+          status: string | null
+          stream_name: string | null
+          student_email: string | null
+          student_id: string | null
+          student_name: string | null
+          student_photo: string | null
+          submitted_at: string | null
+          updated_at: string | null
+          why_apply: string | null
+        }
+        Insert: {
+          age?: string | null
+          class_name?: string | null
+          class_teacher_name?: string | null
+          class_teacher_tel?: string | null
+          created_at?: string | null
+          experience?: string | null
+          id?: string | null
+          parent_name?: string | null
+          parent_tel?: string | null
+          position?: string | null
+          qualifications?: string | null
+          sex?: string | null
+          status?: string | null
+          stream_name?: string | null
+          student_email?: string | null
+          student_id?: string | null
+          student_name?: string | null
+          student_photo?: string | null
+          submitted_at?: string | null
+          updated_at?: string | null
+          why_apply?: string | null
+        }
+        Update: {
+          age?: string | null
+          class_name?: string | null
+          class_teacher_name?: string | null
+          class_teacher_tel?: string | null
+          created_at?: string | null
+          experience?: string | null
+          id?: string | null
+          parent_name?: string | null
+          parent_tel?: string | null
+          position?: string | null
+          qualifications?: string | null
+          sex?: string | null
+          status?: string | null
+          stream_name?: string | null
+          student_email?: string | null
+          student_id?: string | null
+          student_name?: string | null
+          student_photo?: string | null
+          submitted_at?: string | null
+          updated_at?: string | null
+          why_apply?: string | null
+        }
+        Relationships: []
+      }
+      electoral_positions: {
+        Row: {
           created_at: string | null
           description: string | null
+          eligible_classes: Json | null
           id: string | null
-          name: string | null
-          stream_code: string | null
+          is_active: boolean | null
+          title: string | null
           updated_at: string | null
         }
         Insert: {
-          class_id?: string | null
           created_at?: string | null
           description?: string | null
+          eligible_classes?: Json | null
           id?: string | null
-          name?: string | null
-          stream_code?: string | null
+          is_active?: boolean | null
+          title?: string | null
           updated_at?: string | null
         }
         Update: {
-          class_id?: string | null
           created_at?: string | null
           description?: string | null
+          eligible_classes?: Json | null
           id?: string | null
+          is_active?: boolean | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      electoral_votes: {
+        Row: {
+          candidate_id: string
+          created_at: string
+          id: string
+          position: string
+          updated_at: string
+          voted_at: string
+          voter_id: string
+        }
+        Insert: {
+          candidate_id: string
+          created_at?: string
+          id?: string
+          position: string
+          updated_at?: string
+          voted_at?: string
+          voter_id: string
+        }
+        Update: {
+          candidate_id?: string
+          created_at?: string
+          id?: string
+          position?: string
+          updated_at?: string
+          voted_at?: string
+          voter_id?: string
+        }
+        Relationships: []
+      }
+      streams: {
+        Row: {
+          Class: string | null
+          class_id: string | null
+          "Created At": string | null
+          created_at: string | null
+          Description: string | null
+          id: string | null
+          ID: string | null
+          name: string | null
+          Name: string | null
+          Students: number | null
+          "Updated At": string | null
+          updated_at: string | null
+        }
+        Insert: {
+          Class?: string | null
+          class_id?: string | null
+          "Created At"?: string | null
+          created_at?: string | null
+          Description?: string | null
+          id?: string | null
+          ID?: string | null
           name?: string | null
-          stream_code?: string | null
+          Name?: string | null
+          Students?: number | null
+          "Updated At"?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          Class?: string | null
+          class_id?: string | null
+          "Created At"?: string | null
+          created_at?: string | null
+          Description?: string | null
+          id?: string | null
+          ID?: string | null
+          name?: string | null
+          Name?: string | null
+          Students?: number | null
+          "Updated At"?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -108,6 +252,7 @@ export type Database = {
         Row: {
           class_id: string | null
           created_at: string | null
+          default_password: string | null
           email: string | null
           id: string | null
           is_verified: boolean | null
@@ -116,11 +261,11 @@ export type Database = {
           personal_email: string | null
           photo_url: string | null
           stream_id: string | null
-          student_id: string | null
         }
         Insert: {
           class_id?: string | null
           created_at?: string | null
+          default_password?: string | null
           email?: string | null
           id?: string | null
           is_verified?: boolean | null
@@ -129,11 +274,11 @@ export type Database = {
           personal_email?: string | null
           photo_url?: string | null
           stream_id?: string | null
-          student_id?: string | null
         }
         Update: {
           class_id?: string | null
           created_at?: string | null
+          default_password?: string | null
           email?: string | null
           id?: string | null
           is_verified?: boolean | null
@@ -142,7 +287,6 @@ export type Database = {
           personal_email?: string | null
           photo_url?: string | null
           stream_id?: string | null
-          student_id?: string | null
         }
         Relationships: []
       }
@@ -152,17 +296,16 @@ export type Database = {
           contactNumber: number | null
           created_at: string | null
           email: string | null
-          id: string
+          id: string | null
           is_verified: boolean | null
           name: string | null
           nationality: string | null
           password_hash: string | null
           personal_email: string | null
+          photo: string | null
           photo_url: string | null
           sex: string | null
           subjectsTaught: string | null
-          teacher_code: string | null
-          teacher_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -170,17 +313,16 @@ export type Database = {
           contactNumber?: number | null
           created_at?: string | null
           email?: string | null
-          id?: string
+          id?: string | null
           is_verified?: boolean | null
           name?: string | null
           nationality?: string | null
           password_hash?: string | null
           personal_email?: string | null
+          photo?: string | null
           photo_url?: string | null
           sex?: string | null
           subjectsTaught?: string | null
-          teacher_code?: string | null
-          teacher_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -188,17 +330,16 @@ export type Database = {
           contactNumber?: number | null
           created_at?: string | null
           email?: string | null
-          id?: string
+          id?: string | null
           is_verified?: boolean | null
           name?: string | null
           nationality?: string | null
           password_hash?: string | null
           personal_email?: string | null
+          photo?: string | null
           photo_url?: string | null
           sex?: string | null
           subjectsTaught?: string | null
-          teacher_code?: string | null
-          teacher_id?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -208,26 +349,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      generate_class_code: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      generate_stream_code: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      generate_student_id: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      generate_teacher_code: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      verify_flexible_login: {
-        Args: { p_identifier: string; p_password: string }
-        Returns: Json
-      }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never

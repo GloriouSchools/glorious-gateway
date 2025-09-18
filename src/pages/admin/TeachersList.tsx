@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,11 +27,16 @@ import {
   Phone,
   MapPin,
   ArrowLeft,
-  Loader2
+  Loader2,
+  FileText
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Teacher {
   id: string;
@@ -51,12 +56,26 @@ interface Teacher {
 
 export default function TeachersList() {
   const navigate = useNavigate();
+  const { userName, photoUrl } = useAuth();
+  
+  const handleLogout = () => {
+    navigate('/login');
+  };
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [filteredTeachers, setFilteredTeachers] = useState<Teacher[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [filterGender, setFilterGender] = useState("all");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [filterType, setFilterType] = useState("all");
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   useEffect(() => {
     fetchTeachers();
@@ -64,7 +83,7 @@ export default function TeachersList() {
 
   useEffect(() => {
     filterTeachers();
-  }, [teachers, searchTerm, filterStatus, filterGender]);
+  }, [teachers, debouncedSearchTerm, filterType]);
 
   const fetchTeachers = async () => {
     try {
@@ -93,61 +112,72 @@ export default function TeachersList() {
     let filtered = teachers;
 
     // Search filter
-    if (searchTerm) {
+    if (debouncedSearchTerm) {
       filtered = filtered.filter(teacher =>
-        teacher.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        teacher.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        teacher.teacher_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        teacher.subjectsTaught?.toLowerCase().includes(searchTerm.toLowerCase())
+        teacher.name?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+        teacher.email?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+        teacher.teacher_id?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+        teacher.subjectsTaught?.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
       );
     }
 
-    // Status filter
-    if (filterStatus !== "all") {
-      filtered = filtered.filter(teacher => {
-        if (filterStatus === "verified") return teacher.is_verified;
-        if (filterStatus === "unverified") return !teacher.is_verified;
-        return true;
-      });
-    }
-
-    // Gender filter
-    if (filterGender !== "all") {
-      filtered = filtered.filter(teacher => teacher.sex === filterGender);
+    // Advanced filters
+    if (filterType !== "all") {
+      const [filterCategory, filterValue] = filterType.split("-");
+      
+      if (filterCategory === "status") {
+        if (filterValue === "verified") filtered = filtered.filter(teacher => teacher.is_verified);
+        if (filterValue === "unverified") filtered = filtered.filter(teacher => !teacher.is_verified);
+      } else if (filterCategory === "gender") {
+        filtered = filtered.filter(teacher => teacher.sex === filterValue);
+      }
     }
 
     setFilteredTeachers(filtered);
   };
 
-  const exportToCSV = () => {
-    const headers = ['ID', 'Teacher ID', 'Name', 'Email', 'Personal Email', 'Nationality', 'Gender', 'Contact', 'Subjects', 'Classes', 'Verified', 'Created At'];
-    const csvData = filteredTeachers.map(teacher => [
-      teacher.id,
-      teacher.teacher_id || '',
-      teacher.name || '',
-      teacher.email || '',
-      teacher.personal_email || '',
-      teacher.nationality || '',
-      teacher.sex || '',
-      teacher.contactNumber || '',
-      teacher.subjectsTaught || '',
-      teacher.classesTaught || '',
-      teacher.is_verified ? 'Yes' : 'No',
-      new Date(teacher.created_at).toLocaleDateString()
+  const downloadPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(20);
+    doc.text('Teachers Report', 20, 20);
+    doc.setFontSize(12);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 30);
+    doc.text(`Total Teachers: ${filteredTeachers.length}`, 20, 40);
+
+    const tableData = filteredTeachers.map(teacher => [
+      teacher.photo_url ? 'Photo' : 'No Photo',
+      teacher.name || 'No Name',
+      teacher.email || 'No Email',
+      teacher.teacher_id || 'No ID'
     ]);
 
-    const csvContent = [headers, ...csvData]
-      .map(row => row.map(field => `"${field}"`).join(','))
-      .join('\n');
+    (doc as any).autoTable({
+      head: [['Avatar', 'Name', 'Email', 'Teacher ID']],
+      body: tableData,
+      startY: 50,
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [59, 130, 246] },
+    });
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'teachers.csv';
-    a.click();
-    window.URL.revokeObjectURL(url);
+    doc.save('teachers-report.pdf');
   };
+
+  const filterOptions = useMemo(() => {
+    const statusOptions = [
+      { value: "status-verified", label: "Verified" },
+      { value: "status-unverified", label: "Unverified" }
+    ];
+    
+    const genderOptions = [
+      { value: "gender-Male", label: "Male" },
+      { value: "gender-Female", label: "Female" }
+    ];
+
+    return [
+      { label: "Status", options: statusOptions },
+      { label: "Gender", options: genderOptions }
+    ];
+  }, []);
 
   if (loading) {
     return (
@@ -161,75 +191,66 @@ export default function TeachersList() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => navigate('/')}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
-          </Button>
+    <DashboardLayout 
+      userRole="admin" 
+      userName={userName} 
+      photoUrl={photoUrl} 
+      onLogout={handleLogout}
+    >
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Teachers List</h1>
             <p className="text-muted-foreground">
               Total: {filteredTeachers.length} of {teachers.length} teachers
             </p>
           </div>
+          <Button onClick={downloadPDF} className="gap-2">
+            <FileText className="h-4 w-4" />
+            Download PDF
+          </Button>
         </div>
-        <Button onClick={exportToCSV} className="gap-2">
-          <Download className="h-4 w-4" />
-          Export CSV
-        </Button>
-      </div>
 
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            Filters & Search
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-4 flex-wrap">
-            <div className="flex-1 min-w-64">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by name, email, ID, or subject..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+        {/* Filters */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Filter className="h-5 w-5" />
+              Search & Filters
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by name, email, ID, or subject..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
               </div>
+              <Select value={filterType} onValueChange={setFilterType}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="All Filters" />
+                </SelectTrigger>
+                <SelectContent className="max-h-48 overflow-y-auto">
+                  <SelectItem value="all">All Teachers</SelectItem>
+                  {filterOptions.map((group) => (
+                    group.options.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="verified">Verified</SelectItem>
-                <SelectItem value="unverified">Unverified</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={filterGender} onValueChange={setFilterGender}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Filter by gender" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Genders</SelectItem>
-                <SelectItem value="Male">Male</SelectItem>
-                <SelectItem value="Female">Female</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
       {/* Teachers Table */}
       <Card>
@@ -270,9 +291,6 @@ export default function TeachersList() {
                           </Avatar>
                           <div>
                             <p className="font-medium">{teacher.name || 'No Name'}</p>
-                            <p className="text-xs text-muted-foreground">
-                              ID: {teacher.teacher_id || teacher.id}
-                            </p>
                           </div>
                         </div>
                       </TableCell>
@@ -339,6 +357,7 @@ export default function TeachersList() {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }

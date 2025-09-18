@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { User, Mail, Phone, Calendar, MapPin } from "lucide-react";
 
 interface PersonalInfoProps {
@@ -8,9 +9,10 @@ interface PersonalInfoProps {
   userRole: string | null;
   userEmail: string | undefined;
   personalEmail: string | null;
+  isLoading?: boolean;
 }
 
-export function PersonalInfo({ userName, userRole, userEmail, personalEmail }: PersonalInfoProps) {
+export function PersonalInfo({ userName, userRole, userEmail, personalEmail, isLoading = false }: PersonalInfoProps) {
   return (
     <Card>
       <CardHeader>
@@ -26,7 +28,7 @@ export function PersonalInfo({ userName, userRole, userEmail, personalEmail }: P
               <User className="inline mr-2 h-4 w-4" />
               Full Name
             </Label>
-            <Input id="name" value={userName} disabled />
+            {isLoading ? <Skeleton className="h-10" /> : <Input id="name" value={userName} disabled />}
           </div>
           
           {userRole === 'student' && (
@@ -47,7 +49,7 @@ export function PersonalInfo({ userName, userRole, userEmail, personalEmail }: P
               <Mail className="inline mr-2 h-4 w-4" />
               School Email
             </Label>
-            <Input id="schoolEmail" value={userEmail || ""} disabled />
+            {isLoading ? <Skeleton className="h-10" /> : <Input id="schoolEmail" value={userEmail || ""} disabled />}
           </div>
 
           <div className="space-y-2">
@@ -55,12 +57,16 @@ export function PersonalInfo({ userName, userRole, userEmail, personalEmail }: P
               <Mail className="inline mr-2 h-4 w-4" />
               Personal Email
             </Label>
-            <Input 
-              id="personalEmailDisplay" 
-              value={personalEmail || "Not set"} 
-              disabled 
-              className={!personalEmail ? "text-muted-foreground" : ""}
-            />
+            {isLoading ? (
+              <Skeleton className="h-10" />
+            ) : (
+              <Input 
+                id="personalEmailDisplay" 
+                value={personalEmail || "Not set"} 
+                disabled 
+                className={!personalEmail ? "text-muted-foreground" : ""}
+              />
+            )}
           </div>
 
           <div className="space-y-2">

@@ -233,6 +233,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Clear any pending verification data
     localStorage.removeItem('pendingVerification');
     
+    // Clear any redirect paths to prevent next user from being redirected to wrong page
+    localStorage.removeItem('redirectAfterLogin');
+    
     // Only sign out from Supabase if there's a real session
     if (session) {
       const { error } = await supabase.auth.signOut();

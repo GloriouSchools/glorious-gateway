@@ -1,0 +1,8 @@
+-- First, make electoral_applications.id a primary key if it isn't already
+ALTER TABLE public.electoral_applications 
+ADD PRIMARY KEY (id);
+
+-- Then add the foreign key constraint from electoral_votes.candidate_id to electoral_applications.id
+ALTER TABLE public.electoral_votes 
+ADD CONSTRAINT electoral_votes_candidate_id_fkey 
+FOREIGN KEY (candidate_id) REFERENCES public.electoral_applications(id);

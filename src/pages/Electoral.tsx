@@ -15,13 +15,21 @@ import {
   ArrowRight
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { populateDummyElectoralData, clearDummyElectoralData, checkDummyDataExists } from "@/utils/dummyElectoralData";
+import { supabase } from "@/integrations/supabase/client";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { toast } from "sonner";
+
 
 export default function Electoral() {
   const navigate = useNavigate();
-  const { user, userName } = useAuth();
+  const { user, userName, userRole, photoUrl, signOut } = useAuth();
   const [hasApplication, setHasApplication] = useState(false);
-  const [dummyDataCount, setDummyDataCount] = useState(0);
+  const [userClass, setUserClass] = useState<string | null>(null);
+  const [loadingUserClass, setLoadingUserClass] = useState(true);
+
+  // Check eligibility based on class
+  const canApplyForPosts = userClass && !['P1', 'P7'].includes(userClass);
+  const canVote = userClass && userClass !== 'P1';
 
   const positionMappings = {
     "head_prefect": { title: "HEAD PREFECT", eligibleClasses: "P4-P5" },
@@ -40,21 +48,49 @@ export default function Electoral() {
     "discipline_prefect": { title: "PREFECT IN CHARGE OF DISCIPLINE", eligibleClasses: "P3-P5" },
   };
 
-  // Check if user has already applied
+  // Check if user has already applied and get user class
   useEffect(() => {
-    const checkApplication = () => {
+    const checkApplicationAndClass = async () => {
       if (user?.id || userName) {
-        const application = localStorage.getItem(`electoral_application_${user?.id || userName}`);
-        setHasApplication(!!application);
+        try {
+          // Get user's class information
+          const { data: studentData, error: studentError } = await supabase
+            .from('students')
+            .select('id, class_id')
+            .eq('id', user?.id || userName)
+            .single();
+
+          if (studentError) throw studentError;
+
+          if (studentData) {
+            const { data: classData, error: classError } = await supabase
+              .from('classes')
+              .select('name')
+              .eq('id', studentData.class_id)
+              .single();
+
+            if (classError) throw classError;
+            setUserClass(classData?.name || null);
+          }
+
+          // Check for existing application
+          const { data, error } = await supabase
+            .from('electoral_applications')
+            .select('id')
+            .eq('student_id', user?.id || userName)
+            .single();
+          
+          setHasApplication(!!data);
+        } catch (error) {
+          console.log('Error fetching user data:', error);
+          setHasApplication(false);
+        } finally {
+          setLoadingUserClass(false);
+        }
       }
     };
     
-    const checkDummyData = () => {
-      setDummyDataCount(checkDummyDataExists());
-    };
-    
-    checkApplication();
-    checkDummyData();
+    checkApplicationAndClass();
   }, [user, userName]);
 
   // Countdown timer state
@@ -92,7 +128,7 @@ export default function Electoral() {
 
   // Calculate dynamic stats
   const totalVoters = useMemo(() => {
-    // Actual student data from the school
+    // Actual student data from the school (excluding P1 as they cannot vote)
     const studentData = {
       "P2": {
         "GOLDEN": ["ABAHO FIACRE EUGENE", "ADIL KIVIIRI MITTI", "AGASHA ABIGAIL", "AHURIRE JONATHAN", "AINEBYONA GABRIELLA ALINDA", "AKAMPULIRA ARISTARCHUS SAMUEL", "ALUMA AARON", "ASHABA ABIGAIL CHLOE", "ATUKUNDA SALOME", "AYONGYERAHO SAMANTHA", "BUKENYA POWEL JUNIOR", "BYAMUKAMA MULUNGI RHODAH", "GANZA HOLLY SHAK", "GITTA JAMAL", "HIRWA TETA HUGUETTE", "JJUUKO DRAKE PUIS", "KABUYAYA SHANNA", "KATO JESSE", "KATUMBA WALLACE MUGERWA", "KAYANJA DALTON", "KIJJAMBU GRACE", "KIRENDA HAVANS KERAMO", "KISAKYE ELIANA TENDO", "KISITU TREVIS STEVEN", "KITENDA GIAN MUKIRIZA", "KIYAGA HADIJAH", "KUBAGYE ISAIAH", "KUNDHUBA LEVITICUS MIGUEL", "KWAGALA GRAHAM", "LUBOWA ABDUL KARIM", "LUTAAYA JORDIN SAAVA", "LWASA DAVIS", "MAGUMBA SHAMYRAH", "MAWEJJE EXPERITO", "MAYANJA FABIAN VANVAN", "MBOGGA JOEL", "MIREMBE LUCY FLAVIA", "MUHOZA PRAISE", "MUSIITWA MARCUS FRANCIS", "MUWANGA HAIMA AADIHA", "MUWANGUZI CHRIS DANIEL", "MWEBIGWA ELIJAH", "NAJJUUKO NALUZZI", "NAKAAYI ABIGAIL", "NALUJJA TIMAYA", "NAMULINDWA MIRACLE", "NANKYINGA SHANNEL MARIA", "NASSALI BASHIRAH JOY", "NATUHWERA ABIGAIL KATONGOLE", "NAZZIWA ELIANA GRACE", "NUWASIIMA ELIJAH JUNIOR", "RUGABA CAESER", "SSEBBUMBA ISAAC IQRAM", "SSEGAWA JORAM", "TIBANYAGA GENESIS", "ZAWEDDE NADRA"],
@@ -140,57 +176,74 @@ export default function Electoral() {
   
   const daysRemaining = Math.max(0, timeLeft.days);
   
-  const votesCast = 0; // Voting hasn't started yet, we're in application phase
+  const [applicantCounts, setApplicantCounts] = useState<{[key: string]: number}>({});
+  const [loadingApplicants, setLoadingApplicants] = useState(true);
+  
+  // Calculate total applicants from applicantCounts
+  const totalApplicants = useMemo(() => {
+    return Object.values(applicantCounts).reduce((sum, count) => sum + count, 0);
+  }, [applicantCounts]);
 
   const electionStats = [
     { title: "Total Voters", value: totalVoters.toLocaleString(), icon: Users, color: "text-blue-500" },
     { title: "Active Positions", value: activePositions.toString(), icon: Trophy, color: "text-green-500" },
     { title: "Days Remaining", value: daysRemaining.toString(), icon: Clock, color: "text-orange-500" },
-    { title: "Votes Cast", value: votesCast.toLocaleString(), icon: CheckCircle, color: "text-purple-500" },
+    { title: "Total Applicants", value: totalApplicants.toString(), icon: UserPlus, color: "text-purple-500", loading: loadingApplicants },
   ];
 
-  const [applicantCounts, setApplicantCounts] = useState<{[key: string]: number}>({});
-
-  // Count applications from localStorage
+  // Fetch application counts from database
   useEffect(() => {
-    const countApplications = () => {
-      const counts: {[key: string]: number} = {};
-      
-      // Initialize all positions with 0
-      Object.keys(positionMappings).forEach(position => {
-        counts[position] = 0;
-      });
-      
-      // Count applications from localStorage
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('electoral_application_')) {
-          try {
-            const appData = localStorage.getItem(key);
-            if (appData) {
-              const parsedApp = JSON.parse(appData);
-              if (parsedApp.position && counts.hasOwnProperty(parsedApp.position)) {
-                counts[parsedApp.position]++;
-              }
-            }
-          } catch (error) {
-            console.error('Error parsing application data:', error);
+    const fetchApplicantCounts = async () => {
+      try {
+        setLoadingApplicants(true);
+        const counts: {[key: string]: number} = {};
+        
+        // Initialize all positions with 0
+        Object.keys(positionMappings).forEach(position => {
+          counts[position] = 0;
+        });
+        
+        // Count applications from database
+        for (const position of Object.keys(positionMappings)) {
+          const { count, error } = await supabase
+            .from('electoral_applications')
+            .select('*', { count: 'exact', head: true })
+            .eq('position', position);
+          
+          if (!error && count !== null) {
+            counts[position] = count;
           }
         }
+        
+        setApplicantCounts(counts);
+      } catch (error) {
+        console.error('Error fetching applicant counts:', error);
+      } finally {
+        setLoadingApplicants(false);
       }
-      
-      setApplicantCounts(counts);
     };
 
-    countApplications();
+    fetchApplicantCounts();
     
-    // Listen for localStorage changes to update counts
-    const handleStorageChange = () => {
-      countApplications();
+    // Set up real-time subscription for application changes
+    const channel = supabase
+      .channel('electoral-applications')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'electoral_applications'
+        },
+        () => {
+          fetchApplicantCounts();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
     };
-    
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   const availablePositions = Object.entries(positionMappings).map(([key, value]) => ({
@@ -200,8 +253,24 @@ export default function Electoral() {
     eligibleClasses: value.eligibleClasses,
   }));
 
+  
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast.success("You have been logged out");
+      navigate("/login");
+    } catch (error: any) {
+      toast.error("Failed to log out");
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+    <DashboardLayout 
+      userRole={userRole || "student"} 
+      userName={userName} 
+      photoUrl={photoUrl} 
+      onLogout={handleLogout}
+    >
       <div className="container mx-auto px-4 py-8 space-y-8">
         {/* Header with Timer */}
         <div className="text-center mb-8">
@@ -250,54 +319,6 @@ export default function Electoral() {
           </div>
         </div>
 
-        {/* Dummy Data Management - For Testing */}
-        <div className="max-w-2xl mx-auto">
-          <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950/20">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2 text-blue-800 dark:text-blue-200">
-                🧪 Testing Tools
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-sm text-blue-700 dark:text-blue-300">
-                Use these tools to add dummy candidate data for testing the voting system.
-              </p>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">
-                  Current dummy candidates: <Badge variant="secondary">{dummyDataCount}</Badge>
-                </span>
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => {
-                      const count = populateDummyElectoralData();
-                      setDummyDataCount(checkDummyDataExists());
-                      // Trigger a custom event to refresh other components
-                      window.dispatchEvent(new Event('storage'));
-                    }}
-                    className="text-blue-700 border-blue-300 hover:bg-blue-100"
-                  >
-                    Add Dummy Data
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => {
-                      clearDummyElectoralData();
-                      setDummyDataCount(0);
-                      // Trigger a custom event to refresh other components
-                      window.dispatchEvent(new Event('storage'));
-                    }}
-                    className="text-red-700 border-red-300 hover:bg-red-100"
-                  >
-                    Clear Dummy Data
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Main Action Cards - Above the fold */}
         <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
@@ -315,24 +336,40 @@ export default function Electoral() {
               <p className="text-muted-foreground text-base">
                 Ready to lead? Submit your application and campaign for a leadership position.
               </p>
-              <div className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span>Application Deadline</span>
-                  <span className="font-medium text-orange-600">Sept 19, 2025</span>
+              {loadingUserClass ? (
+                <div className="flex items-center justify-center py-4">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
+                  <span className="ml-2 text-sm text-muted-foreground">Checking eligibility...</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span>Open Positions</span>
-                  <Badge variant="secondary">12 available</Badge>
+              ) : !canApplyForPosts ? (
+                <div className="bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 rounded-lg p-3">
+                  <p className="text-sm text-orange-800 dark:text-orange-200 text-center">
+                    Students in {userClass} are not eligible to apply for prefectorial positions. 
+                    Only classes P2-P6 can participate in the electoral contest.
+                  </p>
                 </div>
-              </div>
-              <Button 
-                size="lg"
-                className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white group-hover:scale-105 transition-transform"
-                onClick={() => navigate(hasApplication ? '/electoral/status' : '/electoral/apply')}
-              >
-                {hasApplication ? 'Track My Application' : 'Start Application'}
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
+              ) : (
+                <>
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-sm">
+                      <span>Application Deadline</span>
+                      <span className="font-medium text-orange-600">Sept 19, 2025</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Open Positions</span>
+                      <Badge variant="secondary">12 available</Badge>
+                    </div>
+                  </div>
+                  <Button 
+                    size="lg"
+                    className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white group-hover:scale-105 transition-transform"
+                    onClick={() => navigate(hasApplication ? '/electoral/status' : '/electoral/apply')}
+                  >
+                    {hasApplication ? 'Track My Application' : 'Start Application'}
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </>
+              )}
             </CardContent>
           </Card>
 
@@ -350,26 +387,42 @@ export default function Electoral() {
               <p className="text-muted-foreground text-base">
                 Exercise your democratic right. Vote for the candidates you believe in.
               </p>
-              <div className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span>Elections</span>
-                  <span className="font-medium text-orange-600">Oct 16-17, 2025</span>
+              {loadingUserClass ? (
+                <div className="flex items-center justify-center py-4">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
+                  <span className="ml-2 text-sm text-muted-foreground">Checking eligibility...</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span>Your Status</span>
-                  <Badge variant="outline" className="border-orange-200 text-orange-600">
-                    Ready to Vote
-                  </Badge>
+              ) : !canVote ? (
+                <div className="bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 rounded-lg p-3">
+                  <p className="text-sm text-orange-800 dark:text-orange-200 text-center">
+                    Students in {userClass} are not eligible to vote in the electoral process. 
+                    Only classes P2-P7 can participate in voting.
+                  </p>
                 </div>
-              </div>
-              <Button 
-                size="lg"
-                className="w-full bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 hover:from-orange-600 hover:via-orange-700 hover:to-orange-800 text-white animate-pulse group-hover:scale-105 transition-transform"
-                onClick={() => navigate('/electoral/vote')}
-              >
-                Vote Now
-                <Vote className="ml-2 h-5 w-5" />
-              </Button>
+              ) : (
+                <>
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-sm">
+                      <span>Elections</span>
+                      <span className="font-medium text-orange-600">Oct 16-17, 2025</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Your Status</span>
+                      <Badge variant="outline" className="border-orange-200 text-orange-600">
+                        Ready to Vote
+                      </Badge>
+                    </div>
+                  </div>
+                  <Button 
+                    size="lg"
+                    className="w-full bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 hover:from-orange-600 hover:via-orange-700 hover:to-orange-800 text-white animate-pulse group-hover:scale-105 transition-transform"
+                    onClick={() => navigate('/electoral/vote')}
+                  >
+                    Vote Now
+                    <Vote className="ml-2 h-5 w-5" />
+                  </Button>
+                </>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -382,7 +435,15 @@ export default function Electoral() {
               <Card key={stat.title} className="text-center">
                 <CardContent className="pt-4 pb-4">
                   <Icon className={`h-6 w-6 mx-auto mb-2 ${stat.color}`} />
-                  <div className="text-xl font-bold">{stat.value}</div>
+                  <div className="text-xl font-bold">
+                    {stat.loading ? (
+                      <div className="flex justify-center">
+                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
+                      </div>
+                    ) : (
+                      stat.value
+                    )}
+                  </div>
                   <p className="text-xs text-muted-foreground">{stat.title}</p>
                 </CardContent>
               </Card>
@@ -500,6 +561,6 @@ export default function Electoral() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

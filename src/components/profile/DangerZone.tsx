@@ -215,7 +215,10 @@ export function DangerZone({ personalEmail, userId, userRole }: DangerZoneProps)
         console.log('Updating student password');
         const { error, data } = await supabase
           .from('students')
-          .update({ password_hash: formData.newPassword })
+          .update({ 
+            password_hash: formData.newPassword,
+            default_password: null // Clear default password so only new password works
+          })
           .eq('id', userId)
           .select();
         

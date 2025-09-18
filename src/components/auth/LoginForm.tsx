@@ -102,84 +102,121 @@ export function LoginForm({ schoolLogo }: LoginFormProps) {
     setIsLoading(true);
     
     try {
-      // Use the flexible login function that handles all user types
-      const { data, error } = await supabase
-        .rpc('verify_flexible_login', {
-          p_identifier: signInData.email,
-          p_password: signInData.password
-        });
+      console.log('Attempting login with email:', signInData.email);
       
-      if (error) {
-        toast.error(error.message || "Failed to sign in");
+      // First, try direct database authentication as fallback
+      let userData = null;
+      let userRole = null;
+      
+      // Try to find user in students table
+      const { data: student } = await supabase
+        .from('students')
+        .select('*')
+        .eq('email', signInData.email)
+        .maybeSingle();
+      
+      if (student) {
+        const correctPassword = student.password_hash || student.default_password;
+        if (correctPassword === signInData.password) {
+          userData = student;
+          userRole = 'student';
+        }
+      }
+      
+      // Try teachers table if no student found
+      if (!userData) {
+        const { data: teacher } = await supabase
+          .from('teachers')
+          .select('*')
+          .eq('email', signInData.email)
+          .maybeSingle();
+        
+        if (teacher && teacher.password_hash === signInData.password) {
+          userData = teacher;
+          userRole = 'teacher';
+        }
+      }
+      
+      // Try admins table if no teacher found
+      if (!userData) {
+        const { data: admin } = await supabase
+          .from('admins')
+          .select('*')
+          .eq('email', signInData.email)
+          .maybeSingle();
+        
+        if (admin && admin.password_hash === signInData.password) {
+          userData = admin;
+          userRole = 'admin';
+        }
+      }
+      
+      if (!userData) {
+        toast.error("Invalid email or password");
         setIsLoading(false);
         return;
       }
       
-      if (data && typeof data === 'object' && 'success' in data && data.success) {
-        // Store session info based on role
-        const userType = (data as any).user_type;
-        const userData = (data as any).user_data;
-        const name = userData.name;
-        const isVerified = userData.is_verified;
-        const personalEmail = userData.personal_email;
-        const photoUrl = userData.photo_url;
-        const email = userData.email;
-        const userId = userData.id;
-        
-        if (userType === 'admin') {
-          localStorage.setItem('adminToken', 'admin-token-' + userId);
-          localStorage.setItem('adminRole', 'admin');
-          localStorage.setItem('adminName', name);
-          localStorage.setItem('adminVerified', String(isVerified));
-          localStorage.setItem('adminId', userId);
-          localStorage.setItem('adminEmail', email);
-          if (personalEmail) {
-            localStorage.setItem('adminPersonalEmail', personalEmail);
-          }
-        } else if (userType === 'teacher') {
-          localStorage.setItem('teacherToken', 'teacher-token-' + userId);
-          localStorage.setItem('teacherRole', 'teacher');
-          localStorage.setItem('teacherName', name);
-          localStorage.setItem('teacherId', userData.teacher_id || userId);
-          localStorage.setItem('teacherEmail', email);
-          localStorage.setItem('teacherVerified', String(isVerified));
-          if (personalEmail) {
-            localStorage.setItem('teacherPersonalEmail', personalEmail);
-          }
-        } else if (userType === 'student') {
-          localStorage.setItem('studentToken', 'student-token-' + userId);
-          localStorage.setItem('studentRole', 'student');
-          localStorage.setItem('studentName', name);
-          localStorage.setItem('studentId', userId);
-          localStorage.setItem('studentEmail', email);
-          localStorage.setItem('studentVerified', String(isVerified));
-          if (personalEmail) {
-            localStorage.setItem('studentPersonalEmail', personalEmail);
-          }
-          if (photoUrl) {
-            localStorage.setItem('studentPhotoUrl', photoUrl);
-          }
+      // Store session info based on role
+      const name = userData.name;
+      const isVerified = userData.is_verified || false;
+      const personalEmail = userData.personal_email;
+      const photoUrl = userData.photo_url;
+      const email = userData.email;
+      const userId = userData.id;
+      
+      if (userRole === 'admin') {
+        localStorage.setItem('adminToken', 'admin-token-' + userId);
+        localStorage.setItem('adminRole', 'admin');
+        localStorage.setItem('adminName', name);
+        localStorage.setItem('adminVerified', String(isVerified));
+        localStorage.setItem('adminId', userId);
+        localStorage.setItem('adminEmail', email);
+        if (personalEmail) {
+          localStorage.setItem('adminPersonalEmail', personalEmail);
         }
-        
-        toast.success(`Welcome, ${name}!`);
-        
-        // Check for redirect path and navigate there
-        const redirectPath = localStorage.getItem('redirectAfterLogin');
-        localStorage.removeItem('redirectAfterLogin'); // Clean up
-        
-        // Force a page reload to ensure auth state is properly initialized
-        if (redirectPath && redirectPath !== '/login') {
-          window.location.href = redirectPath;
-        } else {
-          window.location.href = '/';
+      } else if (userRole === 'teacher') {
+        localStorage.setItem('teacherToken', 'teacher-token-' + userId);
+        localStorage.setItem('teacherRole', 'teacher');
+        localStorage.setItem('teacherName', name);
+        localStorage.setItem('teacherId', userId);
+        localStorage.setItem('teacherEmail', email);
+        localStorage.setItem('teacherVerified', String(isVerified));
+        if (personalEmail) {
+          localStorage.setItem('teacherPersonalEmail', personalEmail);
         }
-        return;
-      } else {
-        toast.error((data as any)?.message || "Invalid credentials");
-        setIsLoading(false);
-        return;
+      } else if (userRole === 'student') {
+        localStorage.setItem('studentToken', 'student-token-' + userId);
+        localStorage.setItem('studentRole', 'student');
+        localStorage.setItem('studentName', name);
+        localStorage.setItem('studentId', userId);
+        localStorage.setItem('studentEmail', email);
+        localStorage.setItem('studentVerified', String(isVerified));
+        if (personalEmail) {
+          localStorage.setItem('studentPersonalEmail', personalEmail);
+        }
+        if (photoUrl) {
+          localStorage.setItem('studentPhotoUrl', photoUrl);
+        }
       }
+      
+      toast.success(`Welcome, ${name}!`);
+      
+      // Check for redirect path - only use it if user was actively trying to access a page
+      const redirectPath = localStorage.getItem('redirectAfterLogin');
+      localStorage.removeItem('redirectAfterLogin'); // Clean up immediately
+      
+      // Only redirect to specific page if there's a valid redirect path that's not the login page
+      // Otherwise, always go to dashboard (home page)
+      const targetPath = (redirectPath && redirectPath !== '/login' && redirectPath !== '/') 
+        ? redirectPath 
+        : '/';
+      
+      // Force a page reload to ensure auth state is properly initialized
+      window.location.href = targetPath;
+      
     } catch (error: any) {
+      console.error('Login error:', error);
       toast.error(error.message || "Failed to sign in");
     } finally {
       setIsLoading(false);

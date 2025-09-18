@@ -34,8 +34,10 @@ serve(async (req) => {
       .maybeSingle();
 
     if (student && !studentError) {
-      // For simplicity, we'll just check if the password matches (in production, use proper hashing)
-      if (student.password_hash === p_password) {
+      // Use password_hash if it exists, otherwise use default_password
+      const correctPassword = student.password_hash || student.default_password;
+      
+      if (correctPassword === p_password) {
         return new Response(
           JSON.stringify({
             success: true,
@@ -49,6 +51,12 @@ serve(async (req) => {
             photo_url: student.photo_url
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } else {
+        // User exists but password is wrong
+        return new Response(
+          JSON.stringify({ success: false, message: 'Your password is incorrect' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
         );
       }
     }
@@ -75,6 +83,12 @@ serve(async (req) => {
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
+      } else {
+        // User exists but password is wrong
+        return new Response(
+          JSON.stringify({ success: false, message: 'Your password is incorrect' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+        );
       }
     }
 
@@ -99,12 +113,18 @@ serve(async (req) => {
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
+      } else {
+        // User exists but password is wrong
+        return new Response(
+          JSON.stringify({ success: false, message: 'Your password is incorrect' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+        );
       }
     }
 
-    // If no user found or password doesn't match
+    // If no user found with that email in any table
     return new Response(
-      JSON.stringify({ success: false, message: 'Invalid credentials' }),
+      JSON.stringify({ success: false, message: 'Your email is incorrect' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
 

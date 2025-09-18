@@ -18,6 +18,12 @@ export default {
 			}
 		},
 		extend: {
+			fontFamily: {
+				'century-gothic': ['"Century Gothic"', '"Gothic A1"', 'sans-serif'],
+			},
+			fontSize: {
+				'application': ['14px', '1.4'],
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',

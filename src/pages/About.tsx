@@ -1,16 +1,24 @@
-import { ArrowLeft } from "lucide-react";
-import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 export default function About() {
+  const { userName, photoUrl, userRole } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    navigate('/login');
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-subtle animate-page-in">
-      <div className="max-w-4xl mx-auto px-6 py-12">
-        <Link to="/" className="inline-flex items-center text-primary hover:text-primary-hover mb-6">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Home
-        </Link>
-        
+    <DashboardLayout 
+      userRole={userRole} 
+      userName={userName || ''} 
+      photoUrl={photoUrl} 
+      onLogout={handleLogout}
+    >
+      <div className="space-y-6">
         <Card>
           <CardHeader>
             <CardTitle className="text-3xl">About Glorious Kindergarten & Primary School</CardTitle>
@@ -81,6 +89,6 @@ export default function About() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

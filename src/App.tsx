@@ -22,6 +22,7 @@ import StudentsList from "./pages/admin/StudentsList";
 import TeachersList from "./pages/admin/TeachersList";
 import ClassesList from "./pages/admin/ClassesList";
 import StreamsList from "./pages/admin/StreamsList";
+import ElectoralApplications from "./pages/admin/ElectoralApplications";
 import Electoral from "./pages/Electoral";
 import Apply from "./pages/electoral/Apply";
 import ApplicationStatus from "./pages/electoral/ApplicationStatus";
@@ -76,6 +77,11 @@ const App = () => (
               <Route path="/admin/streams" element={
                 <ProtectedRoute>
                   <StreamsList />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/electoral" element={
+                <ProtectedRoute>
+                  <ElectoralApplications />
                 </ProtectedRoute>
               } />
               <Route path="/electoral" element={
