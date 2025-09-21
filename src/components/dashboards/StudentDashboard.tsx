@@ -268,11 +268,6 @@ export function StudentDashboard() {
       <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 p-4 md:p-6 text-white">
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="relative z-10 text-center space-y-2 md:space-y-3">
-          <div className="flex justify-center items-center space-x-1 md:space-x-2 mb-2">
-            <Sparkles className="h-4 w-4 md:h-6 md:w-6 animate-pulse" />
-            <span className="text-lg md:text-2xl animate-bounce">🎉</span>
-            <Sparkles className="h-4 w-4 md:h-6 md:w-6 animate-pulse" />
-          </div>
           <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold animate-slide-in-right">
             {greeting}, {userName || 'Superstar'}! 
           </h1>
