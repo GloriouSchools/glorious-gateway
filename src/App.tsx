@@ -41,6 +41,8 @@ import Birthdays from "./pages/Birthdays";
 import Communication from "./pages/Communication";
 import HelpSupport from "./pages/HelpSupport";
 import Library from "./pages/Library";
+import Games from "./pages/Games";
+import TypingWizard from "./pages/games/TypingWizard";
 
 const queryClient = new QueryClient();
 
@@ -159,11 +161,21 @@ const App = () => (
                   <Attendance />
                 </ProtectedRoute>
               } />
-              <Route path="/hall-of-fame" element={
-                <ProtectedRoute>
-                  <HallOfFame />
-                </ProtectedRoute>
-              } />
+               <Route path="/hall-of-fame" element={
+                 <ProtectedRoute>
+                   <HallOfFame />
+                 </ProtectedRoute>
+               } />
+               <Route path="/games" element={
+                 <ProtectedRoute>
+                   <Games />
+                 </ProtectedRoute>
+               } />
+               <Route path="/games/typing-wizard" element={
+                 <ProtectedRoute>
+                   <TypingWizard />
+                 </ProtectedRoute>
+               } />
               <Route path="/birthdays" element={
                 <ProtectedRoute>
                   <Birthdays />
@@ -184,11 +196,12 @@ const App = () => (
                   <HelpSupport />
                 </ProtectedRoute>
               } />
-              <Route path="/library" element={
-                <ProtectedRoute>
-                  <Library />
-                </ProtectedRoute>
-              } />
+               <Route path="/library" element={
+                 <ProtectedRoute>
+                   <Library />
+                 </ProtectedRoute>
+               } />
+               <Route path="/404" element={<NotFound />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

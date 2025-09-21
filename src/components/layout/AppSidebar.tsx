@@ -19,7 +19,8 @@ import {
   Clock,
   HelpCircle,
   Vote,
-  Trophy
+  Trophy,
+  Gamepad2
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -65,6 +66,7 @@ export function AppSidebar({ userRole, userName, photoUrl, onLogout }: AppSideba
           { title: "Attendance", icon: UserCheck, url: "/attendance" },
           { title: "Elections", icon: Vote, url: "/electoral" },
           { title: "Hall of Fame", icon: Trophy, url: "/hall-of-fame" },
+          { title: "Games", icon: Gamepad2, url: "/games" },
           { title: "Library", icon: Library, url: "/library" },
           { title: "Communication", icon: MessageSquare, url: "/communication" },
           { title: "Help & Support", icon: HelpCircle, url: "/help" },

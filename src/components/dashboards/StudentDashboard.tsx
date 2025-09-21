@@ -38,7 +38,8 @@ import {
   User,
   GraduationCap,
   Monitor,
-  Quote
+  Quote,
+  Gamepad2
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { AccountVerificationForm } from "@/components/auth/AccountVerificationForm";
@@ -213,6 +214,16 @@ export function StudentDashboard() {
       stats: 'Top 10 Students',
       action: 'See Stars',
       route: '/hall-of-fame'
+    },
+    {
+      id: 'games',
+      title: 'Educational Games',
+      description: 'Learn while having fun!',
+      icon: Gamepad2,
+      color: 'from-indigo-400 to-purple-400',
+      stats: '12 New Games',
+      action: 'Play Now',
+      route: '/games'
     },
     {
       id: 'library',
