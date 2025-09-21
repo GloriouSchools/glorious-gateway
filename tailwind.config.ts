@@ -237,6 +237,140 @@ export default {
 						transform: 'scale(1)'
 					}
 				},
+				'bounce-in': {
+					'0%': {
+						transform: 'scale(0.3) translateY(-100px)',
+						opacity: '0'
+					},
+					'50%': {
+						transform: 'scale(1.05) translateY(0)',
+						opacity: '1'
+					},
+					'70%': {
+						transform: 'scale(0.9)',
+						opacity: '1'
+					},
+					'100%': {
+						transform: 'scale(1)',
+						opacity: '1'
+					}
+				},
+				'bounce-out': {
+					'0%': {
+						transform: 'scale(1)',
+						opacity: '1'
+					},
+					'30%': {
+						transform: 'scale(1.1)',
+						opacity: '1'
+					},
+					'100%': {
+						transform: 'scale(0.3) translateY(-100px)',
+						opacity: '0'
+					}
+				},
+				'swipe-left': {
+					'0%': {
+						transform: 'translateX(100%) rotate(10deg)',
+						opacity: '0'
+					},
+					'100%': {
+						transform: 'translateX(0) rotate(0)',
+						opacity: '1'
+					}
+				},
+				'swipe-right': {
+					'0%': {
+						transform: 'translateX(-100%) rotate(-10deg)',
+						opacity: '0'
+					},
+					'100%': {
+						transform: 'translateX(0) rotate(0)',
+						opacity: '1'
+					}
+				},
+				'swipe-up': {
+					'0%': {
+						transform: 'translateY(100%) rotate(5deg) scale(0.8)',
+						opacity: '0'
+					},
+					'100%': {
+						transform: 'translateY(0) rotate(0) scale(1)',
+						opacity: '1'
+					}
+				},
+				'swipe-down': {
+					'0%': {
+						transform: 'translateY(-100%) rotate(-5deg) scale(0.8)',
+						opacity: '0'
+					},
+					'100%': {
+						transform: 'translateY(0) rotate(0) scale(1)',
+						opacity: '1'
+					}
+				},
+				'flip-x': {
+					'0%': {
+						transform: 'rotateX(90deg)',
+						opacity: '0'
+					},
+					'50%': {
+						transform: 'rotateX(45deg)',
+						opacity: '0.5'
+					},
+					'100%': {
+						transform: 'rotateX(0)',
+						opacity: '1'
+					}
+				},
+				'flip-y': {
+					'0%': {
+						transform: 'rotateY(90deg)',
+						opacity: '0'
+					},
+					'50%': {
+						transform: 'rotateY(45deg)',
+						opacity: '0.5'
+					},
+					'100%': {
+						transform: 'rotateY(0)',
+						opacity: '1'
+					}
+				},
+				'zoom-bounce': {
+					'0%': {
+						transform: 'scale(0) rotate(180deg)',
+						opacity: '0'
+					},
+					'50%': {
+						transform: 'scale(1.2) rotate(90deg)',
+						opacity: '0.8'
+					},
+					'100%': {
+						transform: 'scale(1) rotate(0)',
+						opacity: '1'
+					}
+				},
+				'wiggle': {
+					'0%, 100%': {
+						transform: 'rotate(-3deg)'
+					},
+					'50%': {
+						transform: 'rotate(3deg)'
+					}
+				},
+				'float': {
+					'0%, 100%': {
+						transform: 'translateY(-5px)'
+					},
+					'50%': {
+						transform: 'translateY(5px)'
+					}
+				},
+				'rainbow': {
+					'0%': { transform: 'rotate(0deg) hue-rotate(0deg)' },
+					'100%': { transform: 'rotate(360deg) hue-rotate(360deg)' }
+				},
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
@@ -256,6 +390,18 @@ export default {
 				'slide-down': 'slide-down 0.3s ease-out',
 				'flip-in': 'flip-in 0.4s ease-out',
 				'swipe-in': 'swipe-in 0.3s ease-out',
+				'bounce-in': 'bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+				'bounce-out': 'bounce-out 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+				'swipe-left': 'swipe-left 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+				'swipe-right': 'swipe-right 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+				'swipe-up': 'swipe-up 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+				'swipe-down': 'swipe-down 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+				'flip-x': 'flip-x 0.5s ease-out',
+				'flip-y': 'flip-y 0.5s ease-out',
+				'zoom-bounce': 'zoom-bounce 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+				'wiggle': 'wiggle 0.5s ease-in-out infinite',
+				'float': 'float 2s ease-in-out infinite',
+				'rainbow': 'rainbow 3s linear infinite',
 			}
 		}
 	},

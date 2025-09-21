@@ -14,8 +14,14 @@ import {
   DollarSign,
   Library,
   UserCheck,
-  BarChart3
+  BarChart3,
+  User,
+  Clock,
+  HelpCircle,
+  Vote,
+  Trophy
 } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -39,6 +45,8 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar({ userRole, userName, photoUrl, onLogout }: AppSidebarProps) {
+  const location = useLocation();
+  
   const getMenuItems = () => {
     const commonItems = [
       { title: "Dashboard", icon: Home, url: `/${userRole}` },
@@ -48,13 +56,18 @@ export function AppSidebar({ userRole, userName, photoUrl, onLogout }: AppSideba
       case "student":
         return [
           { title: "Dashboard", icon: Home, url: "/" },
-          { title: "My Courses", icon: BookOpen, url: "/courses" },
+          { title: "Profile", icon: User, url: "/profile" },
+          { title: "Calendar", icon: Calendar, url: "/calendar" },
+          { title: "My Classes", icon: GraduationCap, url: "/classes" },
           { title: "Assignments", icon: ClipboardList, url: "/assignments" },
-          { title: "Grades", icon: Award, url: "/grades" },
-          { title: "Schedule", icon: Calendar, url: "/schedule" },
+          { title: "My Grades", icon: Award, url: "/grades" },
+          { title: "Timetable", icon: Clock, url: "/timetable" },
+          { title: "Attendance", icon: UserCheck, url: "/attendance" },
+          { title: "Elections", icon: Vote, url: "/electoral" },
+          { title: "Hall of Fame", icon: Trophy, url: "/hall-of-fame" },
           { title: "Library", icon: Library, url: "/library" },
-          { title: "Messages", icon: MessageSquare, url: "/messages" },
-          { title: "Fees", icon: DollarSign, url: "/fees" },
+          { title: "Communication", icon: MessageSquare, url: "/communication" },
+          { title: "Help & Support", icon: HelpCircle, url: "/help" },
         ];
       case "teacher":
         return [
@@ -109,23 +122,31 @@ export function AppSidebar({ userRole, userName, photoUrl, onLogout }: AppSideba
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <a href={item.url} className="flex items-center gap-3">
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </a>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {menuItems.map((item) => {
+                const isActive = location.pathname === item.url;
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <Link 
+                        to={item.url} 
+                        className={`flex items-center gap-3 ${
+                          isActive ? 'bg-primary text-primary-foreground font-medium' : ''
+                        }`}
+                      >
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter className="border-t p-4">
-        <SidebarMenuButton onClick={onLogout} className="w-full">
+        <SidebarMenuButton onClick={onLogout} className="w-full text-destructive hover:text-destructive hover:bg-destructive/10">
           <LogOut className="h-4 w-4 mr-3" />
           <span>Logout</span>
         </SidebarMenuButton>

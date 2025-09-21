@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { PageTransition } from "@/components/PageTransition";
 import Index from "./pages/Index";
 import { LoginPage } from "./pages/Login";
 import { VerifyCallback } from "./pages/VerifyCallback";
@@ -29,6 +30,17 @@ import ApplicationStatus from "./pages/electoral/ApplicationStatus";
 import Candidates from "./pages/electoral/Candidates";
 import LiveResults from "./pages/electoral/LiveResults";
 import Vote from "./pages/electoral/Vote";
+import Calendar from "./pages/Calendar";
+import Classes from "./pages/Classes";
+import Assignments from "./pages/Assignments";
+import Grades from "./pages/Grades";
+import Timetable from "./pages/Timetable";
+import Attendance from "./pages/Attendance";
+import HallOfFame from "./pages/HallOfFame";
+import Birthdays from "./pages/Birthdays";
+import Communication from "./pages/Communication";
+import HelpSupport from "./pages/HelpSupport";
+import Library from "./pages/Library";
 
 const queryClient = new QueryClient();
 
@@ -46,7 +58,8 @@ const App = () => (
         <BrowserRouter>
           <AuthProvider>
             <ScrollToTop />
-            <Routes>
+            <PageTransition>
+              <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/verify-callback" element={<VerifyCallback />} />
               <Route path="/" element={
@@ -116,9 +129,70 @@ const App = () => (
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/cookies" element={<Cookies />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+              <Route path="/calendar" element={
+                <ProtectedRoute>
+                  <Calendar />
+                </ProtectedRoute>
+              } />
+              <Route path="/classes" element={
+                <ProtectedRoute>
+                  <Classes />
+                </ProtectedRoute>
+              } />
+              <Route path="/assignments" element={
+                <ProtectedRoute>
+                  <Assignments />
+                </ProtectedRoute>
+              } />
+              <Route path="/grades" element={
+                <ProtectedRoute>
+                  <Grades />
+                </ProtectedRoute>
+              } />
+              <Route path="/timetable" element={
+                <ProtectedRoute>
+                  <Timetable />
+                </ProtectedRoute>
+              } />
+              <Route path="/attendance" element={
+                <ProtectedRoute>
+                  <Attendance />
+                </ProtectedRoute>
+              } />
+              <Route path="/hall-of-fame" element={
+                <ProtectedRoute>
+                  <HallOfFame />
+                </ProtectedRoute>
+              } />
+              <Route path="/birthdays" element={
+                <ProtectedRoute>
+                  <Birthdays />
+                </ProtectedRoute>
+              } />
+              <Route path="/communication" element={
+                <ProtectedRoute>
+                  <Communication />
+                </ProtectedRoute>
+              } />
+              <Route path="/help-support" element={
+                <ProtectedRoute>
+                  <HelpSupport />
+                </ProtectedRoute>
+              } />
+              <Route path="/help" element={
+                <ProtectedRoute>
+                  <HelpSupport />
+                </ProtectedRoute>
+              } />
+              <Route path="/library" element={
+                <ProtectedRoute>
+                  <Library />
+                </ProtectedRoute>
+              } />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </PageTransition>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>

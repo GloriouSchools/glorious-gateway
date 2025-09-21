@@ -48,6 +48,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import defaultAvatar from "@/assets/default-avatar.png";
 import headerImage from "@/assets/header.png";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Student {
   id: string;
@@ -64,6 +66,7 @@ interface Student {
 export default function StudentsList() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { userRole, userName, photoUrl, signOut } = useAuth();
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -446,6 +449,16 @@ export default function StudentsList() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast.success("You have been logged out");
+      navigate("/login");
+    } catch (error: any) {
+      toast.error("Failed to log out");
+    }
+  };
+
   const visiblePages = useMemo(() => {
     const pages: number[] = [];
     const maxToShow = 5;
@@ -458,17 +471,20 @@ export default function StudentsList() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-          <p className="text-muted-foreground">Loading students...</p>
+      <DashboardLayout userRole={userRole || "admin"} userName={userName} photoUrl={photoUrl} onLogout={handleLogout}>
+        <div className="flex items-center justify-center min-h-96">
+          <div className="text-center space-y-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+            <p className="text-muted-foreground">Loading students...</p>
+          </div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <DashboardLayout userRole={userRole || "admin"} userName={userName} photoUrl={photoUrl} onLogout={handleLogout}>
+      <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -787,6 +803,7 @@ export default function StudentsList() {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }

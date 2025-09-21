@@ -103,7 +103,7 @@ const positionsList = [
 export default function Vote() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, userRole, userName, photoUrl, signOut } = useAuth();
   
   const [positions, setPositions] = useState<Position[]>([]);
   const [selectedPosition, setSelectedPosition] = useState<string>("");
@@ -378,51 +378,64 @@ export default function Vote() {
     setSelectedCandidate("");
   };
 
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Logged out",
+        description: "You have been logged out successfully."
+      });
+      navigate("/login");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to log out",
+        variant: "destructive"
+      });
+    }
+  };
+
   const getInitials = (name: string) => {
     return name.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2);
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center space-y-6 max-w-md mx-auto">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-              <div className="space-y-2">
-                <h3 className="text-lg font-semibold">Preparing Voting System</h3>
-                <p className="text-muted-foreground">Loading candidates and ballot information...</p>
-              </div>
-              <div className="space-y-2">
-                <Progress value={loadingProgress} className="h-2" />
-                <p className="text-xs text-muted-foreground">{loadingProgress}% Complete</p>
-              </div>
+      <DashboardLayout userRole={userRole || "student"} userName={userName} photoUrl={photoUrl} onLogout={handleLogout}>
+        <div className="flex items-center justify-center min-h-96">
+          <div className="text-center space-y-6 max-w-md mx-auto">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold">Preparing Voting System</h3>
+              <p className="text-muted-foreground">Loading candidates and ballot information...</p>
+            </div>
+            <div className="space-y-2">
+              <Progress value={loadingProgress} className="h-2" />
+              <p className="text-xs text-muted-foreground">{loadingProgress}% Complete</p>
             </div>
           </div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <DashboardLayout userRole={userRole || "student"} userName={userName} photoUrl={photoUrl} onLogout={handleLogout}>
       <Confetti isActive={showConfetti} onComplete={() => setShowConfetti(false)} />
       
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto space-y-6">
-          
-          {/* Header */}
-          <div className="flex items-center gap-4 mb-6">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/electoral')}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Electoral
-            </Button>
-          </div>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center gap-4 mb-6">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/electoral')}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Electoral
+          </Button>
+        </div>
 
           {/* Progress Card */}
           <Card>
@@ -642,7 +655,6 @@ export default function Vote() {
             </CardContent>
           </Card>
         </div>
-      </div>
-    </div>
+    </DashboardLayout>
   );
 }

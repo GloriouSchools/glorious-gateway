@@ -5,6 +5,7 @@ import { UserRole } from "@/types/user";
 import { Footer } from "./Footer";
 import { useNavigate } from "react-router-dom";
 import { UserAvatarDropdown } from "@/components/ui/user-avatar-dropdown";
+import { WhatsAppFloat } from "@/components/ui/whatsapp-float";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -22,10 +23,10 @@ export function DashboardLayout({ children, userRole, userName, photoUrl, onLogo
       <div className="min-h-screen flex w-full animate-fade-in">
         <AppSidebar userRole={userRole} userName={userName} photoUrl={photoUrl} onLogout={onLogout} />
         <div className="flex-1 flex flex-col">
-          <header className="h-16 border-b bg-card flex items-center justify-between px-4 animate-slide-in-right">
+          <header className="sticky top-0 z-50 h-16 border-b bg-card/95 backdrop-blur-sm flex items-center justify-between px-4 animate-slide-in-right">
             <div className="flex items-center">
               <SidebarTrigger className="mr-4" />
-              <h1 className="text-xl font-semibold">Glorious Schools Management System</h1>
+              <h1 className="text-xl font-semibold">Glorious App</h1>
             </div>
             <div className="flex items-center space-x-2">
               <UserAvatarDropdown 
@@ -41,6 +42,7 @@ export function DashboardLayout({ children, userRole, userName, photoUrl, onLogo
           <Footer />
         </div>
       </div>
+      <WhatsAppFloat />
     </SidebarProvider>
   );
 }

@@ -3,16 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import { 
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
-import Autoplay from "embla-carousel-autoplay";
+import { AnimatedCard } from "@/components/ui/animated-card";
+import { AnimatedButton } from "@/components/ui/animated-button";
+import { QuoteModal } from "@/components/ui/quote-modal";
+import { getQuoteOfTheDay, getRandomPhotoQuote, PhotoQuote } from "@/utils/photoQuotes";
+import { format } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 import { 
   BookOpen, 
   ClipboardList, 
@@ -22,202 +19,429 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
-  Shield,
   Mail,
   Loader2,
-  Vote
+  Vote,
+  Trophy,
+  UserCheck,
+  Sparkles,
+  Star,
+  Users,
+  Library,
+  MessageSquare,
+  HelpCircle,
+  ArrowRight,
+  Zap,
+  Target,
+  Heart,
+  Smile,
+  User,
+  GraduationCap,
+  Monitor,
+  Quote
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { AccountVerificationForm } from "@/components/auth/AccountVerificationForm";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
-
-// Import election images
-import election1 from "@/assets/election-1.jpg";
-import election2 from "@/assets/election-2.jpg";
-import election3 from "@/assets/election-3.jpg";
-import election4 from "@/assets/election-4.jpg";
+import { Confetti } from "@/components/ui/confetti";
 
 export function StudentDashboard() {
   const { userName, isVerified, personalEmail, user, isLoading } = useAuth();
   const navigate = useNavigate();
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [carouselApi, setCarouselApi] = useState<any>(null);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+  const [dailyPhotoQuote, setDailyPhotoQuote] = useState<PhotoQuote>({ src: "", alt: "" });
+  const [greeting, setGreeting] = useState("");
+  const [quoteLoading, setQuoteLoading] = useState(true);
+  const [showQuoteModal, setShowQuoteModal] = useState(false);
 
+  // Get quote of the day and time-based greeting on component mount
   useEffect(() => {
-    if (!carouselApi) return;
+    loadQuoteOfTheDay();
 
-    carouselApi.on("select", () => {
-      setCurrentSlide(carouselApi.selectedScrollSnap());
-    });
-  }, [carouselApi]);
+    // Get current time in East Africa Time (EAT)
+    const eatTime = toZonedTime(new Date(), 'Africa/Nairobi');
+    const hour = eatTime.getHours();
 
-  // Election carousel data
-  const electionSlides = [
-    {
-      image: election1,
-      title: "🗳️ Election Time!",
-      text: "At Glorious, democracy is the power of the pupils for the pupils by the pupils."
-    },
-    {
-      image: election2,
-      title: "Your Voice Matters",
-      text: "At Glorious, we believe in democracy so pupils exercise their rights of choosing their own leaders."
-    },
-    {
-      image: election3,
-      title: "Make Every Vote Count",
-      text: "Every election you don't participate in is a vote lost."
-    },
-    {
-      image: election4,
-      title: "#PupilPower ✊",
-      text: "Democracy thrives when every student participates in shaping their future."
+    if (hour >= 5 && hour < 12) {
+      setGreeting("Good morning");
+    } else if (hour >= 12 && hour < 17) {
+      setGreeting("Good afternoon");
+    } else {
+      setGreeting("Good evening");
     }
-  ];
+  }, []);
+
+  // Function to load quote of the day (persistent)
+  const loadQuoteOfTheDay = () => {
+    try {
+      setQuoteLoading(true);
+      const photoQuote = getQuoteOfTheDay();
+      setDailyPhotoQuote(photoQuote);
+    } catch (error) {
+      console.log('Error loading photo quote:', error);
+      // Fallback to a default image or text
+      setDailyPhotoQuote({ 
+        src: "/placeholder.svg", 
+        alt: "Inspirational quote of the day" 
+      });
+    } finally {
+      setQuoteLoading(false);
+    }
+  };
+
+  // Function to load a new photo quote (when user requests new one)
+  const loadNewPhotoQuote = () => {
+    try {
+      setQuoteLoading(true);
+      const photoQuote = getRandomPhotoQuote();
+      setDailyPhotoQuote(photoQuote);
+    } catch (error) {
+      console.log('Error loading photo quote:', error);
+      // Fallback to a default image or text
+      setDailyPhotoQuote({ 
+        src: "/placeholder.svg", 
+        alt: "Inspirational quote of the day" 
+      });
+    } finally {
+      setQuoteLoading(false);
+    }
+  };
 
   // Show loading state while authentication is being resolved
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-          <p className="text-muted-foreground">Loading your dashboard...</p>
+        <div className="text-center space-y-4 animate-bounce">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
+          <p className="text-lg font-semibold text-muted-foreground">Loading your awesome dashboard... 🚀</p>
         </div>
       </div>
     );
   }
   
-  const stats = [
-    { 
-      title: "Current GPA", 
-      value: "3.75", 
-      icon: TrendingUp, 
-      description: "Out of 4.0",
-      color: "text-success" 
+  const dashboardSections = [
+    {
+      id: 'elections',
+      title: 'Elections',
+      description: 'Vote for your school leaders',
+      icon: Vote,
+      color: 'from-red-400 to-pink-400',
+      stats: 'Voting Open Now!',
+      action: 'Vote Now',
+      route: '/electoral',
+      isHighlight: true
     },
-    { 
-      title: "Courses Enrolled", 
-      value: "6", 
-      icon: BookOpen, 
-      description: "This semester",
-      color: "text-primary" 
+    {
+      id: 'profile',
+      title: 'Profile',
+      description: 'See your info & achievements',
+      icon: User,
+      color: 'from-purple-400 to-pink-400',
+      stats: 'Profile 95% Complete',
+      action: 'Visit Profile',
+      route: '/profile'
     },
-    { 
-      title: "Assignments Due", 
-      value: "4", 
-      icon: ClipboardList, 
-      description: "This week",
-      color: "text-warning" 
+    {
+      id: 'calendar',
+      title: 'Calendar',
+      description: 'Never miss important dates!',
+      icon: Calendar,
+      color: 'from-blue-400 to-cyan-400',
+      stats: '3 Events Today',
+      action: 'Check Schedule',
+      route: '/calendar'
     },
-    { 
-      title: "Attendance", 
-      value: "92%", 
-      icon: Award, 
-      description: "Overall",
-      color: "text-secondary" 
+    {
+      id: 'classes',
+      title: 'My Classes',
+      description: 'All your subjects in one place',
+      icon: BookOpen,
+      color: 'from-green-400 to-emerald-400',
+      stats: '6 Active Classes',
+      action: 'Explore Classes',
+      route: '/classes'
     },
+    {
+      id: 'assignments',
+      title: 'Assignments',
+      description: 'Track your homework & projects',
+      icon: ClipboardList,
+      color: 'from-orange-400 to-red-400',
+      stats: '4 Due This Week',
+      action: 'Start Working',
+      route: '/assignments'
+    },
+    {
+      id: 'grades',
+      title: 'My Grades',
+      description: 'See how awesome you\'re doing!',
+      icon: Award,
+      color: 'from-yellow-400 to-orange-400',
+      stats: 'GPA: 3.75/4.0',
+      action: 'View Report',
+      route: '/grades'
+    },
+    {
+      id: 'timetable',
+      title: 'Timetable',
+      description: 'Your daily class schedule',
+      icon: Clock,
+      color: 'from-indigo-400 to-purple-400',
+      stats: 'Next: Math at 10:00',
+      action: 'See Schedule',
+      route: '/timetable'
+    },
+    {
+      id: 'attendance',
+      title: 'Attendance',
+      description: 'Track your presence streak!',
+      icon: UserCheck,
+      color: 'from-teal-400 to-green-400',
+      stats: '92% This Month',
+      action: 'Check Record',
+      route: '/attendance'
+    },
+    {
+      id: 'hall-of-fame',
+      title: 'Hall of Fame',
+      description: 'See the amazing achievers!',
+      icon: Trophy,
+      color: 'from-yellow-400 to-amber-400',
+      stats: 'Top 10 Students',
+      action: 'See Stars',
+      route: '/hall-of-fame'
+    },
+    {
+      id: 'library',
+      title: 'Library',
+      description: 'Discover amazing books & resources',
+      icon: Library,
+      color: 'from-emerald-400 to-teal-400',
+      stats: '500+ Books Available',
+      action: 'Browse Books',
+      route: '/library'
+    },
+    {
+      id: 'communication',
+      title: 'Communication',
+      description: 'Connect with friends & teachers',
+      icon: MessageSquare,
+      color: 'from-blue-400 to-indigo-400',
+      stats: '3 New Messages',
+      action: 'Read Messages',
+      route: '/communication'
+    },
+    {
+      id: 'help',
+      title: 'Help & Support',
+      description: 'Need help? We\'re here for you!',
+      icon: HelpCircle,
+      color: 'from-purple-400 to-pink-400',
+      stats: '24/7 Support',
+      action: 'Get Help',
+      route: '/help'
+    }
   ];
 
-  const upcomingClasses = [
-    { time: "09:00 AM", subject: "Mathematics", room: "Room 201", status: "upcoming" },
-    { time: "10:30 AM", subject: "Physics", room: "Lab 3", status: "upcoming" },
-    { time: "12:00 PM", subject: "English Literature", room: "Room 105", status: "upcoming" },
-    { time: "02:00 PM", subject: "Computer Science", room: "Lab 1", status: "current" },
+  const quickStats = [
+    { label: 'Friends', value: '24', icon: Users, color: 'text-blue-500', route: '/friends', clickable: true },
+    { label: 'Friend Requests', value: '3', icon: Heart, color: 'text-pink-500', route: '/friend-requests', clickable: true },
+    { label: 'Classmates', value: '35', icon: GraduationCap, color: 'text-green-500', route: '/classmates', clickable: true },
+    { label: 'Streammates', value: '142', icon: Monitor, color: 'text-purple-500', route: '/streammates', clickable: true }
   ];
 
-  const recentGrades = [
-    { subject: "Mathematics", assignment: "Quiz 3", grade: "A", percentage: 92 },
-    { subject: "Physics", assignment: "Lab Report", grade: "B+", percentage: 87 },
-    { subject: "English", assignment: "Essay", grade: "A-", percentage: 90 },
-    { subject: "Computer Science", assignment: "Project 1", grade: "A", percentage: 95 },
-  ];
+  const handleSectionClick = (route: string, isHighlight?: boolean) => {
+    if (isHighlight) {
+      setShowConfetti(true);
+    }
+    navigate(route);
+  };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">Welcome back, {userName || 'Student'}!</h2>
-        <p className="text-muted-foreground">Here's an overview of your academic progress</p>
-      </div>
-
-      {/* Election Carousel */}
-      <div className="relative overflow-hidden rounded-xl animate-fade-in">
-        <Carousel 
-          className="w-full" 
-          opts={{ align: "start", loop: true }}
-          plugins={[Autoplay({ delay: 4000 })]}
-          setApi={setCarouselApi}
-        >
-          <CarouselContent>
-            {electionSlides.map((slide, index) => (
-              <CarouselItem key={index}>
-                <div className="relative h-72 md:h-96 overflow-hidden rounded-xl">
-                  {/* Background Image */}
-                  <img 
-                    src={slide.image} 
-                    alt={`Election slide ${index + 1}`}
-                    className="absolute inset-0 w-full h-full object-cover object-center"
-                  />
-                  
-                  {/* Gradient Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/70 to-black/50"></div>
-                  
-                  {/* Content Overlay */}
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full space-y-4 md:space-y-6 px-6 md:px-12">
-                      {/* Centered Heading */}
-                      <div className="flex items-center justify-center gap-2 md:gap-3">
-                        <Vote className="h-6 w-6 md:h-8 md:w-8 text-white animate-pulse" />
-                        <h3 className="text-xl md:text-3xl font-bold text-white animate-fade-in">
-                          {slide.title}
-                        </h3>
-                        <Vote className="h-6 w-6 md:h-8 md:w-8 text-white animate-pulse" />
-                      </div>
-                      
-                      {/* Centered Text */}
-                      <div className="max-w-2xl mx-auto text-center">
-                        <p className="text-sm md:text-lg text-white/90 font-medium leading-relaxed animate-fade-in">
-                          {slide.text}
-                        </p>
-                      </div>
-                      
-                      {/* Centered Button */}
-                      <div className="pt-2 md:pt-4 text-center">
-                        <Button 
-                          size="lg" 
-                          className="bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 hover:from-orange-600 hover:via-orange-700 hover:to-orange-800 text-white border-0 shadow-lg hover:shadow-xl animate-pulse font-bold text-sm md:text-lg px-6 md:px-10 py-2 md:py-3 transition-all duration-500"
-                          onClick={() => navigate('/electoral')}
-                        >
-                          <Vote className="h-4 w-4 md:h-5 md:w-5 mr-2" />
-                          VOTE NOW
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
+    <div className="space-y-8 animate-fade-in">
+      <Confetti isActive={showConfetti} onComplete={() => setShowConfetti(false)} />
+      
+      {/* Hero Welcome Section */}
+      <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 p-4 md:p-6 text-white">
+        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="relative z-10 text-center space-y-2 md:space-y-3">
+          <div className="flex justify-center items-center space-x-1 md:space-x-2 mb-2">
+            <Sparkles className="h-4 w-4 md:h-6 md:w-6 animate-pulse" />
+            <span className="text-lg md:text-2xl animate-bounce">🎉</span>
+            <Sparkles className="h-4 w-4 md:h-6 md:w-6 animate-pulse" />
+          </div>
+          <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold animate-slide-in-right">
+            {greeting}, {userName || 'Superstar'}! 
+          </h1>
+          <p className="text-sm md:text-lg lg:text-xl font-medium opacity-90 animate-fade-in">
+            Quote of the Day
+          </p>
+          <div className="bg-black/20 backdrop-blur-sm rounded-lg md:rounded-xl p-3 md:p-4 mt-2 md:mt-4 max-w-xs md:max-w-2xl mx-auto border border-white/10">
+            {quoteLoading ? (
+              <div className="flex justify-center items-center h-32 md:h-48">
+                <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin text-white/80" />
+              </div>
+            ) : (
+              <div className="relative group cursor-pointer" onClick={() => setShowQuoteModal(true)}>
+                <img 
+                  src={dailyPhotoQuote.src} 
+                  alt={dailyPhotoQuote.alt}
+                  className="w-full h-32 md:h-48 object-contain rounded-lg md:rounded-xl shadow-lg transition-transform duration-300 group-hover:scale-105"
+                  onError={(e) => {
+                    // Fallback to placeholder if image fails to load
+                    (e.target as HTMLImageElement).src = "/placeholder.svg";
+                  }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg md:rounded-xl flex items-center justify-center">
+                  <p className="text-sm text-white font-medium bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm">Click to zoom 🔍</p>
                 </div>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-        </Carousel>
+              </div>
+            )}
+          </div>
+        </div>
         
-        {/* Dot Indicators */}
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-          {electionSlides.map((_, index) => (
-            <button
-              key={index}
-              className={`w-2 h-2 md:w-3 md:h-3 rounded-full transition-all duration-300 ${
-                currentSlide === index 
-                  ? 'bg-white shadow-lg' 
-                  : 'bg-white/40 hover:bg-white/70'
-              }`}
-              onClick={() => carouselApi?.scrollTo(index)}
-              aria-label={`Go to slide ${index + 1}`}
-            />
-          ))}
+        {/* Floating Elements - Hidden on mobile */}
+        <div className="hidden md:block absolute top-4 left-4 animate-bounce delay-100">
+          <Star className="h-4 w-4 md:h-6 md:w-6 text-yellow-300" />
+        </div>
+        <div className="hidden md:block absolute top-8 right-8 animate-bounce delay-300">
+          <Heart className="h-3 w-3 md:h-5 md:w-5 text-pink-300" />
+        </div>
+        <div className="hidden md:block absolute bottom-4 left-8 animate-bounce delay-500">
+          <Smile className="h-4 w-4 md:h-6 md:w-6 text-yellow-300" />
         </div>
       </div>
 
+      {/* Quick Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {quickStats.map((stat, index) => {
+        const Icon = stat.icon;
+        return (
+          <AnimatedCard 
+            key={stat.label} 
+            hoverAnimation={index % 2 === 0 ? 'bounce' : 'wiggle'}
+            delay={index * 100}
+            className="fun-hover cursor-pointer transition-all duration-300 hover:shadow-xl border-2 hover:border-primary/50 bg-gradient-subtle click-effect"
+            onClick={() => navigate(stat.route)}
+          >
+            <CardContent className="p-4 text-center">
+              <Icon className={`h-8 w-8 ${stat.color} mx-auto mb-2 animate-pulse`} />
+              <div className="text-2xl font-bold">{stat.value}</div>
+              <div className="text-sm text-muted-foreground font-medium">{stat.label}</div>
+              <div className="text-xs text-primary font-medium mt-1">Click to explore</div>
+            </CardContent>
+          </AnimatedCard>
+        );
+      })}
+      </div>
+
+      {/* Dashboard Sections Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {dashboardSections.map((section, index) => {
+          const Icon = section.icon;
+          const isHovered = hoveredCard === section.id;
+          
+          // Different animation for each card based on position
+          const animations = ['bounce', 'wiggle', 'float', 'zoom', 'rainbow'];
+          const cardAnimation = animations[index % animations.length] as any;
+          
+          return (
+            <AnimatedCard 
+              key={section.id}
+              hoverAnimation={cardAnimation}
+              delay={index * 50}
+              className={`group fun-hover cursor-pointer click-effect transition-all duration-500 hover:shadow-2xl border-2 hover:border-primary/50 relative overflow-hidden ${
+                section.isHighlight ? 'animate-pulse border-orange-400' : ''
+              }`}
+              onMouseEnter={() => setHoveredCard(section.id)}
+              onMouseLeave={() => setHoveredCard(null)}
+              onClick={() => handleSectionClick(section.route, section.isHighlight)}
+            >
+              {/* Background Gradient */}
+              <div className={`absolute inset-0 bg-gradient-to-br ${section.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}></div>
+              
+              <CardHeader className="relative z-10 pb-2">
+                <div className="flex items-center space-x-3">
+                  <div className={`p-3 rounded-full bg-gradient-to-r ${section.color} transition-transform duration-300`}>
+                    <Icon className={`h-6 w-6 text-white transition-transform duration-300 ${isHovered ? 'animate-bounce' : ''}`} />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg font-bold group-hover:text-primary transition-colors duration-300">
+                      {section.title}
+                    </CardTitle>
+                  </div>
+                </div>
+              </CardHeader>
+              
+              <CardContent className="relative z-10 space-y-4">
+                <p className="text-muted-foreground font-medium">
+                  {section.description}
+                </p>
+                
+                <div className="flex items-center justify-between">
+                  <Badge 
+                    variant="secondary" 
+                    className={`font-semibold ${section.isHighlight ? 'bg-orange-100 text-orange-700 animate-pulse' : ''}`}
+                  >
+                    {section.stats}
+                  </Badge>
+                  
+                  <AnimatedButton 
+                    variant={section.isHighlight ? "default" : "outline"}
+                    size="sm" 
+                    animation={section.isHighlight ? 'bounce' : 'zoom'}
+                    playAnimation={section.isHighlight}
+                    className={`group-hover:scale-105 transition-all duration-300 font-bold ${
+                      section.isHighlight 
+                        ? 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white' 
+                        : 'hover:bg-primary hover:text-white'
+                    }`}
+                  >
+                    {section.action}
+                    <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
+                  </AnimatedButton>
+                </div>
+                
+                {section.isHighlight && (
+                  <div className="text-center">
+                    <span className="text-xs font-bold text-orange-600 animate-bounce">
+                      HOT! Don't miss out!
+                    </span>
+                  </div>
+                )}
+              </CardContent>
+            </AnimatedCard>
+          );
+        })}
+      </div>
+
+      {/* Motivational Footer */}
+      <Card className="bg-gradient-to-r from-green-400 to-blue-500 text-white border-0">
+        <CardContent className="p-6 text-center">
+          <div className="flex justify-center items-center space-x-2 mb-4">
+            <Target className="h-6 w-6 animate-pulse" />
+            <span className="text-2xl font-bold">You're doing AMAZING! 🌟</span>
+            <Target className="h-6 w-6 animate-pulse" />
+          </div>
+          <p className="text-lg opacity-90">
+            Every day is a new adventure. Keep exploring, keep learning, and keep being awesome! 🚀
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Confetti Effect */}
+      <Confetti isActive={showConfetti} />
+
+      {/* Quote Modal */}
+      <QuoteModal 
+        isOpen={showQuoteModal}
+        onClose={() => setShowQuoteModal(false)}
+        quote={dailyPhotoQuote}
+        onNewQuote={loadNewPhotoQuote}
+      />
 
       {/* Verification Dialog */}
       <Dialog open={showVerificationDialog} onOpenChange={setShowVerificationDialog}>
@@ -232,119 +456,6 @@ export function StudentDashboard() {
           />
         </DialogContent>
       </Dialog>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <Card key={stat.title}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-                <Icon className={`h-4 w-4 ${stat.color}`} />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
-                <p className="text-xs text-muted-foreground">{stat.description}</p>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Today's Schedule
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {upcomingClasses.map((class_, index) => (
-                <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                  <div className="flex items-center gap-3">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">{class_.subject}</p>
-                      <p className="text-sm text-muted-foreground">{class_.time} - {class_.room}</p>
-                    </div>
-                  </div>
-                  {class_.status === "current" && (
-                    <Badge variant="default" className="bg-gradient-primary">In Progress</Badge>
-                  )}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Award className="h-5 w-5" />
-              Recent Grades
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {recentGrades.map((grade, index) => (
-                <div key={index} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">{grade.subject}</p>
-                      <p className="text-sm text-muted-foreground">{grade.assignment}</p>
-                    </div>
-                    <Badge variant={grade.percentage >= 90 ? "default" : "secondary"}>
-                      {grade.grade}
-                    </Badge>
-                  </div>
-                  <Progress value={grade.percentage} className="h-2" />
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ClipboardList className="h-5 w-5" />
-            Pending Assignments
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {[
-              { subject: "Mathematics", title: "Problem Set 5", due: "Tomorrow", priority: "high" },
-              { subject: "Physics", title: "Lab Report 3", due: "In 3 days", priority: "medium" },
-              { subject: "English", title: "Book Review", due: "In 5 days", priority: "low" },
-              { subject: "Computer Science", title: "Coding Assignment", due: "Next week", priority: "medium" },
-            ].map((assignment, index) => (
-              <div key={index} className="flex items-center justify-between p-3 rounded-lg border">
-                <div className="flex items-center gap-3">
-                  {assignment.priority === "high" ? (
-                    <AlertCircle className="h-4 w-4 text-destructive" />
-                  ) : (
-                    <CheckCircle className="h-4 w-4 text-muted-foreground" />
-                  )}
-                  <div>
-                    <p className="font-medium">{assignment.title}</p>
-                    <p className="text-sm text-muted-foreground">{assignment.subject} • Due {assignment.due}</p>
-                  </div>
-                </div>
-                <Badge variant={
-                  assignment.priority === "high" ? "destructive" : 
-                  assignment.priority === "medium" ? "default" : "secondary"
-                }>
-                  {assignment.priority}
-                </Badge>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

@@ -8,6 +8,7 @@ import { ArrowLeft, CheckCircle, Clock, Edit, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { ApplicationPreview } from "@/components/electoral";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 
 interface Application {
   id: string;
@@ -26,11 +27,28 @@ interface Application {
 }
 
 export default function ApplicationStatus() {
-  const { user, userName } = useAuth();
+  const { user, userName, userRole, photoUrl, signOut } = useAuth();
   const navigate = useNavigate();
   const [application, setApplication] = useState<Application | null>(null);
   const [loading, setLoading] = useState(true);
   const [showPreview, setShowPreview] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Logged out",
+        description: "You have been logged out successfully."
+      });
+      navigate("/login");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to log out",
+        variant: "destructive"
+      });
+    }
+  };
 
   useEffect(() => {
     fetchApplication();
@@ -96,18 +114,18 @@ export default function ApplicationStatus() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto">
+      <DashboardLayout userRole={userRole || "student"} userName={userName} photoUrl={photoUrl} onLogout={handleLogout}>
+        <div className="flex items-center justify-center min-h-96">
           <div className="text-center">Loading your application status...</div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
   if (!application) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto">
+      <DashboardLayout userRole={userRole || "student"} userName={userName} photoUrl={photoUrl} onLogout={handleLogout}>
+        <div className="space-y-6">
           <Button
             variant="ghost"
             onClick={() => navigate('/electoral')}
@@ -129,13 +147,13 @@ export default function ApplicationStatus() {
             </CardContent>
           </Card>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-2xl mx-auto">
+    <DashboardLayout userRole={userRole || "student"} userName={userName} photoUrl={photoUrl} onLogout={handleLogout}>
+      <div className="space-y-6">
         <Button
           variant="ghost"
           onClick={() => navigate('/electoral')}
@@ -273,6 +291,6 @@ export default function ApplicationStatus() {
           </div>
         )}
       </div>
-    </div>
+    </DashboardLayout>
   );
 }
