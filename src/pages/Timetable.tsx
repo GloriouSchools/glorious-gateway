@@ -577,8 +577,8 @@ const Timetable = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col lg:flex-row gap-4">
-              <div className="flex items-center gap-2">
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"
@@ -586,7 +586,7 @@ const Timetable = () => {
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <span className="text-sm font-medium min-w-32 text-center">
+                <span className="text-sm font-medium text-center flex-1 min-w-0">
                   Week of {format(weekStart, 'MMM dd, yyyy')}
                 </span>
                 <Button
@@ -598,12 +598,12 @@ const Timetable = () => {
                 </Button>
               </div>
               
-              <div className="flex flex-1 gap-4">
+              <div className="flex flex-col sm:flex-row gap-4">
                 <div className="flex-1">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                     <Input 
-                      placeholder="Search subjects, teachers, or rooms..."
+                      placeholder="Search subjects, teachers..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="pl-10"
@@ -611,7 +611,7 @@ const Timetable = () => {
                   </div>
                 </div>
                 <Select value={filterSubject} onValueChange={setFilterSubject}>
-                  <SelectTrigger className="w-48">
+                  <SelectTrigger className="w-full sm:w-48">
                     <SelectValue placeholder="All subjects" />
                   </SelectTrigger>
                   <SelectContent>
@@ -639,21 +639,21 @@ const Timetable = () => {
           </CardHeader>
           <CardContent>
             {/* Desktop View */}
-            <div className="hidden lg:block">
+            <div className="hidden xl:block">
               <div className="overflow-x-auto">
-                <div className="min-w-[800px]">
+                <div className="min-w-0 w-full">
                   {/* Header */}
-                  <div className="grid grid-cols-6 gap-3 mb-4">
-                    <div className="text-sm font-medium text-muted-foreground p-2 min-w-20">Time</div>
+                  <div className="grid grid-cols-6 gap-2 mb-4">
+                    <div className="text-sm font-medium text-muted-foreground p-2 text-center">Time</div>
                     {weekDays.map(day => (
-                      <div key={day} className="text-sm font-medium text-muted-foreground p-2 text-center min-w-32">
-                        {day}
+                      <div key={day} className="text-sm font-medium text-muted-foreground p-2 text-center">
+                        {day.slice(0, 3)}
                       </div>
                     ))}
                   </div>
 
                   {/* Time slots */}
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     {timeSlots.map(timeSlot => {
                       const getClassAtTime = (day: string) => {
                         return filteredTimetable[day]?.find(slot => 
@@ -662,16 +662,16 @@ const Timetable = () => {
                       };
 
                       return (
-                        <div key={timeSlot} className="grid grid-cols-6 gap-3">
-                          <div className="text-sm font-medium p-3 border rounded-lg bg-muted/50 min-w-20">
+                        <div key={timeSlot} className="grid grid-cols-6 gap-2">
+                          <div className="text-xs font-medium p-2 border rounded bg-muted/50 text-center">
                             {timeSlot}
                           </div>
                           {weekDays.map(day => {
                             const classAtTime = getClassAtTime(day);
                             return (
-                              <div key={`${day}-${timeSlot}`} className="min-w-32">
+                              <div key={`${day}-${timeSlot}`} className="min-w-0">
                                 {classAtTime && (
-                                  <div className={`p-2 rounded-lg border-2 ${classAtTime.color} transition-all hover:scale-105 cursor-pointer h-full`}>
+                                  <div className={`p-2 rounded border-2 ${classAtTime.color} transition-all hover:scale-105 cursor-pointer`}>
                                     <div className="text-xs font-medium truncate" title={classAtTime.subject}>
                                       {classAtTime.subject}
                                     </div>
@@ -681,19 +681,10 @@ const Timetable = () => {
                                       </div>
                                     )}
                                     {classAtTime.room && (
-                                      <div className="text-xs opacity-75 flex items-center gap-1 mt-1">
-                                        <MapPin className="h-3 w-3 flex-shrink-0" />
-                                        <span className="truncate" title={classAtTime.room}>
-                                          {classAtTime.room}
-                                        </span>
+                                      <div className="text-xs opacity-75 truncate mt-1" title={classAtTime.room}>
+                                        {classAtTime.room}
                                       </div>
                                     )}
-                                    <div className="text-xs opacity-75 flex items-center gap-1 mt-1">
-                                      <Clock className="h-3 w-3 flex-shrink-0" />
-                                      <span className="truncate">
-                                        {classAtTime.startTime} - {classAtTime.endTime}
-                                      </span>
-                                    </div>
                                   </div>
                                 )}
                               </div>
@@ -708,7 +699,7 @@ const Timetable = () => {
             </div>
 
             {/* Mobile/Tablet View */}
-            <div className="lg:hidden">
+            <div className="xl:hidden">
               <div className="space-y-4">
                 {weekDays.map(day => {
                   const daySlots = filteredTimetable[day] || [];

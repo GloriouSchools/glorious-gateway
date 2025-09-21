@@ -315,8 +315,8 @@ const Communication = () => {
 
               <TabsContent value="messages" className="p-6 space-y-4">
                 {/* Search and Filters */}
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="flex-1 relative">
+                <div className="flex flex-col gap-4">
+                  <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input 
                       placeholder="Search messages... 🔍"
@@ -326,7 +326,7 @@ const Communication = () => {
                     />
                   </div>
                   <Select value={filterType} onValueChange={setFilterType}>
-                    <SelectTrigger className="w-full sm:w-48">
+                    <SelectTrigger className="w-full">
                       <Filter className="h-4 w-4 mr-2" />
                       <SelectValue placeholder="All types" />
                     </SelectTrigger>

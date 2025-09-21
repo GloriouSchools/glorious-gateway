@@ -290,52 +290,52 @@ const Attendance = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col lg:flex-row gap-4">
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigateDate('prev')}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <span className="text-sm font-medium min-w-40 text-center">
-                  {format(selectedDate, 'EEEE, MMMM d, yyyy')}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigateDate('next')}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-              
-              <div className="flex flex-1 gap-4">
-                <Select value={selectedClass} onValueChange={setSelectedClass}>
-                  <SelectTrigger className="flex-1">
-                    <SelectValue placeholder="Select class" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border z-50">
-                    {realClasses.map(cls => (
-                      <SelectItem key={cls.id} value={cls.id}>
-                        {cls.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center justify-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigateDate('prev')}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <span className="text-sm font-medium text-center flex-1 min-w-0 px-2">
+                    {format(selectedDate, 'EEEE, MMM d, yyyy')}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigateDate('next')}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
                 
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                  <Input 
-                    placeholder="Search students..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Select value={selectedClass} onValueChange={setSelectedClass}>
+                    <SelectTrigger className="w-full sm:flex-1">
+                      <SelectValue placeholder="Select class" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border z-50">
+                      {realClasses.map(cls => (
+                        <SelectItem key={cls.id} value={cls.id}>
+                          {cls.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  
+                  <div className="relative w-full sm:flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input 
+                      placeholder="Search students..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
           </CardContent>
         </Card>
 
@@ -450,28 +450,28 @@ const Attendance = () => {
                   return (
                     <div 
                       key={student.id} 
-                      className="flex flex-col lg:flex-row items-start lg:items-center gap-4 p-4 rounded-lg border bg-card hover:bg-accent/20 transition-colors"
+                      className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-lg border bg-card hover:bg-accent/20 transition-colors"
                     >
-                      <div className="flex items-center gap-3 flex-1">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                           <span className="text-sm font-semibold">
                             {student.name.split(' ').map(n => n[0]).join('')}
                           </span>
                         </div>
-                        <div>
-                          <h3 className="font-semibold">{student.name}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            ID: {student.studentId} | Grade: {student.grade} {student.section}
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-semibold truncate">{student.name}</h3>
+                          <p className="text-sm text-muted-foreground truncate">
+                            ID: {student.studentId} | {student.grade} {student.section}
                           </p>
                         </div>
                       </div>
                       
-                      <div className="flex gap-2 w-full lg:w-auto justify-center lg:justify-end">
+                      <div className="flex gap-2 w-full sm:w-auto">
                         <Button
                           size="sm"
                           variant={record?.status === 'present' ? 'default' : 'outline'}
                           onClick={() => markAttendance(student.id, 'present')}
-                          className={record?.status === 'present' ? getStatusColor('present') : 'hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200'}
+                          className={`flex-1 sm:flex-none ${record?.status === 'present' ? getStatusColor('present') : 'hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200'}`}
                         >
                           <CheckCircle className="h-4 w-4 mr-1" />
                           Present
@@ -480,7 +480,7 @@ const Attendance = () => {
                           size="sm"
                           variant={record?.status === 'absent' ? 'default' : 'outline'}
                           onClick={() => markAttendance(student.id, 'absent')}
-                          className={record?.status === 'absent' ? getStatusColor('absent') : 'hover:bg-red-50 hover:text-red-600 hover:border-red-200'}
+                          className={`flex-1 sm:flex-none ${record?.status === 'absent' ? getStatusColor('absent') : 'hover:bg-red-50 hover:text-red-600 hover:border-red-200'}`}
                         >
                           <XCircle className="h-4 w-4 mr-1" />
                           Absent
@@ -488,7 +488,7 @@ const Attendance = () => {
                       </div>
                       
                       {record && (
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 w-full sm:w-auto">
                           <Badge className={getStatusColor(record.status)}>
                             {getStatusIcon(record.status)}
                             <span className="ml-1 capitalize">{record.status}</span>

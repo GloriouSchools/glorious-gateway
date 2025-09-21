@@ -22,11 +22,11 @@ export function WhatsAppFloat({
     let greetingMessage;
     
     if (currentHour >= 5 && currentHour < 12) {
-      greetingMessage = "Hello, good morning! ☀️ How may I help you today?";
+      greetingMessage = "Hello, good morning! ☀️ How may I help you?";
     } else if (currentHour >= 12 && currentHour < 18) {
-      greetingMessage = "Hello, good afternoon! 🌤️ How may I help you today?";
+      greetingMessage = "Hello, good afternoon! 🌤️ How may I help you?";
     } else {
-      greetingMessage = "Hello, good evening! 🌙 How may I help you today?";
+      greetingMessage = "Hello, good evening! 🌙 How may I help you?";
     }
     
     setGreeting(greetingMessage);

@@ -285,8 +285,8 @@ const HallOfFame = () => {
             <CardDescription>Search for amazing achievements and filter by category or level</CardDescription>
           </CardHeader>
           <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
+            <div className="flex flex-col gap-4">
+              <div className="w-full">
                 <Input 
                   placeholder="Search by student name or achievement... ✨"
                   value={searchTerm}
@@ -294,30 +294,32 @@ const HallOfFame = () => {
                   className="text-base"
                 />
               </div>
-              <Select value={filterCategory} onValueChange={setFilterCategory}>
-                <SelectTrigger className="w-full sm:w-48">
-                  <SelectValue placeholder="All categories" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map(category => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={filterLevel} onValueChange={setFilterLevel}>
-                <SelectTrigger className="w-full sm:w-48">
-                  <SelectValue placeholder="All levels" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Levels</SelectItem>
-                  <SelectItem value="platinum">🚀 Platinum</SelectItem>
-                  <SelectItem value="gold">👑 Gold</SelectItem>
-                  <SelectItem value="silver">⭐ Silver</SelectItem>
-                  <SelectItem value="bronze">🥉 Bronze</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Select value={filterCategory} onValueChange={setFilterCategory}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="All categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map(category => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={filterLevel} onValueChange={setFilterLevel}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="All levels" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Levels</SelectItem>
+                    <SelectItem value="platinum">🚀 Platinum</SelectItem>
+                    <SelectItem value="gold">👑 Gold</SelectItem>
+                    <SelectItem value="silver">⭐ Silver</SelectItem>
+                    <SelectItem value="bronze">🥉 Bronze</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -401,23 +403,25 @@ const HallOfFame = () => {
                     delay={index * 50}
                     className="p-0 overflow-hidden"
                   >
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center p-6 gap-4">
-                      <div className="flex items-center gap-4 flex-1">
-                        <PhotoDialog 
-                          photoUrl={achievement.photoUrl} 
-                          userName={achievement.studentName}
-                          size="h-12 w-12"
-                        />
-                        <div className="space-y-1 flex-1">
-                          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                            <h3 className="font-bold text-lg">{achievement.studentName}</h3>
+                    <div className="flex flex-col gap-4 p-6">
+                      <div className="flex items-center gap-4">
+                        <div className="flex-shrink-0">
+                          <PhotoDialog 
+                            photoUrl={achievement.photoUrl} 
+                            userName={achievement.studentName}
+                            size="h-12 w-12"
+                          />
+                        </div>
+                        <div className="space-y-1 flex-1 min-w-0">
+                          <div className="flex flex-col gap-2">
+                            <h3 className="font-bold text-lg truncate">{achievement.studentName}</h3>
                             <Badge variant="outline" className="text-xs w-fit">
                               {getCategoryIcon(achievement.category)}
                               <span className="ml-1 capitalize">{achievement.category}</span>
                             </Badge>
                           </div>
-                          <h4 className="font-semibold text-primary">{achievement.achievement}</h4>
-                          <p className="text-sm text-muted-foreground">{achievement.description}</p>
+                          <h4 className="font-semibold text-primary line-clamp-2">{achievement.achievement}</h4>
+                          <p className="text-sm text-muted-foreground line-clamp-2">{achievement.description}</p>
                           {achievement.subject && (
                             <Badge variant="secondary" className="text-xs w-fit">
                               📚 {achievement.subject}
@@ -425,9 +429,9 @@ const HallOfFame = () => {
                           )}
                         </div>
                       </div>
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                      <div className="flex items-center justify-between">
                         <div className="text-center">
-                          <div className="flex items-center gap-1 mb-1">
+                          <div className="flex items-center gap-1">
                             <Zap className="h-4 w-4 text-yellow-500" />
                             <span className="font-bold text-lg">{achievement.points}</span>
                           </div>
