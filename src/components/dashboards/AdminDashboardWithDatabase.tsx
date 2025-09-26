@@ -4,6 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ProfessionalCard } from "@/components/ui/professional-card";
+import { ProfessionalButton } from "@/components/ui/professional-button";
+import { QuoteModal } from "@/components/ui/quote-modal";
+import { ScrollReveal } from "@/components/ui/scroll-reveal";
+import { getQuoteOfTheDay, getRandomPhotoQuote, PhotoQuote } from "@/utils/photoQuotes";
+import { format } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 import { 
   Users, 
   GraduationCap, 
@@ -20,13 +27,23 @@ import {
   Shield,
   Mail,
   Loader2,
-  Vote
+  Vote,
+  Sparkles,
+  Star,
+  Heart,
+  Smile,
+  ArrowRight,
+  Target,
+  Settings,
+  FileText,
+  Database
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { AccountVerificationForm } from "@/components/auth/AccountVerificationForm";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { Confetti } from "@/components/ui/confetti";
 
 interface DatabaseStats {
   totalStudents: number;
@@ -40,11 +57,67 @@ export function AdminDashboard() {
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
   const [stats, setStats] = useState<DatabaseStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+  const [dailyPhotoQuote, setDailyPhotoQuote] = useState<PhotoQuote>({ src: "", alt: "" });
+  const [greeting, setGreeting] = useState("");
+  const [quoteLoading, setQuoteLoading] = useState(true);
+  const [showQuoteModal, setShowQuoteModal] = useState(false);
   const navigate = useNavigate();
 
+  // Get quote of the day and time-based greeting on component mount
   useEffect(() => {
     fetchDashboardStats();
+    loadQuoteOfTheDay();
+
+    // Get current time in East Africa Time (EAT)
+    const eatTime = toZonedTime(new Date(), 'Africa/Nairobi');
+    const hour = eatTime.getHours();
+
+    if (hour >= 5 && hour < 12) {
+      setGreeting("Good morning");
+    } else if (hour >= 12 && hour < 17) {
+      setGreeting("Good afternoon");
+    } else {
+      setGreeting("Good evening");
+    }
   }, []);
+
+  // Function to load quote of the day (persistent)
+  const loadQuoteOfTheDay = () => {
+    try {
+      setQuoteLoading(true);
+      const photoQuote = getQuoteOfTheDay();
+      setDailyPhotoQuote(photoQuote);
+    } catch (error) {
+      console.log('Error loading photo quote:', error);
+      // Fallback to a default image or text
+      setDailyPhotoQuote({ 
+        src: "/placeholder.svg", 
+        alt: "Inspirational quote of the day" 
+      });
+    } finally {
+      setQuoteLoading(false);
+    }
+  };
+
+  // Function to load a new random quote
+  const loadNewPhotoQuote = () => {
+    try {
+      setQuoteLoading(true);
+      const photoQuote = getRandomPhotoQuote();
+      setDailyPhotoQuote(photoQuote);
+    } catch (error) {
+      console.log('Error loading new photo quote:', error);
+      // Fallback to a default image or text
+      setDailyPhotoQuote({ 
+        src: "/placeholder.svg", 
+        alt: "Inspirational quote" 
+      });
+    } finally {
+      setQuoteLoading(false);
+    }
+  };
 
   const fetchDashboardStats = async () => {
     try {
@@ -96,93 +169,299 @@ export function AdminDashboard() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-          <p className="text-muted-foreground">Loading admin dashboard...</p>
+        <div className="text-center space-y-4 animate-bounce">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
+          <p className="text-lg font-semibold text-muted-foreground">Loading admin control panel...</p>
         </div>
       </div>
     );
   }
 
-  const dashboardStats = stats ? [
-    { 
-      title: "Total Students", 
-      value: stats.totalStudents.toString(), 
-      icon: GraduationCap, 
-      change: "+12%",
-      trend: "up",
-      color: "text-primary",
-      route: "/admin/students"
+  const adminSections = [
+    {
+      id: 'electoral',
+      title: 'Electoral Applications',
+      description: 'Manage student electoral applications',
+      icon: Vote,
+      color: 'from-indigo-400 to-purple-400',
+      stats: 'Electoral Management',
+      action: 'View Applications',
+      route: '/admin/electoral'
     },
-    { 
-      title: "Total Teachers", 
-      value: stats.totalTeachers.toString(), 
-      icon: Users, 
-      change: "+5%",
-      trend: "up",
-      color: "text-secondary",
-      route: "/admin/teachers"
+    {
+      id: 'students',
+      title: 'Students',
+      description: 'Manage all student records and data',
+      icon: GraduationCap,
+      color: 'from-green-400 to-emerald-400',
+      stats: stats ? `${stats.totalStudents} Students` : 'Loading...',
+      action: 'Manage Students',
+      route: '/students'
     },
-    { 
-      title: "Total Classes", 
-      value: stats.totalClasses.toString(), 
-      icon: BookOpen, 
-      change: "+8%",
-      trend: "up",
-      color: "text-success",
-      route: "/admin/classes"
+    {
+      id: 'teachers',
+      title: 'Teachers',
+      description: 'Oversee teaching staff and assignments',
+      icon: Users,
+      color: 'from-purple-400 to-pink-400',
+      stats: stats ? `${stats.totalTeachers} Teachers` : 'Loading...',
+      action: 'Manage Teachers',
+      route: '/teachers'
     },
-    { 
-      title: "Total Streams", 
-      value: stats.totalStreams.toString(), 
-      icon: Building, 
-      change: "+2%",
-      trend: "up",
-      color: "text-warning",
-      route: "/admin/streams"
+    {
+      id: 'courses',
+      title: 'Courses',
+      description: 'Configure courses and curriculum',
+      icon: BookOpen,
+      color: 'from-orange-400 to-red-400',
+      stats: 'Course Management',
+      action: 'Manage Courses',
+      route: '/courses'
     },
+    {
+      id: 'analytics',
+      title: 'Analytics',
+      description: 'View performance and usage analytics',
+      icon: BarChart3,
+      color: 'from-teal-400 to-green-400',
+      stats: 'Data Insights',
+      action: 'View Analytics',
+      route: '/analytics',
+      isHighlight: true
+    },
+    {
+      id: 'finance',
+      title: 'Finance',
+      description: 'Manage school finances and fees',
+      icon: DollarSign,
+      color: 'from-indigo-400 to-purple-400',
+      stats: 'Financial Data',
+      action: 'View Finance',
+      route: '/finance'
+    },
+    {
+      id: 'reports',
+      title: 'Reports',
+      description: 'Generate comprehensive school reports',
+      icon: FileText,
+      color: 'from-emerald-400 to-teal-400',
+      stats: 'Report Center',
+      action: 'View Reports',
+      route: '/reports'
+    },
+    {
+      id: 'settings',
+      title: 'Settings',
+      description: 'Configure system settings and preferences',
+      icon: Settings,
+      color: 'from-gray-400 to-slate-400',
+      stats: 'Configuration',
+      action: 'Open Settings',
+      route: '/settings'
+    }
+  ];
+
+  const quickStats = stats ? [
+    { label: 'Total Students', value: stats.totalStudents.toString(), icon: GraduationCap, color: 'text-blue-500', route: '/admin/students', clickable: true },
+    { label: 'Total Teachers', value: stats.totalTeachers.toString(), icon: Users, color: 'text-green-500', route: '/admin/teachers', clickable: true },
+    { label: 'Total Classes', value: stats.totalClasses.toString(), icon: BookOpen, color: 'text-purple-500', route: '/admin/classes', clickable: true },
+    { label: 'Total Streams', value: stats.totalStreams.toString(), icon: Building, color: 'text-orange-500', route: '/admin/streams', clickable: true }
   ] : [];
 
-  const handleCardClick = (route: string) => {
+  const handleSectionClick = (route: string, isHighlight?: boolean) => {
+    if (isHighlight) {
+      setShowConfetti(true);
+    }
     navigate(route);
   };
 
-  const recentActivities = [
-    { action: "New student enrolled", user: "John Doe", time: "2 minutes ago", type: "student" },
-    { action: "Teacher joined", user: "Dr. Sarah Smith", time: "1 hour ago", type: "teacher" },
-    { action: "Course created", user: "Advanced Physics", time: "3 hours ago", type: "course" },
-    { action: "Payment received", user: "$1,250 from Grade 11", time: "5 hours ago", type: "payment" },
-    { action: "Report generated", user: "Monthly Performance", time: "Yesterday", type: "report" },
-  ];
-
-  const departmentStats = [
-    { name: "Mathematics", teachers: 25, students: 520, performance: 85 },
-    { name: "Science", teachers: 22, students: 480, performance: 82 },
-    { name: "English", teachers: 20, students: 510, performance: 88 },
-    { name: "History", teachers: 18, students: 420, performance: 79 },
-    { name: "Computer Science", teachers: 15, students: 380, performance: 91 },
-  ];
-
-  const upcomingEvents = [
-    { event: "Parent-Teacher Meeting", date: "March 15", status: "upcoming" },
-    { event: "Mid-term Examinations", date: "March 20-25", status: "upcoming" },
-    { event: "Sports Day", date: "April 2", status: "planned" },
-    { event: "Annual Function", date: "April 15", status: "planned" },
-  ];
-
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Admin Dashboard</h2>
-          <p className="text-muted-foreground">Complete overview of Glorious Schools</p>
+    <div className="space-y-8 animate-fade-in">
+      <Confetti isActive={showConfetti} onComplete={() => setShowConfetti(false)} />
+      
+      {/* Hero Welcome Section */}
+      <ScrollReveal animation="fadeInUp" delay={100}>
+        <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-r from-red-500 via-purple-500 to-blue-500 p-4 md:p-6 text-white">
+          <div className="absolute inset-0 bg-black/20"></div>
+          <div className="relative z-10 text-center space-y-2 md:space-y-3">
+            <div className="flex justify-center items-center space-x-2 mb-2">
+              <Shield className="h-5 w-5 text-white/80" />
+              <span className="text-sm font-medium tracking-wider">ADMIN PORTAL</span>
+              <Shield className="h-5 w-5 text-white/80" />
+            </div>
+            <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold animate-slide-in-right">
+              {greeting}, {userName || 'Administrator'}! 
+            </h1>
+            <p className="text-sm md:text-lg lg:text-xl font-medium opacity-90">
+              School Management Dashboard
+            </p>
+            <div className="bg-black/20 backdrop-blur-sm rounded-lg md:rounded-xl p-3 md:p-4 mt-2 md:mt-4 max-w-xs md:max-w-2xl mx-auto border border-white/10">
+              {quoteLoading ? (
+                <div className="flex justify-center items-center h-32 md:h-48">
+                  <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin text-white/80" />
+                </div>
+              ) : (
+                <div className="relative group cursor-pointer" onClick={() => setShowQuoteModal(true)}>
+                  <img 
+                    src={dailyPhotoQuote.src} 
+                    alt={dailyPhotoQuote.alt}
+                    className="w-full h-32 md:h-48 object-contain rounded-lg md:rounded-xl shadow-lg transition-transform duration-300 group-hover:scale-105"
+                    onError={(e) => {
+                      // Fallback to placeholder if image fails to load
+                      (e.target as HTMLImageElement).src = "/placeholder.svg";
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg md:rounded-xl flex items-center justify-center">
+                    <p className="text-sm text-white font-medium bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm">Click to view</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {/* Professional Corner Elements - Hidden on mobile */}
+          <div className="hidden md:block absolute top-4 left-4 opacity-20">
+            <Database className="h-5 w-5 text-white" />
+          </div>
+          <div className="hidden md:block absolute top-4 right-4 opacity-20">
+            <Settings className="h-5 w-5 text-white" />
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline">Generate Report</Button>
-          <Button className="bg-gradient-primary">Add New User</Button>
-        </div>
-      </div>
+      </ScrollReveal>
 
+      {/* Quick Stats */}
+      <ScrollReveal animation="fadeInUp" delay={200}>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {statsLoading ? (
+            Array.from({ length: 4 }).map((_, index) => (
+              <Card key={index}>
+                <CardContent className="p-4 text-center">
+                  <Skeleton className="h-8 w-8 mx-auto mb-2" />
+                  <Skeleton className="h-8 w-16 mx-auto mb-2" />
+                  <Skeleton className="h-4 w-20 mx-auto" />
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            quickStats.map((stat, index) => {
+              const Icon = stat.icon;
+              return (
+                <ProfessionalCard 
+                  key={stat.label} 
+                  variant="elevated"
+                  onClick={() => navigate(stat.route)}
+                >
+                  <CardContent className="p-4 text-center">
+                    <Icon className={`h-8 w-8 ${stat.color} mx-auto mb-2`} />
+                    <div className="text-2xl font-bold">{stat.value}</div>
+                    <div className="text-sm text-muted-foreground font-medium">{stat.label}</div>
+                    <div className="text-xs text-primary font-medium mt-1">View details</div>
+                  </CardContent>
+                </ProfessionalCard>
+              );
+            })
+          )}
+        </div>
+      </ScrollReveal>
+
+      {/* Dashboard Sections Grid */}
+      <ScrollReveal animation="fadeInUp" delay={300}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {adminSections.map((section, index) => {
+            const Icon = section.icon;
+            const isHovered = hoveredCard === section.id;
+            
+            return (
+              <ProfessionalCard 
+                key={section.id}
+                variant="bordered"
+                className={`group relative overflow-hidden ${
+                  section.isHighlight ? 'border-primary/50 bg-primary/5' : ''
+                }`}
+                onMouseEnter={() => setHoveredCard(section.id)}
+                onMouseLeave={() => setHoveredCard(null)}
+                onClick={() => handleSectionClick(section.route, section.isHighlight)}
+              >
+                {/* Background Gradient */}
+                <div className={`absolute inset-0 bg-gradient-to-br ${section.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}></div>
+                
+                <CardHeader className="relative z-10 pb-2">
+                  <div className="flex items-center space-x-3">
+                    <div className={`p-3 rounded-full bg-gradient-to-r ${section.color} transition-transform duration-300`}>
+                      <Icon className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg font-bold group-hover:text-primary transition-colors duration-300">
+                        {section.title}
+                      </CardTitle>
+                    </div>
+                  </div>
+                </CardHeader>
+                
+                <CardContent className="relative z-10 space-y-4">
+                  <p className="text-muted-foreground font-medium">
+                    {section.description}
+                  </p>
+                  
+                  <div className="flex items-center justify-between">
+                    <Badge 
+                      variant="secondary" 
+                      className={`font-semibold ${section.isHighlight ? 'bg-orange-100 text-orange-700 animate-pulse' : ''}`}
+                    >
+                      {section.stats}
+                    </Badge>
+                    
+                    <ProfessionalButton 
+                      variant={section.isHighlight ? "default" : "outline"}
+                      size="sm" 
+                      className={`font-medium ${
+                        section.isHighlight 
+                          ? 'bg-primary hover:bg-primary/90' 
+                          : ''
+                      }`}
+                    >
+                      {section.action}
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </ProfessionalButton>
+                  </div>
+                  
+                  {section.isHighlight && (
+                    <div className="text-center">
+                      <span className="text-xs font-bold text-orange-600 animate-bounce">
+                        High Priority!
+                      </span>
+                    </div>
+                  )}
+                </CardContent>
+              </ProfessionalCard>
+            );
+          })}
+        </div>
+      </ScrollReveal>
+
+      {/* Motivational Footer */}
+      <ScrollReveal animation="fadeInUp" delay={400}>
+        <Card className="bg-gradient-to-r from-red-400 to-purple-500 text-white border-0">
+          <CardContent className="p-6 text-center">
+            <div className="flex justify-center items-center space-x-2 mb-4">
+              <Target className="h-6 w-6 animate-pulse" />
+              <span className="text-2xl font-bold">Leading with Excellence! 🌟</span>
+              <Target className="h-6 w-6 animate-pulse" />
+            </div>
+            <p className="text-lg opacity-90">
+              Your leadership shapes the future of education. Keep making great decisions! ⚡🎓
+            </p>
+          </CardContent>
+        </Card>
+      </ScrollReveal>
+
+      {/* Quote Modal */}
+      <QuoteModal 
+        isOpen={showQuoteModal}
+        onClose={() => setShowQuoteModal(false)}
+        quote={dailyPhotoQuote}
+        onNewQuote={loadNewPhotoQuote}
+      />
 
       {/* Verification Dialog */}
       <Dialog open={showVerificationDialog} onOpenChange={setShowVerificationDialog}>
@@ -197,170 +476,6 @@ export function AdminDashboard() {
           />
         </DialogContent>
       </Dialog>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {statsLoading ? (
-          // Show skeleton loading for stats
-          Array.from({ length: 4 }).map((_, index) => (
-            <Card key={index}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-4 w-4" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-8 w-16 mb-2" />
-                <Skeleton className="h-4 w-20" />
-              </CardContent>
-            </Card>
-          ))
-        ) : (
-          dashboardStats.map((stat) => {
-            const Icon = stat.icon;
-            return (
-              <Card 
-                key={stat.title} 
-                className="cursor-pointer hover:shadow-md transition-shadow hover:scale-105 transform duration-200"
-                onClick={() => handleCardClick(stat.route)}
-              >
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-                  <Icon className={`h-4 w-4 ${stat.color}`} />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stat.value}</div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Click to view details
-                  </p>
-                </CardContent>
-              </Card>
-            );
-          })
-        )}
-      </div>
-
-      {/* Electoral Applications Management */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span className="flex items-center gap-2">
-              <Vote className="h-5 w-5" />
-              Electoral Applications
-            </span>
-            <Button size="sm" variant="outline" onClick={() => navigate('/admin/electoral')}>
-              Manage Applications
-            </Button>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground mb-4">
-            Review and manage student applications for leadership positions
-          </p>
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="text-center p-4 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg">
-              <p className="text-2xl font-bold text-yellow-600">-</p>
-              <p className="text-sm text-yellow-700 dark:text-yellow-400">Pending Review</p>
-            </div>
-            <div className="text-center p-4 bg-green-50 dark:bg-green-950/20 rounded-lg">
-              <p className="text-2xl font-bold text-green-600">-</p>
-              <p className="text-sm text-green-700 dark:text-green-400">Confirmed</p>
-            </div>
-            <div className="text-center p-4 bg-red-50 dark:bg-red-950/20 rounded-lg">
-              <p className="text-2xl font-bold text-red-600">-</p>
-              <p className="text-sm text-red-700 dark:text-red-400">Rejected</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="h-5 w-5" />
-              Recent Activities
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {recentActivities.map((activity, index) => (
-                <div key={index} className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors">
-                  <div className="h-2 w-2 rounded-full bg-gradient-primary" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{activity.action}</p>
-                    <p className="text-xs text-muted-foreground">{activity.user} • {activity.time}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Upcoming Events
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {upcomingEvents.map((event, index) => (
-                <div key={index} className="flex items-center justify-between p-3 rounded-lg border">
-                  <div>
-                    <p className="font-medium">{event.event}</p>
-                    <p className="text-sm text-muted-foreground">{event.date}</p>
-                  </div>
-                  <Badge variant={event.status === "upcoming" ? "default" : "secondary"}>
-                    {event.status}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span className="flex items-center gap-2">
-              <Building className="h-5 w-5" />
-              Department Overview
-            </span>
-            <Button size="sm" variant="outline">View Details</Button>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {departmentStats.map((dept, index) => (
-              <div key={index} className="grid grid-cols-4 gap-4 p-3 rounded-lg bg-muted/30">
-                <div>
-                  <p className="font-medium">{dept.name}</p>
-                  <p className="text-sm text-muted-foreground">Department</p>
-                </div>
-                <div>
-                  <p className="font-semibold">{dept.teachers}</p>
-                  <p className="text-sm text-muted-foreground">Teachers</p>
-                </div>
-                <div>
-                  <p className="font-semibold">{dept.students}</p>
-                  <p className="text-sm text-muted-foreground">Students</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <p className="font-semibold">{dept.performance}%</p>
-                  {dept.performance >= 85 ? (
-                    <CheckCircle className="h-4 w-4 text-success" />
-                  ) : dept.performance >= 75 ? (
-                    <AlertCircle className="h-4 w-4 text-warning" />
-                  ) : (
-                    <AlertCircle className="h-4 w-4 text-destructive" />
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

@@ -140,7 +140,11 @@
 @layer utilities {
   .gradient-text {
     /* Gradient text effect */
-    @apply bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent;
+    background: linear-gradient(to right, hsl(var(--primary)), hsl(var(--primary-glow)));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
   }
 
   /* Page transition animations */
@@ -250,5 +254,33 @@
 
   .floating-element:nth-child(3n) {
     animation-delay: 2s;
+  }
+
+  /* Bootstrap-style scroll animations */
+  @keyframes scroll-fade-in-up {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  @keyframes scroll-fade-in-down {
+    from { opacity: 0; transform: translateY(-30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  @keyframes scroll-fade-in-left {
+    from { opacity: 0; transform: translateX(-30px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  
+  @keyframes scroll-fade-in-right {
+    from { opacity: 0; transform: translateX(30px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  /* Print styles */
+  @media print {
+    .no-print {
+      display: none !important;
+    }
   }
 }

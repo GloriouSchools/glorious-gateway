@@ -103,23 +103,25 @@ export function AppSidebar({ userRole, userName, photoUrl, onLogout }: AppSideba
   const initials = userName.split(' ').map(n => n[0]).join('').toUpperCase();
 
   return (
-    <Sidebar className="border-r">
-      <SidebarContent>
-        <div className="p-4 border-b">
-          <div className="flex items-center gap-3">
-            <Avatar>
-              <AvatarImage src={photoUrl || defaultAvatar} />
-              <AvatarFallback>
-                <img src={defaultAvatar} alt="User avatar" className="h-full w-full object-cover" />
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <p className="text-sm font-semibold">{userName}</p>
-              <p className="text-xs text-muted-foreground capitalize">{userRole}</p>
-            </div>
+    <Sidebar className="border-r flex flex-col">
+      {/* Sticky header section */}
+      <div className="sticky top-0 z-10 bg-background p-4 border-b">
+        <div className="flex items-center gap-3">
+          <Avatar>
+            <AvatarImage src={photoUrl || defaultAvatar} />
+            <AvatarFallback>
+              <img src={defaultAvatar} alt="User avatar" className="h-full w-full object-cover" />
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1">
+            <p className="text-sm font-semibold">{userName}</p>
+            <p className="text-xs text-muted-foreground capitalize">{userRole}</p>
           </div>
         </div>
+      </div>
 
+      {/* Scrollable content */}
+      <SidebarContent className="flex-1 overflow-y-auto">
         <SidebarGroup>
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>

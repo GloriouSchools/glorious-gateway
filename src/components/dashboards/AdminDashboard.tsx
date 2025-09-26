@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { 
   Users, 
   GraduationCap, 
@@ -152,12 +153,14 @@ export function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Admin Dashboard</h2>
-          <p className="text-muted-foreground">Complete overview of Glorious Schools</p>
+      <ScrollReveal animation="fadeInUp" delay={100}>
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">Admin Dashboard</h2>
+            <p className="text-muted-foreground">Complete overview of Glorious Schools</p>
+          </div>
         </div>
-      </div>
+      </ScrollReveal>
 
 
       {/* Verification Dialog */}
@@ -175,7 +178,8 @@ export function AdminDashboard() {
       </Dialog>
 
         {/* Dashboard Stats Cards */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <ScrollReveal animation="fadeInUp" delay={200}>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/admin/students')}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -218,23 +222,25 @@ export function AdminDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/admin/streams')}>
+          <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/admin/electoral-applications')}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-orange-600">Total Streams</p>
-                  <p className="text-3xl font-bold text-orange-800">
-                    {loading ? <Skeleton className="h-8 w-20" /> : stats.totalStreams}
+                  <p className="text-sm font-medium text-indigo-600">Electoral Applications</p>
+                  <p className="text-3xl font-bold text-indigo-800">
+                    {loadingElectoral ? <Skeleton className="h-8 w-20" /> : (electoralStats.pending + electoralStats.confirmed + electoralStats.rejected)}
                   </p>
                 </div>
-                <Layers className="h-8 w-8 text-orange-600" />
+                <Shield className="h-8 w-8 text-indigo-600" />
               </div>
             </CardContent>
           </Card>
-        </div>
+          </div>
+        </ScrollReveal>
 
         {/* Electoral Applications Management */}
-        <Card>
+        <ScrollReveal animation="fadeInUp" delay={300}>
+          <Card>
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span className="flex items-center gap-2">
@@ -268,9 +274,11 @@ export function AdminDashboard() {
               </div>
             </div>
           </CardContent>
-        </Card>
+          </Card>
+        </ScrollReveal>
 
-        <div className="grid gap-6 md:grid-cols-2">
+        <ScrollReveal animation="fadeInUp" delay={400}>
+          <div className="grid gap-6 md:grid-cols-2">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -316,9 +324,11 @@ export function AdminDashboard() {
             </div>
           </CardContent>
         </Card>
-      </div>
+        </div>
+      </ScrollReveal>
 
-      <Card>
+      <ScrollReveal animation="fadeInUp" delay={500}>
+        <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Building className="h-5 w-5" />
@@ -355,7 +365,8 @@ export function AdminDashboard() {
             ))}
           </div>
         </CardContent>
-      </Card>
+        </Card>
+      </ScrollReveal>
     </div>
   );
 }

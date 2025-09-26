@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatedCard } from "@/components/ui/animated-card";
 import { AnimatedButton } from "@/components/ui/animated-button";
 import { QuoteModal } from "@/components/ui/quote-modal";
+import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { getQuoteOfTheDay, getRandomPhotoQuote, PhotoQuote } from "@/utils/photoQuotes";
 import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
@@ -93,18 +94,18 @@ export function StudentDashboard() {
     }
   };
 
-  // Function to load a new photo quote (when user requests new one)
+  // Function to load a new random quote
   const loadNewPhotoQuote = () => {
     try {
       setQuoteLoading(true);
       const photoQuote = getRandomPhotoQuote();
       setDailyPhotoQuote(photoQuote);
     } catch (error) {
-      console.log('Error loading photo quote:', error);
+      console.log('Error loading new photo quote:', error);
       // Fallback to a default image or text
       setDailyPhotoQuote({ 
         src: "/placeholder.svg", 
-        alt: "Inspirational quote of the day" 
+        alt: "Inspirational quote" 
       });
     } finally {
       setQuoteLoading(false);
@@ -276,167 +277,180 @@ export function StudentDashboard() {
       <Confetti isActive={showConfetti} onComplete={() => setShowConfetti(false)} />
       
       {/* Hero Welcome Section */}
-      <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 p-4 md:p-6 text-white">
-        <div className="absolute inset-0 bg-black/20"></div>
-        <div className="relative z-10 text-center space-y-2 md:space-y-3">
-          <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold animate-slide-in-right">
-            {greeting}, {userName || 'Superstar'}! 
-          </h1>
-          <p className="text-sm md:text-lg lg:text-xl font-medium opacity-90 animate-fade-in">
-            Quote of the Day
-          </p>
-          <div className="bg-black/20 backdrop-blur-sm rounded-lg md:rounded-xl p-3 md:p-4 mt-2 md:mt-4 max-w-xs md:max-w-2xl mx-auto border border-white/10">
-            {quoteLoading ? (
-              <div className="flex justify-center items-center h-32 md:h-48">
-                <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin text-white/80" />
-              </div>
-            ) : (
-              <div className="relative group cursor-pointer" onClick={() => setShowQuoteModal(true)}>
-                <img 
-                  src={dailyPhotoQuote.src} 
-                  alt={dailyPhotoQuote.alt}
-                  className="w-full h-32 md:h-48 object-contain rounded-lg md:rounded-xl shadow-lg transition-transform duration-300 group-hover:scale-105"
-                  onError={(e) => {
-                    // Fallback to placeholder if image fails to load
-                    (e.target as HTMLImageElement).src = "/placeholder.svg";
-                  }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg md:rounded-xl flex items-center justify-center">
-                  <p className="text-sm text-white font-medium bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm">Click to zoom 🔍</p>
+      <ScrollReveal animation="fadeInUp" delay={100}>
+        <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 p-4 md:p-6 text-white">
+          <div className="absolute inset-0 bg-black/20"></div>
+          <div className="relative z-10 text-center space-y-2 md:space-y-3">
+            <div className="flex justify-center items-center space-x-1 md:space-x-2 mb-2">
+              <Sparkles className="h-4 w-4 md:h-6 md:w-6 animate-pulse" />
+              <span className="text-lg md:text-2xl animate-bounce">🎉</span>
+              <Sparkles className="h-4 w-4 md:h-6 md:w-6 animate-pulse" />
+            </div>
+            <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold animate-slide-in-right">
+              {greeting}, {userName || 'Superstar'}! 
+            </h1>
+            <p className="text-sm md:text-lg lg:text-xl font-medium opacity-90 animate-fade-in">
+              Quote of the Day
+            </p>
+            <div className="bg-black/20 backdrop-blur-sm rounded-lg md:rounded-xl p-3 md:p-4 mt-2 md:mt-4 max-w-xs md:max-w-2xl mx-auto border border-white/10">
+              {quoteLoading ? (
+                <div className="flex justify-center items-center h-32 md:h-48">
+                  <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin text-white/80" />
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="relative group cursor-pointer" onClick={() => setShowQuoteModal(true)}>
+                  <img 
+                    src={dailyPhotoQuote.src} 
+                    alt={dailyPhotoQuote.alt}
+                    className="w-full h-32 md:h-48 object-contain rounded-lg md:rounded-xl shadow-lg transition-transform duration-300 group-hover:scale-105"
+                    onError={(e) => {
+                      // Fallback to placeholder if image fails to load
+                      (e.target as HTMLImageElement).src = "/placeholder.svg";
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg md:rounded-xl flex items-center justify-center">
+                    <p className="text-sm text-white font-medium bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm">Click to zoom 🔍</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {/* Floating Elements - Hidden on mobile */}
+          <div className="hidden md:block absolute top-4 left-4 animate-bounce delay-100">
+            <Star className="h-4 w-4 md:h-6 md:w-6 text-yellow-300" />
+          </div>
+          <div className="hidden md:block absolute top-8 right-8 animate-bounce delay-300">
+            <Heart className="h-3 w-3 md:h-5 md:w-5 text-pink-300" />
+          </div>
+          <div className="hidden md:block absolute bottom-4 left-8 animate-bounce delay-500">
+            <Smile className="h-4 w-4 md:h-6 md:w-6 text-yellow-300" />
           </div>
         </div>
-        
-        {/* Floating Elements - Hidden on mobile */}
-        <div className="hidden md:block absolute top-4 left-4 animate-bounce delay-100">
-          <Star className="h-4 w-4 md:h-6 md:w-6 text-yellow-300" />
-        </div>
-        <div className="hidden md:block absolute top-8 right-8 animate-bounce delay-300">
-          <Heart className="h-3 w-3 md:h-5 md:w-5 text-pink-300" />
-        </div>
-        <div className="hidden md:block absolute bottom-4 left-8 animate-bounce delay-500">
-          <Smile className="h-4 w-4 md:h-6 md:w-6 text-yellow-300" />
-        </div>
-      </div>
+      </ScrollReveal>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      {quickStats.map((stat, index) => {
-        const Icon = stat.icon;
-        return (
-          <AnimatedCard 
-            key={stat.label} 
-            hoverAnimation={index % 2 === 0 ? 'bounce' : 'wiggle'}
-            delay={index * 100}
-            className="fun-hover cursor-pointer transition-all duration-300 hover:shadow-xl border-2 hover:border-primary/50 bg-gradient-subtle click-effect"
-            onClick={() => navigate(stat.route)}
-          >
-            <CardContent className="p-4 text-center">
-              <Icon className={`h-8 w-8 ${stat.color} mx-auto mb-2 animate-pulse`} />
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <div className="text-sm text-muted-foreground font-medium">{stat.label}</div>
-              <div className="text-xs text-primary font-medium mt-1">Click to explore</div>
-            </CardContent>
-          </AnimatedCard>
-        );
-      })}
-      </div>
+      <ScrollReveal animation="fadeInUp" delay={200}>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {quickStats.map((stat, index) => {
+            const Icon = stat.icon;
+            return (
+              <AnimatedCard 
+                key={stat.label} 
+                hoverAnimation={index % 2 === 0 ? 'bounce' : 'wiggle'}
+                delay={index * 100}
+                className="fun-hover cursor-pointer transition-all duration-300 hover:shadow-xl border-2 hover:border-primary/50 bg-gradient-subtle click-effect"
+                onClick={() => navigate(stat.route)}
+              >
+                <CardContent className="p-4 text-center">
+                  <Icon className={`h-8 w-8 ${stat.color} mx-auto mb-2 animate-pulse`} />
+                  <div className="text-2xl font-bold">{stat.value}</div>
+                  <div className="text-sm text-muted-foreground font-medium">{stat.label}</div>
+                  <div className="text-xs text-primary font-medium mt-1">Click to explore</div>
+                </CardContent>
+              </AnimatedCard>
+            );
+          })}
+        </div>
+      </ScrollReveal>
 
       {/* Dashboard Sections Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {dashboardSections.map((section, index) => {
-          const Icon = section.icon;
-          const isHovered = hoveredCard === section.id;
-          
-          // Different animation for each card based on position
-          const animations = ['bounce', 'wiggle', 'float', 'zoom', 'rainbow'];
-          const cardAnimation = animations[index % animations.length] as any;
-          
-          return (
-            <AnimatedCard 
-              key={section.id}
-              hoverAnimation={cardAnimation}
-              delay={index * 50}
-              className={`group fun-hover cursor-pointer click-effect transition-all duration-500 hover:shadow-2xl border-2 hover:border-primary/50 relative overflow-hidden ${
-                section.isHighlight ? 'animate-pulse border-orange-400' : ''
-              }`}
-              onMouseEnter={() => setHoveredCard(section.id)}
-              onMouseLeave={() => setHoveredCard(null)}
-              onClick={() => handleSectionClick(section.route, section.isHighlight)}
-            >
-              {/* Background Gradient */}
-              <div className={`absolute inset-0 bg-gradient-to-br ${section.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}></div>
-              
-              <CardHeader className="relative z-10 pb-2">
-                <div className="flex items-center space-x-3">
-                  <div className={`p-3 rounded-full bg-gradient-to-r ${section.color} transition-transform duration-300`}>
-                    <Icon className={`h-6 w-6 text-white transition-transform duration-300 ${isHovered ? 'animate-bounce' : ''}`} />
-                  </div>
-                  <div>
-                    <CardTitle className="text-lg font-bold group-hover:text-primary transition-colors duration-300">
-                      {section.title}
-                    </CardTitle>
-                  </div>
-                </div>
-              </CardHeader>
-              
-              <CardContent className="relative z-10 space-y-4">
-                <p className="text-muted-foreground font-medium">
-                  {section.description}
-                </p>
+      <ScrollReveal animation="fadeInUp" delay={300}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {dashboardSections.map((section, index) => {
+            const Icon = section.icon;
+            const isHovered = hoveredCard === section.id;
+            
+            // Different animation for each card based on position
+            const animations = ['bounce', 'wiggle', 'float', 'zoom', 'rainbow'];
+            const cardAnimation = animations[index % animations.length] as any;
+            
+            return (
+              <AnimatedCard 
+                key={section.id}
+                hoverAnimation={cardAnimation}
+                delay={index * 50}
+                className={`group fun-hover cursor-pointer click-effect transition-all duration-500 hover:shadow-2xl border-2 hover:border-primary/50 relative overflow-hidden ${
+                  section.isHighlight ? 'animate-pulse border-orange-400' : ''
+                }`}
+                onMouseEnter={() => setHoveredCard(section.id)}
+                onMouseLeave={() => setHoveredCard(null)}
+                onClick={() => handleSectionClick(section.route, section.isHighlight)}
+              >
+                {/* Background Gradient */}
+                <div className={`absolute inset-0 bg-gradient-to-br ${section.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}></div>
                 
-                <div className="flex items-center justify-between">
-                  <Badge 
-                    variant="secondary" 
-                    className={`font-semibold ${section.isHighlight ? 'bg-orange-100 text-orange-700 animate-pulse' : ''}`}
-                  >
-                    {section.stats}
-                  </Badge>
+                <CardHeader className="relative z-10 pb-2">
+                  <div className="flex items-center space-x-3">
+                    <div className={`p-3 rounded-full bg-gradient-to-r ${section.color} transition-transform duration-300`}>
+                      <Icon className={`h-6 w-6 text-white transition-transform duration-300 ${isHovered ? 'animate-bounce' : ''}`} />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg font-bold group-hover:text-primary transition-colors duration-300">
+                        {section.title}
+                      </CardTitle>
+                    </div>
+                  </div>
+                </CardHeader>
+                
+                <CardContent className="relative z-10 space-y-4">
+                  <p className="text-muted-foreground font-medium">
+                    {section.description}
+                  </p>
                   
-                  <AnimatedButton 
-                    variant={section.isHighlight ? "default" : "outline"}
-                    size="sm" 
-                    animation={section.isHighlight ? 'bounce' : 'zoom'}
-                    playAnimation={section.isHighlight}
-                    className={`group-hover:scale-105 transition-all duration-300 font-bold ${
-                      section.isHighlight 
-                        ? 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white' 
-                        : 'hover:bg-primary hover:text-white'
-                    }`}
-                  >
-                    {section.action}
-                    <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
-                  </AnimatedButton>
-                </div>
-                
-                {section.isHighlight && (
-                  <div className="text-center">
-                    <span className="text-xs font-bold text-orange-600 animate-bounce">
-                      HOT! Don't miss out!
-                    </span>
+                  <div className="flex items-center justify-between">
+                    <Badge 
+                      variant="secondary" 
+                      className={`font-semibold ${section.isHighlight ? 'bg-orange-100 text-orange-700 animate-pulse' : ''}`}
+                    >
+                      {section.stats}
+                    </Badge>
+                    
+                    <AnimatedButton 
+                      variant={section.isHighlight ? "default" : "outline"}
+                      size="sm" 
+                      animation={section.isHighlight ? 'bounce' : 'zoom'}
+                      playAnimation={section.isHighlight}
+                      className={`group-hover:scale-105 transition-all duration-300 font-bold ${
+                        section.isHighlight 
+                          ? 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white' 
+                          : 'hover:bg-primary hover:text-white'
+                      }`}
+                    >
+                      {section.action}
+                      <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
+                    </AnimatedButton>
                   </div>
-                )}
-              </CardContent>
-            </AnimatedCard>
-          );
-        })}
-      </div>
+                  
+                  {section.isHighlight && (
+                    <div className="text-center">
+                      <span className="text-xs font-bold text-orange-600 animate-bounce">
+                        HOT! Don't miss out!
+                      </span>
+                    </div>
+                  )}
+                </CardContent>
+              </AnimatedCard>
+            );
+          })}
+        </div>
+      </ScrollReveal>
 
       {/* Motivational Footer */}
-      <Card className="bg-gradient-to-r from-green-400 to-blue-500 text-white border-0">
-        <CardContent className="p-6 text-center">
-          <div className="flex justify-center items-center space-x-2 mb-4">
-            <Target className="h-6 w-6 animate-pulse" />
-            <span className="text-2xl font-bold">You're doing AMAZING! 🌟</span>
-            <Target className="h-6 w-6 animate-pulse" />
-          </div>
-          <p className="text-lg opacity-90">
-            Every day is a new adventure. Keep exploring, keep learning, and keep being awesome! 🚀
-          </p>
-        </CardContent>
-      </Card>
+      <ScrollReveal animation="fadeInUp" delay={400}>
+        <Card className="bg-gradient-to-r from-green-400 to-blue-500 text-white border-0">
+          <CardContent className="p-6 text-center">
+            <div className="flex justify-center items-center space-x-2 mb-4">
+              <Target className="h-6 w-6 animate-pulse" />
+              <span className="text-2xl font-bold">You're doing AMAZING! 🌟</span>
+              <Target className="h-6 w-6 animate-pulse" />
+            </div>
+            <p className="text-lg opacity-90">
+              Every day is a new adventure. Keep exploring, keep learning, and keep being awesome! 🚀
+            </p>
+          </CardContent>
+        </Card>
+      </ScrollReveal>
 
       {/* Confetti Effect */}
       <Confetti isActive={showConfetti} />

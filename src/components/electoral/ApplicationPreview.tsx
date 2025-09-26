@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Download } from "lucide-react";
+import { Download, CheckCircle, XCircle, Clock } from "lucide-react";
 import schoolLogo from "@/assets/school-logo.png";
 import headerImage from "@/assets/header.png";
 
@@ -271,6 +271,7 @@ export default function ApplicationPreview({ application, showActions = true, on
                     On the (Date): <span className="font-bold underline">{submissionDate}</span>{' '}
                     Time: <span className="font-bold underline">{submissionTime}</span>
                   </div>
+                  
                   <div className="text-center mt-3 text-base">
                     For more information contact: Chairperson GEC 0700718846
                   </div>

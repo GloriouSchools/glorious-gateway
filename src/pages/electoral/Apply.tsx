@@ -188,18 +188,27 @@ export default function Apply() {
         // First check if student already has an application
         const { data: existingApplication } = await supabase
           .from('electoral_applications')
-          .select('id')
+          .select('id, status')
           .eq('student_id', user.id)
           .single();
 
+        console.log('Existing application check:', existingApplication);
+
         if (existingApplication) {
-          // If application exists, redirect to status page
-          toast({
-            title: "Application Already Exists",
-            description: "You have already submitted an application. Redirecting to status page.",
-          });
-          navigate('/electoral/status');
-          return;
+          // Only redirect if application is confirmed or rejected
+          // Allow editing if application is pending or null/undefined
+          const status = existingApplication.status || 'pending';
+          console.log('Application status:', status);
+          
+          if (status === 'confirmed' || status === 'rejected') {
+            toast({
+              title: "Application Already Processed",
+              description: `Your application has been ${status}. You cannot make changes to a processed application.`,
+            });
+            navigate('/electoral/status');
+            return;
+          }
+          // If status is pending, allow editing by continuing to load the form
         }
 
         // Fetch student details with class and stream information
@@ -279,12 +288,30 @@ export default function Apply() {
     setIsSubmitting(true);
     
     try {
+      // Check if this is an edit (existing application) or new submission
+      const { data: existingApplication } = await supabase
+        .from('electoral_applications')
+        .select('id, status')
+        .eq('student_id', studentDetails?.id)
+        .single();
+
+      // If application exists and is not pending, prevent submission
+      if (existingApplication && (existingApplication.status === 'confirmed' || existingApplication.status === 'rejected')) {
+        toast({
+          title: "Cannot Edit Application",
+          description: "Your application has already been processed and cannot be modified.",
+          variant: "destructive"
+        });
+        setIsSubmitting(false);
+        navigate('/electoral/status');
+        return;
+      }
+
       // Show confetti first
       setShowConfetti(true);
       
       // Store application data (now including all form fields)
       const applicationData = {
-        id: crypto.randomUUID(),
         student_id: studentDetails?.id,
         student_name: studentDetails?.name,
         student_email: studentDetails?.email,
@@ -301,30 +328,51 @@ export default function Apply() {
         experience: formData.experience,
         qualifications: formData.qualifications,
         why_apply: formData.whyApply,
-        submitted_at: new Date().toISOString()
+        submitted_at: new Date().toISOString(),
+        status: 'pending' // Ensure status is set to pending
       };
 
-      // Use applicationData directly since it now includes all fields
-      const previewData = applicationData;
+      let savedApplication;
 
-      // Save to Supabase (now includes all fields)
-      const { error } = await supabase
-        .from('electoral_applications')
-        .insert([applicationData]);
-
-      if (error) throw error;
+      if (existingApplication) {
+        // Update existing application
+        const { data, error } = await supabase
+          .from('electoral_applications')
+          .update(applicationData)
+          .eq('id', existingApplication.id)
+          .select()
+          .single();
+        
+        if (error) throw error;
+        savedApplication = data;
+      } else {
+        // Insert new application
+        const { data, error } = await supabase
+          .from('electoral_applications')
+          .insert([{ ...applicationData, id: crypto.randomUUID() }])
+          .select()
+          .single();
+        
+        if (error) throw error;
+        savedApplication = data;
+      }
       
       toast({
-        title: "🎉 Application Submitted!",
-        description: `Congratulations, ${studentDetails?.name}! You have successfully applied for the post of ${positions.find(p => p.value === formData.position)?.label}. Your application is under review by the Glorious Electoral Commission.`,
+        title: existingApplication ? "🎉 Application Updated!" : "🎉 Application Submitted!",
+        description: `Congratulations, ${studentDetails?.name}! You have successfully ${existingApplication ? 'updated' : 'applied for'} the post of ${positions.find(p => p.value === formData.position)?.label}. Your application is under review by the Glorious Electoral Commission.`,
       });
       
       // Clear localStorage after successful submission
       localStorage.removeItem('electoralApplicationForm');
       
-      // Set submitted application data for preview (includes non-persisted fields)
-      setSubmittedApplication(previewData);
+      // Set submitted application data for preview
+      setSubmittedApplication(savedApplication);
       setShowPreview(true);
+      
+      // Scroll to top when showing preview
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 100);
       setCurrentStep(4); // Move to preview step
       
       // Hide confetti after animation

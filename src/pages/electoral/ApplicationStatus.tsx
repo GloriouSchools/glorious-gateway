@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CheckCircle, Clock, Edit, FileText } from "lucide-react";
+import { ArrowLeft, CheckCircle, Clock, Edit, FileText, XCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { ApplicationPreview } from "@/components/electoral";
@@ -70,7 +70,7 @@ export default function ApplicationStatus() {
       if (data && !error) {
         setApplication({
           ...data,
-          status: data.status as 'pending' | 'confirmed' | 'rejected',
+          status: (data.status || 'pending') as 'pending' | 'confirmed' | 'rejected',
           submitted_at: data.created_at || data.submitted_at
         });
       }
@@ -102,7 +102,7 @@ export default function ApplicationStatus() {
       case 'confirmed':
         return <CheckCircle className="h-4 w-4" />;
       case 'rejected':
-        return <CheckCircle className="h-4 w-4" />;
+        return <XCircle className="h-4 w-4" />;
       default:
         return <Clock className="h-4 w-4" />;
     }
@@ -167,9 +167,9 @@ export default function ApplicationStatus() {
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>Application Status</span>
-              <Badge className={getStatusColor(application.status)}>
-                {getStatusIcon(application.status)}
-                <span className="ml-2 capitalize">{application.status}</span>
+              <Badge className={getStatusColor(application.status || 'pending')}>
+                {getStatusIcon(application.status || 'pending')}
+                <span className="ml-2 capitalize">{(application.status || 'pending')}</span>
               </Badge>
             </CardTitle>
           </CardHeader>

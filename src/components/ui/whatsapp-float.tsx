@@ -9,7 +9,7 @@ interface WhatsAppFloatProps {
 }
 
 export function WhatsAppFloat({ 
-  phoneNumber = "+256753279445", 
+  phoneNumber = "+256750687790", 
   teacherName = "Ssentongo Vicent",
   teacherAvatar = "https://gloriouschools.com/wp-content/uploads/2023/04/KEN_0281-scaled-1.jpg"
 }: WhatsAppFloatProps) {
@@ -22,11 +22,11 @@ export function WhatsAppFloat({
     let greetingMessage;
     
     if (currentHour >= 5 && currentHour < 12) {
-      greetingMessage = "Hello, good morning! ☀️ How may I help you?";
+      greetingMessage = "Hello, good morning! ☀️";
     } else if (currentHour >= 12 && currentHour < 18) {
-      greetingMessage = "Hello, good afternoon! 🌤️ How may I help you?";
+      greetingMessage = "Hello, good afternoon! 🌤️";
     } else {
-      greetingMessage = "Hello, good evening! 🌙 How may I help you?";
+      greetingMessage = "Hello, good evening! 🌙";
     }
     
     setGreeting(greetingMessage);
