@@ -10,8 +10,8 @@ interface WhatsAppFloatProps {
 
 export function WhatsAppFloat({ 
   phoneNumber = "+256750687790", 
-  teacherName = "Ssentongo Vicent",
-  teacherAvatar = "https://gloriouschools.com/wp-content/uploads/2023/04/KEN_0281-scaled-1.jpg"
+  teacherName = "Tr. Jesse Paul",
+  teacherAvatar = "https://fresh-teacher.github.io/dp.jpeg"
 }: WhatsAppFloatProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState("");
@@ -22,11 +22,11 @@ export function WhatsAppFloat({
     let greetingMessage;
     
     if (currentHour >= 5 && currentHour < 12) {
-      greetingMessage = "Hello, good morning! ☀️";
+      greetingMessage = "Good morning! How are you? ☀️";
     } else if (currentHour >= 12 && currentHour < 18) {
-      greetingMessage = "Hello, good afternoon! 🌤️";
+      greetingMessage = "Good afternoon! How are you? 🌤️";
     } else {
-      greetingMessage = "Hello, good evening! 🌙";
+      greetingMessage = "Good evening! How are you? 🌙";
     }
     
     setGreeting(greetingMessage);
