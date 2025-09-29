@@ -272,7 +272,7 @@ export default function StreamsList() {
         </Card>
 
       {/* Streams Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
         {filteredStreams.length === 0 ? (
           <Card className="col-span-full">
             <CardContent className="text-center py-8">
@@ -286,48 +286,48 @@ export default function StreamsList() {
             <Card key={stream.id} className="hover:shadow-md transition-shadow">
               <CardHeader>
                 <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-lg">{stream.name || 'Unnamed Stream'}</CardTitle>
-                    <p className="text-xs text-muted-foreground mt-1">ID: {stream.id}</p>
+                  <div className="min-w-0 flex-1">
+                    <CardTitle className="text-lg truncate">{stream.name || 'Unnamed Stream'}</CardTitle>
+                    <p className="text-xs text-muted-foreground mt-1 truncate">ID: {stream.id}</p>
                   </div>
-                  <Building className="h-5 w-5 text-primary" />
+                  <Building className="h-5 w-5 text-primary flex-shrink-0" />
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {stream.description && (
-                    <p className="text-sm text-muted-foreground">{stream.description}</p>
+                    <p className="text-sm text-muted-foreground line-clamp-2">{stream.description}</p>
                   )}
                   
                   <div className="flex flex-wrap gap-2">
                     {stream.className && (
-                      <Badge variant="outline" className="flex items-center gap-1">
+                      <Badge variant="outline" className="flex items-center gap-1 text-xs">
                         <BookOpen className="h-3 w-3" />
-                        {stream.className}
+                        <span className="truncate">{stream.className}</span>
                       </Badge>
                     )}
-                    <Badge variant="secondary" className="flex items-center gap-1">
+                    <Badge variant="secondary" className="flex items-center gap-1 text-xs">
                       <Users className="h-3 w-3" />
                       {stream.studentCount} Students
                     </Badge>
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    <Badge variant="outline">
+                    <Badge variant="outline" className="text-xs">
                       Created: {new Date(stream.created_at).toLocaleDateString()}
                     </Badge>
                     {stream.updated_at !== stream.created_at && (
-                      <Badge variant="secondary">
+                      <Badge variant="secondary" className="text-xs">
                         Updated: {new Date(stream.updated_at).toLocaleDateString()}
                       </Badge>
                     )}
                   </div>
 
-                    <div className="flex gap-2 pt-2">
-                      <Button size="sm" variant="outline" className="flex-1" onClick={() => navigate(`/admin/students?stream=${stream.id}`)}>
-                        View Students
-                      </Button>
-                    </div>
+                  <div className="flex gap-2 pt-2">
+                    <Button size="sm" variant="outline" className="flex-1" onClick={() => navigate(`/admin/students?stream=${stream.id}`)}>
+                      View Students
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -335,13 +335,13 @@ export default function StreamsList() {
         )}
       </div>
 
-      {/* Summary Table */}
-      <Card>
+      {/* Summary Table - Desktop Only */}
+      <Card className="hidden lg:block">
         <CardHeader>
           <CardTitle>Streams Summary</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
+          <div className="rounded-md border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -370,7 +370,7 @@ export default function StreamsList() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <p className="text-sm">{stream.description || 'No description'}</p>
+                      <p className="text-sm max-w-xs truncate">{stream.description || 'No description'}</p>
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary">{stream.studentCount}</Badge>

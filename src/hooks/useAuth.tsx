@@ -253,6 +253,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Clear any remaining form data in memory for security
     const event = new CustomEvent('clearFormData');
     window.dispatchEvent(event);
+    
+    // Redirect to login page immediately after logout
+    window.location.href = '/login';
   };
 
   return (

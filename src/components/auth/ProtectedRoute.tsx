@@ -34,11 +34,11 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   if (!user || !userRole) {
-    // Only store redirect path if user is actively trying to access a protected route
-    // Clear any existing redirect from previous sessions first
+    // Store redirect path for user trying to access a protected route
     const currentPath = location.pathname + location.search;
     
     // Only set redirect if it's not the login page and not the root page
+    // This helps maintain user's intended destination
     if (currentPath !== '/login' && currentPath !== '/') {
       localStorage.setItem('redirectAfterLogin', currentPath);
     } else {

@@ -6,6 +6,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { RoleBasedRedirect } from "@/components/auth/RoleBasedRedirect";
+import { RoleBasedRoute } from "@/components/auth/RoleBasedRoute";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { PageTransition } from "@/components/PageTransition";
 import Index from "./pages/Index";
@@ -19,11 +21,16 @@ import Legal from "./pages/Legal";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Cookies from "./pages/Cookies";
+import Settings from "./pages/Settings";
 import StudentsList from "./pages/admin/StudentsList";
 import TeachersList from "./pages/admin/TeachersList";
 import ClassesList from "./pages/admin/ClassesList";
 import StreamsList from "./pages/admin/StreamsList";
 import ElectoralApplications from "./pages/admin/ElectoralApplications";
+import AdminCourses from "./pages/admin/AdminCourses";
+import AdminAnalytics from "./pages/admin/AdminAnalytics";
+import AdminFinance from "./pages/admin/AdminFinance";
+import AdminReports from "./pages/admin/AdminReports";
 import Electoral from "./pages/Electoral";
 import Apply from "./pages/electoral/Apply";
 import ApplicationStatus from "./pages/electoral/ApplicationStatus";
@@ -54,18 +61,18 @@ const App = () => (
       enableSystem 
       disableTransitionOnChange
     >
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AuthProvider>
-            <ScrollToTop />
-            <PageTransition>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <AuthProvider>
+          <ScrollToTop />
+          <PageTransition>
               <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/verify-callback" element={<VerifyCallback />} />
               <Route path="/" element={
                 <ProtectedRoute>
+                  <RoleBasedRedirect />
                   <Index />
                 </ProtectedRoute>
               } />
@@ -74,133 +81,233 @@ const App = () => (
                   <UserProfile />
                 </ProtectedRoute>
               } />
-              <Route path="/admin/students" element={
+              <Route path="/settings" element={
                 <ProtectedRoute>
-                  <StudentsList />
+                  <UserProfile />
                 </ProtectedRoute>
               } />
-              <Route path="/admin/teachers" element={
+              
+              {/* Student Routes */}
+              <Route path="/student" element={
                 <ProtectedRoute>
-                  <TeachersList />
+                  <Index />
                 </ProtectedRoute>
               } />
-              <Route path="/admin/classes" element={
+              <Route path="/student/profile" element={
                 <ProtectedRoute>
-                  <ClassesList />
+                  <UserProfile />
                 </ProtectedRoute>
               } />
-              <Route path="/admin/streams" element={
-                <ProtectedRoute>
-                  <StreamsList />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/electoral" element={
-                <ProtectedRoute>
-                  <ElectoralApplications />
-                </ProtectedRoute>
-              } />
-              <Route path="/electoral" element={
-                <ProtectedRoute>
-                  <Electoral />
-                </ProtectedRoute>
-              } />
-              <Route path="/electoral/apply" element={
-                <ProtectedRoute>
-                  <Apply />
-                </ProtectedRoute>
-              } />
-              <Route path="/electoral/status" element={
-                <ProtectedRoute>
-                  <ApplicationStatus />
-                </ProtectedRoute>
-              } />
-              <Route path="/electoral/candidates/:position" element={<Candidates />} />
-              <Route path="/electoral/vote" element={
-                <ProtectedRoute>
-                  <Vote />
-                </ProtectedRoute>
-              } />
-              <Route path="/electoral/results" element={
-                <ProtectedRoute>
-                  <LiveResults />
-                </ProtectedRoute>
-              } />
-              <Route path="/about" element={<About />} />
-              <Route path="/disclaimer" element={<Disclaimer />} />
-              <Route path="/legal" element={<Legal />} />
-              <Route path="/terms" element={<Terms />} />
-              <Route path="/privacy" element={<Privacy />} />
-              <Route path="/cookies" element={<Cookies />} />
-              <Route path="/calendar" element={
+              <Route path="/student/calendar" element={
                 <ProtectedRoute>
                   <Calendar />
                 </ProtectedRoute>
               } />
-              <Route path="/classes" element={
+              <Route path="/student/classes" element={
                 <ProtectedRoute>
                   <Classes />
                 </ProtectedRoute>
               } />
-              <Route path="/assignments" element={
+              <Route path="/student/assignments" element={
                 <ProtectedRoute>
                   <Assignments />
                 </ProtectedRoute>
               } />
-              <Route path="/grades" element={
+              <Route path="/student/grades" element={
                 <ProtectedRoute>
                   <Grades />
                 </ProtectedRoute>
               } />
-              <Route path="/timetable" element={
+              <Route path="/student/timetable" element={
                 <ProtectedRoute>
                   <Timetable />
                 </ProtectedRoute>
               } />
-              <Route path="/attendance" element={
+              <Route path="/student/attendance" element={
                 <ProtectedRoute>
                   <Attendance />
                 </ProtectedRoute>
               } />
-               <Route path="/hall-of-fame" element={
-                 <ProtectedRoute>
-                   <HallOfFame />
-                 </ProtectedRoute>
-               } />
-               <Route path="/games" element={
-                 <ProtectedRoute>
-                   <Games />
-                 </ProtectedRoute>
-               } />
-               <Route path="/games/typing-wizard" element={
-                 <ProtectedRoute>
-                   <TypingWizard />
-                 </ProtectedRoute>
-               } />
-              <Route path="/birthdays" element={
+              <Route path="/student/hall-of-fame" element={
                 <ProtectedRoute>
-                  <Birthdays />
+                  <HallOfFame />
                 </ProtectedRoute>
               } />
-              <Route path="/communication" element={
+              <Route path="/student/games" element={
+                <ProtectedRoute>
+                  <Games />
+                </ProtectedRoute>
+              } />
+              <Route path="/student/games/typing-wizard" element={
+                <ProtectedRoute>
+                  <TypingWizard />
+                </ProtectedRoute>
+              } />
+              <Route path="/student/library" element={
+                <ProtectedRoute>
+                  <Library />
+                </ProtectedRoute>
+              } />
+              <Route path="/student/communication" element={
                 <ProtectedRoute>
                   <Communication />
                 </ProtectedRoute>
               } />
-              <Route path="/help-support" element={
+              <Route path="/student/help" element={
                 <ProtectedRoute>
                   <HelpSupport />
                 </ProtectedRoute>
               } />
-              <Route path="/help" element={
+              <Route path="/student/electoral" element={
                 <ProtectedRoute>
-                  <HelpSupport />
+                  <RoleBasedRoute allowedRoles={["student"]}>
+                    <Electoral />
+                  </RoleBasedRoute>
                 </ProtectedRoute>
               } />
-               <Route path="/library" element={
-                 <ProtectedRoute>
-                   <Library />
-                 </ProtectedRoute>
-               } />
+              <Route path="/student/electoral/apply" element={
+                <ProtectedRoute>
+                  <Apply />
+                </ProtectedRoute>
+              } />
+              <Route path="/student/electoral/status" element={
+                <ProtectedRoute>
+                  <ApplicationStatus />
+                </ProtectedRoute>
+              } />
+              <Route path="/student/electoral/candidates" element={
+                <ProtectedRoute>
+                  <Candidates />
+                </ProtectedRoute>
+              } />
+              <Route path="/student/electoral/results" element={
+                <ProtectedRoute>
+                  <LiveResults />
+                </ProtectedRoute>
+              } />
+              <Route path="/student/electoral/vote" element={
+                <ProtectedRoute>
+                  <Vote />
+                </ProtectedRoute>
+              } />
+
+              {/* Teacher Routes */}
+              <Route path="/teacher" element={
+                <ProtectedRoute>
+                  <Index />
+                </ProtectedRoute>
+              } />
+              <Route path="/teacher/classes" element={
+                <ProtectedRoute>
+                  <Classes />
+                </ProtectedRoute>
+              } />
+              <Route path="/teacher/students" element={
+                <ProtectedRoute>
+                  <StudentsList />
+                </ProtectedRoute>
+              } />
+              <Route path="/teacher/assignments" element={
+                <ProtectedRoute>
+                  <Assignments />
+                </ProtectedRoute>
+              } />
+              <Route path="/teacher/grades" element={
+                <ProtectedRoute>
+                  <Grades />
+                </ProtectedRoute>
+              } />
+              <Route path="/teacher/schedule" element={
+                <ProtectedRoute>
+                  <Calendar />
+                </ProtectedRoute>
+              } />
+              <Route path="/teacher/attendance" element={
+                <ProtectedRoute>
+                  <Attendance />
+                </ProtectedRoute>
+              } />
+              <Route path="/teacher/messages" element={
+                <ProtectedRoute>
+                  <Communication />
+                </ProtectedRoute>
+              } />
+              <Route path="/teacher/reports" element={
+                <ProtectedRoute>
+                  <AdminReports />
+                </ProtectedRoute>
+              } />
+
+              {/* Admin Routes */}
+              <Route path="/admin" element={
+                <ProtectedRoute>
+                  <Index />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/students" element={
+                <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={["admin"]}>
+                    <StudentsList />
+                  </RoleBasedRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/teachers" element={
+                <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={["admin"]}>
+                    <TeachersList />
+                  </RoleBasedRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/classes" element={
+                <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={["admin"]}>
+                    <ClassesList />
+                  </RoleBasedRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/streams" element={
+                <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={["admin"]}>
+                    <StreamsList />
+                  </RoleBasedRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/electoral" element={
+                <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={["admin"]}>
+                    <ElectoralApplications />
+                  </RoleBasedRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/courses" element={
+                <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={["admin"]}>
+                    <AdminCourses />
+                  </RoleBasedRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/analytics" element={
+                <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={["admin"]}>
+                    <AdminAnalytics />
+                  </RoleBasedRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/finance" element={
+                <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={["admin"]}>
+                    <AdminFinance />
+                  </RoleBasedRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/reports" element={
+                <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={["admin"]}>
+                    <AdminReports />
+                  </RoleBasedRoute>
+                </ProtectedRoute>
+              } />
+              
                <Route path="/404" element={<NotFound />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
@@ -208,7 +315,6 @@ const App = () => (
             </PageTransition>
           </AuthProvider>
         </BrowserRouter>
-      </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );

@@ -51,11 +51,11 @@ interface ElectoralApplication {
   class_name: string;
   stream_name: string;
   sex?: string;
-  age?: string;
+  age?: number;
   class_teacher_name?: string;
   class_teacher_tel?: string;
   parent_name?: string;
-  parent_tel?: string;
+  parent_tel?: number;
   experience: string;
   qualifications: string;
   why_apply: string;
@@ -854,16 +854,15 @@ export default function ElectoralApplications() {
               <div className="flex justify-center w-full overflow-x-auto py-2">
                 <Pagination>
                   <PaginationContent className="flex-wrap">
-                    <PaginationItem>
-                      <PaginationPrevious 
-                        href="#" 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          if (currentPage > 1) setCurrentPage(currentPage - 1);
-                        }}
-                        className={`text-xs sm:text-sm ${currentPage === 1 ? "pointer-events-none opacity-50" : ""}`}
-                      />
-                    </PaginationItem>
+                     <PaginationItem>
+                       <PaginationPrevious 
+                         onClick={(e) => {
+                           e.preventDefault();
+                           if (currentPage > 1) setCurrentPage(currentPage - 1);
+                         }}
+                         className={`text-xs sm:text-sm ${currentPage === 1 ? "pointer-events-none opacity-50" : ""}`}
+                       />
+                     </PaginationItem>
                     
                     {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                       let page;
@@ -878,32 +877,30 @@ export default function ElectoralApplications() {
                       }
                       
                       return (
-                        <PaginationItem key={page}>
-                          <PaginationLink
-                            href="#"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              setCurrentPage(page);
-                            }}
-                            isActive={currentPage === page}
-                            className="text-xs sm:text-sm"
-                          >
-                            {page}
-                          </PaginationLink>
-                        </PaginationItem>
+                         <PaginationItem key={page}>
+                           <PaginationLink
+                             onClick={(e) => {
+                               e.preventDefault();
+                               setCurrentPage(page);
+                             }}
+                             isActive={currentPage === page}
+                             className="text-xs sm:text-sm"
+                           >
+                             {page}
+                           </PaginationLink>
+                         </PaginationItem>
                       );
                     })}
                     
-                    <PaginationItem>
-                      <PaginationNext 
-                        href="#" 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          if (currentPage < totalPages) setCurrentPage(currentPage + 1);
-                        }}
-                        className={`text-xs sm:text-sm ${currentPage === totalPages ? "pointer-events-none opacity-50" : ""}`}
-                      />
-                    </PaginationItem>
+                     <PaginationItem>
+                       <PaginationNext 
+                         onClick={(e) => {
+                           e.preventDefault();
+                           if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+                         }}
+                         className={`text-xs sm:text-sm ${currentPage === totalPages ? "pointer-events-none opacity-50" : ""}`}
+                       />
+                     </PaginationItem>
                   </PaginationContent>
                 </Pagination>
               </div>

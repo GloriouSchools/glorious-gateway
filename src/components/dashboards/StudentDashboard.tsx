@@ -9,6 +9,7 @@ import { AnimatedButton } from "@/components/ui/animated-button";
 import { QuoteModal } from "@/components/ui/quote-modal";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { getQuoteOfTheDay, getRandomPhotoQuote, PhotoQuote } from "@/utils/photoQuotes";
+import { formatGreetingName, getTimeBasedGreeting } from "@/utils/greetingUtils";
 import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import { 
@@ -62,18 +63,7 @@ export function StudentDashboard() {
   // Get quote of the day and time-based greeting on component mount
   useEffect(() => {
     loadQuoteOfTheDay();
-
-    // Get current time in East Africa Time (EAT)
-    const eatTime = toZonedTime(new Date(), 'Africa/Nairobi');
-    const hour = eatTime.getHours();
-
-    if (hour >= 5 && hour < 12) {
-      setGreeting("Good morning");
-    } else if (hour >= 12 && hour < 17) {
-      setGreeting("Good afternoon");
-    } else {
-      setGreeting("Good evening");
-    }
+    setGreeting(getTimeBasedGreeting());
   }, []);
 
   // Function to load quote of the day (persistent)
@@ -133,7 +123,7 @@ export function StudentDashboard() {
       color: 'from-red-400 to-pink-400',
       stats: 'Voting Open Now!',
       action: 'Vote Now',
-      route: '/electoral',
+      route: '/student/electoral',
       isHighlight: true
     },
     {
@@ -144,7 +134,7 @@ export function StudentDashboard() {
       color: 'from-purple-400 to-pink-400',
       stats: 'Profile 95% Complete',
       action: 'Visit Profile',
-      route: '/profile'
+      route: '/student/profile'
     },
     {
       id: 'calendar',
@@ -154,7 +144,7 @@ export function StudentDashboard() {
       color: 'from-blue-400 to-cyan-400',
       stats: '3 Events Today',
       action: 'Check Schedule',
-      route: '/calendar'
+      route: '/student/calendar'
     },
     {
       id: 'classes',
@@ -164,7 +154,7 @@ export function StudentDashboard() {
       color: 'from-green-400 to-emerald-400',
       stats: '6 Active Classes',
       action: 'Explore Classes',
-      route: '/classes'
+      route: '/student/classes'
     },
     {
       id: 'assignments',
@@ -174,7 +164,7 @@ export function StudentDashboard() {
       color: 'from-orange-400 to-red-400',
       stats: '4 Due This Week',
       action: 'Start Working',
-      route: '/assignments'
+      route: '/student/assignments'
     },
     {
       id: 'grades',
@@ -184,7 +174,7 @@ export function StudentDashboard() {
       color: 'from-yellow-400 to-orange-400',
       stats: 'GPA: 3.75/4.0',
       action: 'View Report',
-      route: '/grades'
+      route: '/student/grades'
     },
     {
       id: 'timetable',
@@ -194,7 +184,7 @@ export function StudentDashboard() {
       color: 'from-indigo-400 to-purple-400',
       stats: 'Next: Math at 10:00',
       action: 'See Schedule',
-      route: '/timetable'
+      route: '/student/timetable'
     },
     {
       id: 'attendance',
@@ -204,7 +194,7 @@ export function StudentDashboard() {
       color: 'from-teal-400 to-green-400',
       stats: '92% This Month',
       action: 'Check Record',
-      route: '/attendance'
+      route: '/student/attendance'
     },
     {
       id: 'hall-of-fame',
@@ -214,7 +204,7 @@ export function StudentDashboard() {
       color: 'from-yellow-400 to-amber-400',
       stats: 'Top 10 Students',
       action: 'See Stars',
-      route: '/hall-of-fame'
+      route: '/student/hall-of-fame'
     },
     {
       id: 'games',
@@ -224,7 +214,7 @@ export function StudentDashboard() {
       color: 'from-indigo-400 to-purple-400',
       stats: '12 New Games',
       action: 'Play Now',
-      route: '/games'
+      route: '/student/games'
     },
     {
       id: 'library',
@@ -234,7 +224,7 @@ export function StudentDashboard() {
       color: 'from-emerald-400 to-teal-400',
       stats: '500+ Books Available',
       action: 'Browse Books',
-      route: '/library'
+      route: '/student/library'
     },
     {
       id: 'communication',
@@ -244,7 +234,7 @@ export function StudentDashboard() {
       color: 'from-blue-400 to-indigo-400',
       stats: '3 New Messages',
       action: 'Read Messages',
-      route: '/communication'
+      route: '/student/communication'
     },
     {
       id: 'help',
@@ -254,7 +244,7 @@ export function StudentDashboard() {
       color: 'from-purple-400 to-pink-400',
       stats: '24/7 Support',
       action: 'Get Help',
-      route: '/help'
+      route: '/student/help'
     }
   ];
 
@@ -287,7 +277,7 @@ export function StudentDashboard() {
               <Sparkles className="h-4 w-4 md:h-6 md:w-6 animate-pulse" />
             </div>
             <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold animate-slide-in-right">
-              {greeting}, {userName || 'Superstar'}! 
+              {greeting}, {formatGreetingName(userName || '', 'student') || 'Superstar'}! 
             </h1>
             <p className="text-sm md:text-lg lg:text-xl font-medium opacity-90 animate-fade-in">
               Quote of the Day

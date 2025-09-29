@@ -9,6 +9,7 @@ import { ProfessionalButton } from "@/components/ui/professional-button";
 import { QuoteModal } from "@/components/ui/quote-modal";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { getQuoteOfTheDay, getRandomPhotoQuote, PhotoQuote } from "@/utils/photoQuotes";
+import { formatGreetingName, getTimeBasedGreeting } from "@/utils/greetingUtils";
 import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import { 
@@ -69,18 +70,7 @@ export function AdminDashboard() {
   useEffect(() => {
     fetchDashboardStats();
     loadQuoteOfTheDay();
-
-    // Get current time in East Africa Time (EAT)
-    const eatTime = toZonedTime(new Date(), 'Africa/Nairobi');
-    const hour = eatTime.getHours();
-
-    if (hour >= 5 && hour < 12) {
-      setGreeting("Good morning");
-    } else if (hour >= 12 && hour < 17) {
-      setGreeting("Good afternoon");
-    } else {
-      setGreeting("Good evening");
-    }
+    setGreeting(getTimeBasedGreeting());
   }, []);
 
   // Function to load quote of the day (persistent)
@@ -196,7 +186,7 @@ export function AdminDashboard() {
       color: 'from-green-400 to-emerald-400',
       stats: stats ? `${stats.totalStudents} Students` : 'Loading...',
       action: 'Manage Students',
-      route: '/students'
+      route: '/admin/students'
     },
     {
       id: 'teachers',
@@ -206,7 +196,7 @@ export function AdminDashboard() {
       color: 'from-purple-400 to-pink-400',
       stats: stats ? `${stats.totalTeachers} Teachers` : 'Loading...',
       action: 'Manage Teachers',
-      route: '/teachers'
+      route: '/admin/teachers'
     },
     {
       id: 'courses',
@@ -216,7 +206,7 @@ export function AdminDashboard() {
       color: 'from-orange-400 to-red-400',
       stats: 'Course Management',
       action: 'Manage Courses',
-      route: '/courses'
+      route: '/admin/courses'
     },
     {
       id: 'analytics',
@@ -226,7 +216,7 @@ export function AdminDashboard() {
       color: 'from-teal-400 to-green-400',
       stats: 'Data Insights',
       action: 'View Analytics',
-      route: '/analytics',
+      route: '/admin/analytics',
       isHighlight: true
     },
     {
@@ -237,7 +227,7 @@ export function AdminDashboard() {
       color: 'from-indigo-400 to-purple-400',
       stats: 'Financial Data',
       action: 'View Finance',
-      route: '/finance'
+      route: '/admin/finance'
     },
     {
       id: 'reports',
@@ -247,7 +237,7 @@ export function AdminDashboard() {
       color: 'from-emerald-400 to-teal-400',
       stats: 'Report Center',
       action: 'View Reports',
-      route: '/reports'
+      route: '/admin/reports'
     },
     {
       id: 'settings',
@@ -290,7 +280,7 @@ export function AdminDashboard() {
               <Shield className="h-5 w-5 text-white/80" />
             </div>
             <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold animate-slide-in-right">
-              {greeting}, {userName || 'Administrator'}! 
+              {greeting}, {formatGreetingName(userName || '', 'admin') || 'Administrator'}! 
             </h1>
             <p className="text-sm md:text-lg lg:text-xl font-medium opacity-90">
               School Management Dashboard

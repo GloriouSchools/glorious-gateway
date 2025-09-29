@@ -277,13 +277,13 @@ export default function ClassesList() {
         )}
       </div>
 
-      {/* Summary Table */}
-      <Card>
+      {/* Summary Table - Desktop Only */}
+      <Card className="hidden lg:block">
         <CardHeader>
           <CardTitle>Classes Summary</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
+          <div className="rounded-md border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -305,7 +305,7 @@ export default function ClassesList() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <p className="text-sm">{classItem.description || 'No description'}</p>
+                      <p className="text-sm max-w-xs truncate">{classItem.description || 'No description'}</p>
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline">{classItem.studentCount}</Badge>

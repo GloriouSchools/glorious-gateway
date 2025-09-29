@@ -103,35 +103,45 @@ export function LoginForm({ schoolLogo }: LoginFormProps) {
     
     try {
       console.log('Attempting login with email:', signInData.email);
+      console.log('Password entered:', signInData.password);
       
       // First, try direct database authentication as fallback
       let userData = null;
       let userRole = null;
       
       // Try to find user in students table
-      const { data: student } = await supabase
+      const { data: student, error: studentError } = await supabase
         .from('students')
         .select('*')
         .eq('email', signInData.email)
         .maybeSingle();
       
+      console.log('Student query result:', { student, studentError });
+      
       if (student) {
         const correctPassword = student.password_hash || student.default_password;
+        console.log('Expected password for student:', correctPassword);
+        console.log('Password match:', correctPassword === signInData.password);
+        
         if (correctPassword === signInData.password) {
           userData = student;
           userRole = 'student';
+          console.log('Student login successful');
         }
       }
       
       // Try teachers table if no student found
       if (!userData) {
-        const { data: teacher } = await supabase
+        const { data: teacher, error: teacherError } = await supabase
           .from('teachers')
           .select('*')
           .eq('email', signInData.email)
           .maybeSingle();
         
+        console.log('Teacher query result:', { teacher, teacherError });
+        
         if (teacher && teacher.password_hash === signInData.password) {
+          console.log('Teacher login successful');
           userData = teacher;
           userRole = 'teacher';
         }
@@ -139,13 +149,16 @@ export function LoginForm({ schoolLogo }: LoginFormProps) {
       
       // Try admins table if no teacher found
       if (!userData) {
-        const { data: admin } = await supabase
+        const { data: admin, error: adminError } = await supabase
           .from('admins')
           .select('*')
           .eq('email', signInData.email)
           .maybeSingle();
         
+        console.log('Admin query result:', { admin, adminError });
+        
         if (admin && admin.password_hash === signInData.password) {
+          console.log('Admin login successful');
           userData = admin;
           userRole = 'admin';
         }
@@ -202,15 +215,31 @@ export function LoginForm({ schoolLogo }: LoginFormProps) {
       
       toast.success(`Welcome, ${name}!`);
       
-      // Check for redirect path - only use it if user was actively trying to access a page
+      // Check for redirect path and validate it for the current user's role
       const redirectPath = localStorage.getItem('redirectAfterLogin');
       localStorage.removeItem('redirectAfterLogin'); // Clean up immediately
       
-      // Only redirect to specific page if there's a valid redirect path that's not the login page
-      // Otherwise, always go to dashboard (home page)
-      const targetPath = (redirectPath && redirectPath !== '/login' && redirectPath !== '/') 
-        ? redirectPath 
-        : '/';
+      // Function to check if a path is valid for the user's role
+      const isValidPathForRole = (path: string, role: string): boolean => {
+        if (!path || path === '/' || path === '/login') return true;
+        
+        // Check if path starts with the user's role prefix
+        if (path.startsWith(`/${role}`)) return true;
+        
+        // Allow access to general pages like profile, settings (if they exist)
+        const allowedGeneralPaths = ['/profile', '/settings'];
+        return allowedGeneralPaths.some(allowedPath => path.startsWith(allowedPath));
+      };
+      
+      // Determine target path based on role and redirect validation
+      let targetPath = '/'; // Default to home/dashboard
+      
+      if (redirectPath && isValidPathForRole(redirectPath, userRole)) {
+        targetPath = redirectPath;
+      } else if (redirectPath && !isValidPathForRole(redirectPath, userRole)) {
+        // If user tried to access a path not allowed for their role, go to their dashboard
+        targetPath = `/${userRole}`;
+      }
       
       // Force a page reload to ensure auth state is properly initialized
       window.location.href = targetPath;

@@ -9,6 +9,7 @@ import { ProfessionalButton } from "@/components/ui/professional-button";
 import { QuoteModal } from "@/components/ui/quote-modal";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { getQuoteOfTheDay, getRandomPhotoQuote, PhotoQuote } from "@/utils/photoQuotes";
+import { formatGreetingName, getTimeBasedGreeting } from "@/utils/greetingUtils";
 import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import { 
@@ -56,18 +57,7 @@ export function TeacherDashboard() {
   // Get quote of the day and time-based greeting on component mount
   useEffect(() => {
     loadQuoteOfTheDay();
-
-    // Get current time in East Africa Time (EAT)
-    const eatTime = toZonedTime(new Date(), 'Africa/Nairobi');
-    const hour = eatTime.getHours();
-
-    if (hour >= 5 && hour < 12) {
-      setGreeting("Good morning");
-    } else if (hour >= 12 && hour < 17) {
-      setGreeting("Good afternoon");
-    } else {
-      setGreeting("Good evening");
-    }
+    setGreeting(getTimeBasedGreeting());
   }, []);
 
   // Function to load quote of the day (persistent)
@@ -127,7 +117,7 @@ export function TeacherDashboard() {
       color: 'from-blue-400 to-cyan-400',
       stats: 'Overview',
       action: 'View Dashboard',
-      route: '/'
+      route: '/teacher'
     },
     {
       id: 'classes',
@@ -137,7 +127,7 @@ export function TeacherDashboard() {
       color: 'from-green-400 to-emerald-400',
       stats: '5 Active Classes',
       action: 'View Classes',
-      route: '/classes'
+      route: '/teacher/classes'
     },
     {
       id: 'students',
@@ -147,7 +137,7 @@ export function TeacherDashboard() {
       color: 'from-purple-400 to-pink-400',
       stats: '156 Students',
       action: 'View Students',
-      route: '/students'
+      route: '/teacher/students'
     },
     {
       id: 'assignments',
@@ -157,7 +147,7 @@ export function TeacherDashboard() {
       color: 'from-orange-400 to-red-400',
       stats: '23 Pending',
       action: 'Manage Assignments',
-      route: '/assignments'
+      route: '/teacher/assignments'
     },
     {
       id: 'grades',
@@ -167,7 +157,7 @@ export function TeacherDashboard() {
       color: 'from-teal-400 to-green-400',
       stats: 'Assessment',
       action: 'View Grades',
-      route: '/grades'
+      route: '/teacher/grades'
     },
     {
       id: 'schedule',
@@ -177,7 +167,7 @@ export function TeacherDashboard() {
       color: 'from-indigo-400 to-purple-400',
       stats: '5 Classes Today',
       action: 'View Schedule',
-      route: '/schedule'
+      route: '/teacher/schedule'
     },
     {
       id: 'attendance',
@@ -187,7 +177,7 @@ export function TeacherDashboard() {
       color: 'from-emerald-400 to-teal-400',
       stats: 'Today\'s Classes',
       action: 'Take Attendance',
-      route: '/attendance',
+      route: '/teacher/attendance',
       isHighlight: true
     },
     {
@@ -198,7 +188,7 @@ export function TeacherDashboard() {
       color: 'from-pink-400 to-rose-400',
       stats: 'Communication',
       action: 'View Messages',
-      route: '/messages'
+      route: '/teacher/messages'
     },
     {
       id: 'reports',
@@ -208,15 +198,15 @@ export function TeacherDashboard() {
       color: 'from-gray-400 to-slate-400',
       stats: 'Performance Data',
       action: 'View Reports',
-      route: '/reports'
+      route: '/teacher/reports'
     }
   ];
 
   const quickStats = [
-    { label: 'Total Students', value: '156', icon: GraduationCap, color: 'text-blue-500', route: '/students', clickable: true },
-    { label: 'Classes Today', value: '5', icon: BookOpen, color: 'text-green-500', route: '/timetable', clickable: true },
-    { label: 'Pending Grades', value: '23', icon: ClipboardList, color: 'text-orange-500', route: '/grades', clickable: true },
-    { label: 'Average Score', value: '82%', icon: TrendingUp, color: 'text-purple-500', route: '/reports', clickable: true }
+    { label: 'Total Students', value: '156', icon: GraduationCap, color: 'text-blue-500', route: '/teacher/classes', clickable: true },
+    { label: 'Classes Today', value: '5', icon: BookOpen, color: 'text-green-500', route: '/teacher/schedule', clickable: true },
+    { label: 'Pending Grades', value: '23', icon: ClipboardList, color: 'text-orange-500', route: '/teacher/grades', clickable: true },
+    { label: 'Average Score', value: '82%', icon: TrendingUp, color: 'text-purple-500', route: '/teacher/grades', clickable: true }
   ];
 
   const handleSectionClick = (route: string, isHighlight?: boolean) => {
@@ -241,7 +231,7 @@ export function TeacherDashboard() {
               <GraduationCap className="h-5 w-5 text-white/80" />
             </div>
             <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold animate-slide-in-right">
-              {greeting}, {userName || 'Teacher'}! 
+              {greeting}, {formatGreetingName(userName || '', 'teacher') || 'Teacher'}! 
             </h1>
             <p className="text-sm md:text-lg lg:text-xl font-medium opacity-90">
               Teaching Management System

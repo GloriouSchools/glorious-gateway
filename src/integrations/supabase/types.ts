@@ -73,7 +73,7 @@ export type Database = {
       }
       electoral_applications: {
         Row: {
-          age: string | null
+          age: number | null
           class_name: string | null
           class_teacher_name: string | null
           class_teacher_tel: string | null
@@ -81,7 +81,7 @@ export type Database = {
           experience: string | null
           id: string | null
           parent_name: string | null
-          parent_tel: string | null
+          parent_tel: number | null
           position: string | null
           qualifications: string | null
           sex: string | null
@@ -96,7 +96,7 @@ export type Database = {
           why_apply: string | null
         }
         Insert: {
-          age?: string | null
+          age?: number | null
           class_name?: string | null
           class_teacher_name?: string | null
           class_teacher_tel?: string | null
@@ -104,7 +104,7 @@ export type Database = {
           experience?: string | null
           id?: string | null
           parent_name?: string | null
-          parent_tel?: string | null
+          parent_tel?: number | null
           position?: string | null
           qualifications?: string | null
           sex?: string | null
@@ -119,7 +119,7 @@ export type Database = {
           why_apply?: string | null
         }
         Update: {
-          age?: string | null
+          age?: number | null
           class_name?: string | null
           class_teacher_name?: string | null
           class_teacher_tel?: string | null
@@ -127,7 +127,7 @@ export type Database = {
           experience?: string | null
           id?: string | null
           parent_name?: string | null
-          parent_tel?: string | null
+          parent_tel?: number | null
           position?: string | null
           qualifications?: string | null
           sex?: string | null
@@ -173,36 +173,6 @@ export type Database = {
         }
         Relationships: []
       }
-      electoral_votes: {
-        Row: {
-          candidate_id: string
-          created_at: string
-          id: string
-          position: string
-          updated_at: string
-          voted_at: string
-          voter_id: string
-        }
-        Insert: {
-          candidate_id: string
-          created_at?: string
-          id?: string
-          position: string
-          updated_at?: string
-          voted_at?: string
-          voter_id: string
-        }
-        Update: {
-          candidate_id?: string
-          created_at?: string
-          id?: string
-          position?: string
-          updated_at?: string
-          voted_at?: string
-          voter_id?: string
-        }
-        Relationships: []
-      }
       streams: {
         Row: {
           Class: string | null
@@ -214,7 +184,7 @@ export type Database = {
           ID: string | null
           name: string | null
           Name: string | null
-          Students: number | null
+          Students: string | null
           "Updated At": string | null
           updated_at: string | null
         }
@@ -228,7 +198,7 @@ export type Database = {
           ID?: string | null
           name?: string | null
           Name?: string | null
-          Students?: number | null
+          Students?: string | null
           "Updated At"?: string | null
           updated_at?: string | null
         }
@@ -242,7 +212,7 @@ export type Database = {
           ID?: string | null
           name?: string | null
           Name?: string | null
-          Students?: number | null
+          Students?: string | null
           "Updated At"?: string | null
           updated_at?: string | null
         }

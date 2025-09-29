@@ -37,6 +37,7 @@ import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useAuth } from "@/hooks/useAuth";
+import { StudentsPagination } from "@/components/admin/StudentsPagination";
 
 interface Teacher {
   id: string;
@@ -68,6 +69,8 @@ export default function TeachersList() {
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Debounce search term
   useEffect(() => {
@@ -162,6 +165,44 @@ export default function TeachersList() {
     doc.save('teachers-report.pdf');
   };
 
+  // Pagination
+  const paginatedTeachers = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredTeachers.slice(startIndex, endIndex);
+  }, [filteredTeachers, currentPage]);
+
+  const totalPages = Math.ceil(filteredTeachers.length / itemsPerPage);
+
+  const visiblePages = useMemo(() => {
+    const maxVisible = 5;
+    const pages: number[] = [];
+    
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+      let end = Math.min(totalPages, start + maxVisible - 1);
+      
+      if (end - start < maxVisible - 1) {
+        start = Math.max(1, end - maxVisible + 1);
+      }
+      
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+    }
+    
+    return pages;
+  }, [currentPage, totalPages]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchTerm, filterType]);
+
   const filterOptions = useMemo(() => {
     const statusOptions = [
       { value: "status-verified", label: "Verified" },
@@ -221,20 +262,18 @@ export default function TeachersList() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search by name, email, ID, or subject..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
+            <div className="flex flex-col gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name, email, ID, or subject..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
               </div>
               <Select value={filterType} onValueChange={setFilterType}>
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-full sm:w-48">
                   <SelectValue placeholder="All Filters" />
                 </SelectTrigger>
                 <SelectContent className="max-h-48 overflow-y-auto">
@@ -253,110 +292,237 @@ export default function TeachersList() {
         </Card>
 
       {/* Teachers Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Teachers ({filteredTeachers.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Teacher</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Subjects/Classes</TableHead>
-                  <TableHead>Details</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredTeachers.length === 0 ? (
+      <div className="space-y-4">
+        {/* Desktop Table View */}
+        <Card className="hidden lg:block">
+          <CardHeader>
+            <CardTitle>Teachers ({filteredTeachers.length})</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8">
-                      No teachers found matching your criteria.
-                    </TableCell>
+                    <TableHead className="min-w-[200px]">Teacher</TableHead>
+                    <TableHead className="min-w-[200px]">Contact</TableHead>
+                    <TableHead className="min-w-[150px]">Subjects/Classes</TableHead>
+                    <TableHead className="min-w-[120px]">Status</TableHead>
+                    <TableHead className="min-w-[100px]">Actions</TableHead>
                   </TableRow>
-                ) : (
-                  filteredTeachers.map((teacher) => (
-                    <TableRow key={teacher.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src={teacher.photo_url} />
-                            <AvatarFallback>
-                              {teacher.name?.split(' ').map(n => n[0]).join('') || 'T'}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium">{teacher.name || 'No Name'}</p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          <p className="text-sm">{teacher.email}</p>
-                          {teacher.personal_email && (
-                            <p className="text-xs text-muted-foreground">{teacher.personal_email}</p>
-                          )}
-                          {teacher.contactNumber && (
-                            <p className="text-xs text-muted-foreground flex items-center gap-1">
-                              <Phone className="h-3 w-3" />
-                              {teacher.contactNumber}
-                            </p>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          {teacher.subjectsTaught && (
-                            <p className="text-sm font-medium">{teacher.subjectsTaught}</p>
-                          )}
-                          {teacher.classesTaught && (
-                            <p className="text-xs text-muted-foreground">Classes: {teacher.classesTaught}</p>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          {teacher.sex && (
-                            <Badge variant="outline">{teacher.sex}</Badge>
-                          )}
-                          {teacher.nationality && (
-                            <p className="text-xs text-muted-foreground flex items-center gap-1">
-                              <MapPin className="h-3 w-3" />
-                              {teacher.nationality}
-                            </p>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={teacher.is_verified ? "default" : "secondary"}>
-                          {teacher.is_verified ? "Verified" : "Unverified"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {new Date(teacher.created_at).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="outline">
-                            <Mail className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" variant="outline">
-                            Edit
-                          </Button>
-                        </div>
+                </TableHeader>
+                <TableBody>
+                  {filteredTeachers.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-8">
+                        No teachers found matching your criteria.
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : (
+                    paginatedTeachers.map((teacher) => (
+                      <TableRow key={teacher.id}>
+                        <TableCell className="p-4">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-10 w-10 flex-shrink-0">
+                              <AvatarImage src={teacher.photo_url} />
+                              <AvatarFallback>
+                                {teacher.name?.split(' ').map(n => n[0]).join('') || 'T'}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-medium truncate">{teacher.name || 'No Name'}</p>
+                              <p className="text-sm text-muted-foreground truncate">{teacher.teacher_id || 'No ID'}</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="p-4">
+                          <div className="space-y-1">
+                            <p className="text-sm truncate max-w-[180px]">{teacher.email}</p>
+                            {teacher.contactNumber && (
+                              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                <Phone className="h-3 w-3 flex-shrink-0" />
+                                <span className="truncate">{teacher.contactNumber}</span>
+                              </p>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="p-4">
+                          <div className="space-y-1">
+                            {teacher.subjectsTaught && (
+                              <p className="text-sm font-medium truncate max-w-[130px]">{teacher.subjectsTaught}</p>
+                            )}
+                            {teacher.classesTaught && (
+                              <p className="text-xs text-muted-foreground truncate max-w-[130px]">Classes: {teacher.classesTaught}</p>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="p-4">
+                          <div className="flex flex-col gap-1">
+                            <Badge variant={teacher.is_verified ? "default" : "secondary"} className="text-xs w-fit">
+                              {teacher.is_verified ? "Verified" : "Unverified"}
+                            </Badge>
+                            {teacher.sex && (
+                              <Badge variant="outline" className="text-xs w-fit">{teacher.sex}</Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="p-4">
+                          <div className="flex flex-col gap-1">
+                            <Button size="sm" variant="outline" className="h-8 w-full">
+                              <Mail className="h-4 w-4 mr-1" />
+                              Email
+                            </Button>
+                            <Button size="sm" variant="outline" className="h-8 w-full">
+                              Edit
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+            {totalPages > 1 && (
+              <StudentsPagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                visiblePages={visiblePages}
+              />
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Mobile Card View */}
+        <div className="lg:hidden">
+          <div className="flex items-center justify-between mb-4 px-1">
+            <h3 className="text-base font-semibold">Teachers ({filteredTeachers.length})</h3>
           </div>
-        </CardContent>
-      </Card>
+          
+          {filteredTeachers.length === 0 ? (
+            <Card className="mx-1">
+              <CardContent className="text-center py-8 text-sm">
+                No teachers found matching your criteria.
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-3 px-1">
+              {paginatedTeachers.map((teacher) => (
+                <Card key={teacher.id} className="w-full max-w-full overflow-hidden">
+                  <CardContent className="p-3">
+                    {/* Header with Avatar and Name */}
+                    <div className="flex items-start gap-3 mb-3">
+                      <Avatar className="h-10 w-10 flex-shrink-0">
+                        <AvatarImage src={teacher.photo_url} />
+                        <AvatarFallback className="text-xs">
+                          {teacher.name?.split(' ').map(n => n[0]).join('') || 'T'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-medium text-sm leading-tight mb-1 break-words">
+                          {teacher.name || 'No Name'}
+                        </h4>
+                        <p className="text-xs text-muted-foreground break-all">
+                          {teacher.email}
+                        </p>
+                        {teacher.teacher_id && (
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            ID: {teacher.teacher_id}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Status Badge */}
+                    <div className="flex justify-center mb-3">
+                      <Badge 
+                        variant={teacher.is_verified ? "default" : "secondary"} 
+                        className="text-xs px-2 py-1"
+                      >
+                        {teacher.is_verified ? "✓ Verified" : "⚠ Unverified"}
+                      </Badge>
+                    </div>
+                    
+                    {/* Subjects and Classes */}
+                    {(teacher.subjectsTaught || teacher.classesTaught) && (
+                      <div className="space-y-2 mb-3 p-2 bg-muted/30 rounded">
+                        {teacher.subjectsTaught && (
+                          <div>
+                            <span className="text-xs font-medium text-muted-foreground block mb-1">
+                              Subjects:
+                            </span>
+                            <p className="text-sm font-medium break-words">
+                              {teacher.subjectsTaught}
+                            </p>
+                          </div>
+                        )}
+                        {teacher.classesTaught && (
+                          <div>
+                            <span className="text-xs font-medium text-muted-foreground block mb-1">
+                              Classes:
+                            </span>
+                            <p className="text-sm break-words">
+                              {teacher.classesTaught}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Additional Info */}
+                    <div className="space-y-2 mb-3">
+                      {teacher.contactNumber && (
+                        <div className="flex items-center gap-2 text-xs">
+                          <Phone className="h-3 w-3 flex-shrink-0 text-muted-foreground" />
+                          <span className="break-all">{teacher.contactNumber}</span>
+                        </div>
+                      )}
+                      
+                      <div className="flex flex-wrap gap-1">
+                        {teacher.sex && (
+                          <Badge variant="outline" className="text-xs px-2 py-0.5">
+                            {teacher.sex}
+                          </Badge>
+                        )}
+                        {teacher.nationality && (
+                          <Badge variant="secondary" className="text-xs px-2 py-0.5 flex items-center gap-1 max-w-full">
+                            <MapPin className="h-3 w-3 flex-shrink-0" />
+                            <span className="truncate">{teacher.nationality}</span>
+                          </Badge>
+                        )}
+                      </div>
+                      
+                      <div className="text-xs text-muted-foreground">
+                        Joined: {new Date(teacher.created_at).toLocaleDateString()}
+                      </div>
+                    </div>
+                    
+                    {/* Action Buttons */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button size="sm" variant="outline" className="h-8 text-xs">
+                        <Mail className="h-3 w-3 mr-1" />
+                        Email
+                      </Button>
+                      <Button size="sm" variant="outline" className="h-8 text-xs">
+                        Edit
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+          
+          {totalPages > 1 && (
+            <StudentsPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              visiblePages={visiblePages}
+            />
+          )}
+        </div>
+      </div>
       </div>
     </DashboardLayout>
   );
