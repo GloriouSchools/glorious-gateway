@@ -93,32 +93,64 @@ export default function Electoral() {
     checkApplicationAndClass();
   }, [user, userName]);
 
-  // Countdown timer state
+  // Election phases and countdown timer state
   const [timeLeft, setTimeLeft] = useState({
-    days: 7,
+    days: 0,
     hours: 0,
     minutes: 0,
     seconds: 0,
     microseconds: 0
   });
+  const [currentPhase, setCurrentPhase] = useState<'applications' | 'voting' | 'results'>('applications');
 
   useEffect(() => {
-    // Applications deadline: Friday 19/9/2025 at 4:00pm EAT (UTC+3)
-    const applicationsEnd = new Date('2025-09-19T16:00:00+03:00').getTime();
+    // Election phases
+    const applicationsEnd = new Date('2024-09-30T16:00:00+03:00').getTime(); // Applications ended
+    const votingStart = new Date('2025-10-16T08:00:00+03:00').getTime(); // Voting starts Oct 16, 2025
+    const votingEnd = new Date('2025-10-17T16:00:00+03:00').getTime(); // Voting ends Oct 17, 2025
     
     const timer = setInterval(() => {
       const now = new Date().getTime();
-      const difference = applicationsEnd - now;
-
-      if (difference > 0) {
-        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
-        const microseconds = Math.floor((difference % 1000) * 1000);
-
-        setTimeLeft({ days, hours, minutes, seconds, microseconds });
+      
+      if (now < applicationsEnd) {
+        // Applications phase
+        setCurrentPhase('applications');
+        const difference = applicationsEnd - now;
+        if (difference > 0) {
+          const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+          const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+          const microseconds = Math.floor((difference % 1000) * 1000);
+          setTimeLeft({ days, hours, minutes, seconds, microseconds });
+        }
+      } else if (now < votingStart) {
+        // Between applications and voting - waiting for voting to start
+        setCurrentPhase('voting');
+        const difference = votingStart - now;
+        if (difference > 0) {
+          const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+          const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+          const microseconds = Math.floor((difference % 1000) * 1000);
+          setTimeLeft({ days, hours, minutes, seconds, microseconds });
+        }
+      } else if (now < votingEnd) {
+        // Voting phase - active voting period
+        setCurrentPhase('voting');
+        const difference = votingEnd - now;
+        if (difference > 0) {
+          const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+          const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+          const microseconds = Math.floor((difference % 1000) * 1000);
+          setTimeLeft({ days, hours, minutes, seconds, microseconds });
+        }
       } else {
+        // Results phase
+        setCurrentPhase('results');
         setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0, microseconds: 0 });
       }
     }, 10); // Update every 10ms for microseconds
@@ -286,36 +318,52 @@ export default function Electoral() {
           </p>
           
           {/* Countdown Timer */}
-          <div className="bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-950/20 dark:to-red-950/20 rounded-lg p-4 border border-orange-200 dark:border-orange-800 max-w-2xl mx-auto">
-            <p className="text-sm text-orange-800 dark:text-orange-200 mb-2 font-medium text-center">
-              🔥 Applications end in:
+          <div className={`rounded-lg p-4 border max-w-2xl mx-auto ${
+            currentPhase === 'applications' 
+              ? 'bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-950/20 dark:to-red-950/20 border-orange-200 dark:border-orange-800'
+              : currentPhase === 'voting'
+              ? 'bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-950/20 dark:to-blue-950/20 border-green-200 dark:border-green-800'
+              : 'bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 border-purple-200 dark:border-purple-800'
+          }`}>
+            <p className={`text-sm mb-2 font-medium text-center ${
+              currentPhase === 'applications' 
+                ? 'text-orange-800 dark:text-orange-200'
+                : currentPhase === 'voting'
+                ? 'text-green-800 dark:text-green-200'
+                : 'text-purple-800 dark:text-purple-200'
+            }`}>
+              {currentPhase === 'applications' && '🔥 Applications end in:'}
+              {currentPhase === 'voting' && timeLeft.days > 0 && '📊 Voting starts in:'}
+              {currentPhase === 'voting' && timeLeft.days === 0 && '🗳️ Voting ends in:'}
+              {currentPhase === 'results' && '🏆 Results are now available!'}
             </p>
-            <div className="flex justify-center items-center gap-2 text-lg font-bold text-orange-700 dark:text-orange-300">
-              <div className="flex flex-col items-center">
-                <span className="text-2xl">{timeLeft.days}</span>
-                <span className="text-xs text-muted-foreground">days</span>
+            {currentPhase !== 'results' && (
+              <div className={`flex justify-center items-center gap-2 text-lg font-bold ${
+                currentPhase === 'applications' 
+                  ? 'text-orange-700 dark:text-orange-300'
+                  : 'text-green-700 dark:text-green-300'
+              }`}>
+                <div className="flex flex-col items-center">
+                  <span className="text-2xl">{timeLeft.days}</span>
+                  <span className="text-xs text-muted-foreground">days</span>
+                </div>
+                <span className={currentPhase === 'applications' ? 'text-orange-500' : 'text-green-500'}>:</span>
+                <div className="flex flex-col items-center">
+                  <span className="text-2xl">{String(timeLeft.hours).padStart(2, '0')}</span>
+                  <span className="text-xs text-muted-foreground">hours</span>
+                </div>
+                <span className={currentPhase === 'applications' ? 'text-orange-500' : 'text-green-500'}>:</span>
+                <div className="flex flex-col items-center">
+                  <span className="text-2xl">{String(timeLeft.minutes).padStart(2, '0')}</span>
+                  <span className="text-xs text-muted-foreground">min</span>
+                </div>
+                <span className={currentPhase === 'applications' ? 'text-orange-500' : 'text-green-500'}>:</span>
+                <div className="flex flex-col items-center">
+                  <span className="text-2xl">{String(timeLeft.seconds).padStart(2, '0')}</span>
+                  <span className="text-xs text-muted-foreground">sec</span>
+                </div>
               </div>
-              <span className="text-orange-500">:</span>
-              <div className="flex flex-col items-center">
-                <span className="text-2xl">{String(timeLeft.hours).padStart(2, '0')}</span>
-                <span className="text-xs text-muted-foreground">hours</span>
-              </div>
-              <span className="text-orange-500">:</span>
-              <div className="flex flex-col items-center">
-                <span className="text-2xl">{String(timeLeft.minutes).padStart(2, '0')}</span>
-                <span className="text-xs text-muted-foreground">min</span>
-              </div>
-              <span className="text-orange-500">:</span>
-              <div className="flex flex-col items-center">
-                <span className="text-2xl">{String(timeLeft.seconds).padStart(2, '0')}</span>
-                <span className="text-xs text-muted-foreground">sec</span>
-              </div>
-              <span className="text-orange-500">:</span>
-              <div className="flex flex-col items-center">
-                <span className="text-lg">{String(timeLeft.microseconds).padStart(6, '0')}</span>
-                <span className="text-xs text-muted-foreground">μsec</span>
-              </div>
-            </div>
+            )}
           </div>
         </div>
 
@@ -363,9 +411,10 @@ export default function Electoral() {
                   <Button 
                     size="lg"
                     className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white group-hover:scale-105 transition-transform"
-                    onClick={() => navigate(hasApplication ? '/electoral/status' : '/electoral/apply')}
+                    onClick={() => navigate(hasApplication ? '/student/electoral/status' : '/student/electoral/apply')}
+                    disabled={currentPhase !== 'applications'}
                   >
-                    {hasApplication ? 'Track My Application' : 'Start Application'}
+                    {hasApplication ? 'Track My Application' : currentPhase === 'applications' ? 'Start Application' : 'Applications Closed'}
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </>
@@ -413,12 +462,15 @@ export default function Electoral() {
                       </Badge>
                     </div>
                   </div>
-                  <Button 
-                    size="lg"
-                    className="w-full bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 hover:from-orange-600 hover:via-orange-700 hover:to-orange-800 text-white animate-pulse group-hover:scale-105 transition-transform"
-                    onClick={() => navigate('/electoral/vote')}
-                  >
-                    Vote Now
+                   <Button 
+                     size="lg"
+                     className="w-full bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 hover:from-orange-600 hover:via-orange-700 hover:to-orange-800 text-white animate-pulse group-hover:scale-105 transition-transform"
+                     onClick={() => navigate('/student/electoral/vote')}
+                     disabled={currentPhase !== 'voting' || new Date().getTime() < new Date('2025-10-16T08:00:00+03:00').getTime()}
+                   >
+                     {currentPhase === 'voting' && new Date().getTime() >= new Date('2025-10-16T08:00:00+03:00').getTime() ? 'Vote Now' : 
+                      currentPhase === 'voting' && new Date().getTime() < new Date('2025-10-16T08:00:00+03:00').getTime() ? 'Voting starts in ' + Math.ceil((new Date('2025-10-16T08:00:00+03:00').getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) + ' days' : 
+                      'Voting Closed'}
                     <Vote className="ml-2 h-5 w-5" />
                   </Button>
                 </>
@@ -472,21 +524,22 @@ export default function Electoral() {
               <Button 
                 variant="outline" 
                 className="w-full group-hover:bg-green-50 group-hover:border-green-300 group-hover:text-green-700 group-hover:scale-105 transition-all"
-                onClick={() => navigate('/electoral/results')}
+                onClick={() => navigate('/student/electoral/results')}
+                disabled={currentPhase === 'applications'}
               >
-                View Live Results
+                {currentPhase === 'applications' ? 'Results Not Available' : 'View Live Results'}
                 <BarChart3 className="ml-2 h-4 w-4" />
               </Button>
             </CardContent>
           </Card>
         </div>
 
-        {/* Available Positions */}
+        {/* Available Candidates */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Trophy className="h-5 w-5 text-primary" />
-              Available Positions
+              Available Candidates
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -495,7 +548,7 @@ export default function Electoral() {
                 <div 
                   key={index} 
                   className="p-4 rounded-lg border bg-muted/20 hover:bg-muted/40 transition-colors cursor-pointer group"
-                  onClick={() => navigate(`/electoral/candidates/${position.key}`)}
+                  onClick={() => navigate(`/student/electoral/candidates/${position.key}`)}
                 >
                   <div className="mb-2">
                     <h4 className="font-medium text-sm mb-1 group-hover:text-primary transition-colors">{position.title}</h4>

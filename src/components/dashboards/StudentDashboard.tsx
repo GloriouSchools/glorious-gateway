@@ -187,6 +187,16 @@ export function StudentDashboard() {
       route: '/student/timetable'
     },
     {
+      id: 'duty-rota',
+      title: 'Duty Rota',
+      description: 'Weekly teacher duty schedule',
+      icon: Calendar,
+      color: 'from-cyan-400 to-blue-400',
+      stats: 'Term 3 Schedule',
+      action: 'View Duty Rota',
+      route: '/student/duty-rota'
+    },
+    {
       id: 'attendance',
       title: 'Attendance',
       description: 'Track your presence streak!',

@@ -4,766 +4,311 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useAuth } from "@/hooks/useAuth";
+import { UserRole } from "@/types/user";
 import { 
   Clock, 
   Calendar, 
   BookOpen, 
-  MapPin,
-  Filter,
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  Users,
-  Bell,
-  Play,
-  Pause
+  Download,
+  GraduationCap,
+  Waves,
+  Home,
+  Utensils,
+  Sun
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { format, addDays, startOfWeek, isSameDay, parseISO } from "date-fns";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface TimeSlot {
-  id: string;
-  subject: string;
-  teacher: string;
-  room: string;
-  startTime: string;
-  endTime: string;
+  time: string;
+  activity: string;
+  teacher?: string;
+  subject?: string;
+}
+
+interface DaySchedule {
+  [day: string]: TimeSlot[];
+}
+
+interface SwimmingSchedule {
+  week: string;
   day: string;
-  type: 'class' | 'break' | 'lunch' | 'assembly' | 'sport';
-  color: string;
+  date: string;
+  classes: string;
 }
 
-interface WeekSchedule {
-  [key: string]: TimeSlot[];
+interface PrepSchedule {
+  grade: string;
+  weekdays: { [day: string]: string[] };
 }
 
-// Mock timetable data
-const mockTimetable: WeekSchedule = {
-  Monday: [
-    {
-      id: 'M1',
-      subject: 'Mathematics',
-      teacher: 'Mr. Johnson',
-      room: 'Room 201',
-      startTime: '08:00',
-      endTime: '09:30',
-      day: 'Monday',
-      type: 'class',
-      color: 'bg-blue-100 border-blue-300 text-blue-800'
-    },
-    {
-      id: 'M2',
-      subject: 'Break',
-      teacher: '',
-      room: 'Playground',
-      startTime: '09:30',
-      endTime: '10:00',
-      day: 'Monday',
-      type: 'break',
-      color: 'bg-green-100 border-green-300 text-green-800'
-    },
-    {
-      id: 'M3',
-      subject: 'English Literature',
-      teacher: 'Ms. Smith',
-      room: 'Room 105',
-      startTime: '10:00',
-      endTime: '11:30',
-      day: 'Monday',
-      type: 'class',
-      color: 'bg-purple-100 border-purple-300 text-purple-800'
-    },
-    {
-      id: 'M4',
-      subject: 'Science',
-      teacher: 'Dr. Wilson',
-      room: 'Lab 1',
-      startTime: '11:30',
-      endTime: '13:00',
-      day: 'Monday',
-      type: 'class',
-      color: 'bg-emerald-100 border-emerald-300 text-emerald-800'
-    },
-    {
-      id: 'M5',
-      subject: 'Lunch Break',
-      teacher: '',
-      room: 'Cafeteria',
-      startTime: '13:00',
-      endTime: '14:00',
-      day: 'Monday',
-      type: 'lunch',
-      color: 'bg-orange-100 border-orange-300 text-orange-800'
-    },
-    {
-      id: 'M6',
-      subject: 'History',
-      teacher: 'Mrs. Brown',
-      room: 'Room 302',
-      startTime: '14:00',
-      endTime: '15:30',
-      day: 'Monday',
-      type: 'class',
-      color: 'bg-amber-100 border-amber-300 text-amber-800'
-    }
-  ],
-  Tuesday: [
-    {
-      id: 'T1',
-      subject: 'English Grammar',
-      teacher: 'Ms. Smith',
-      room: 'Room 105',
-      startTime: '08:00',
-      endTime: '09:30',
-      day: 'Tuesday',
-      type: 'class',
-      color: 'bg-purple-100 border-purple-300 text-purple-800'
-    },
-    {
-      id: 'T2',
-      subject: 'Break',
-      teacher: '',
-      room: 'Playground',
-      startTime: '09:30',
-      endTime: '10:00',
-      day: 'Tuesday',
-      type: 'break',
-      color: 'bg-green-100 border-green-300 text-green-800'
-    },
-    {
-      id: 'T3',
-      subject: 'Physical Education',
-      teacher: 'Coach Davis',
-      room: 'Sports Field',
-      startTime: '10:00',
-      endTime: '11:30',
-      day: 'Tuesday',
-      type: 'sport',
-      color: 'bg-red-100 border-red-300 text-red-800'
-    },
-    {
-      id: 'T4',
-      subject: 'Art & Craft',
-      teacher: 'Ms. Taylor',
-      room: 'Art Room',
-      startTime: '11:30',
-      endTime: '13:00',
-      day: 'Tuesday',
-      type: 'class',
-      color: 'bg-pink-100 border-pink-300 text-pink-800'
-    },
-    {
-      id: 'T5',
-      subject: 'Lunch Break',
-      teacher: '',
-      room: 'Cafeteria',
-      startTime: '13:00',
-      endTime: '14:00',
-      day: 'Tuesday',
-      type: 'lunch',
-      color: 'bg-orange-100 border-orange-300 text-orange-800'
-    },
-    {
-      id: 'T6',
-      subject: 'Mathematics',
-      teacher: 'Mr. Johnson',
-      room: 'Room 201',
-      startTime: '14:00',
-      endTime: '15:30',
-      day: 'Tuesday',
-      type: 'class',
-      color: 'bg-blue-100 border-blue-300 text-blue-800'
-    }
-  ],
-  Wednesday: [
-    {
-      id: 'W1',
-      subject: 'Assembly',
-      teacher: 'Principal',
-      room: 'Main Hall',
-      startTime: '08:00',
-      endTime: '08:30',
-      day: 'Wednesday',
-      type: 'assembly',
-      color: 'bg-indigo-100 border-indigo-300 text-indigo-800'
-    },
-    {
-      id: 'W2',
-      subject: 'Science',
-      teacher: 'Dr. Wilson',
-      room: 'Lab 1',
-      startTime: '08:30',
-      endTime: '10:00',
-      day: 'Wednesday',
-      type: 'class',
-      color: 'bg-emerald-100 border-emerald-300 text-emerald-800'
-    },
-    {
-      id: 'W3',
-      subject: 'Break',
-      teacher: '',
-      room: 'Playground',
-      startTime: '10:00',
-      endTime: '10:30',
-      day: 'Wednesday',
-      type: 'break',
-      color: 'bg-green-100 border-green-300 text-green-800'
-    },
-    {
-      id: 'W4',
-      subject: 'Geography',
-      teacher: 'Mr. Anderson',
-      room: 'Room 203',
-      startTime: '10:30',
-      endTime: '12:00',
-      day: 'Wednesday',
-      type: 'class',
-      color: 'bg-teal-100 border-teal-300 text-teal-800'
-    },
-    {
-      id: 'W5',
-      subject: 'English Literature',
-      teacher: 'Ms. Smith',
-      room: 'Room 105',
-      startTime: '12:00',
-      endTime: '13:00',
-      day: 'Wednesday',
-      type: 'class',
-      color: 'bg-purple-100 border-purple-300 text-purple-800'
-    },
-    {
-      id: 'W6',
-      subject: 'Lunch Break',
-      teacher: '',
-      room: 'Cafeteria',
-      startTime: '13:00',
-      endTime: '14:00',
-      day: 'Wednesday',
-      type: 'lunch',
-      color: 'bg-orange-100 border-orange-300 text-orange-800'
-    },
-    {
-      id: 'W7',
-      subject: 'Music',
-      teacher: 'Ms. Garcia',
-      room: 'Music Room',
-      startTime: '14:00',
-      endTime: '15:30',
-      day: 'Wednesday',
-      type: 'class',
-      color: 'bg-violet-100 border-violet-300 text-violet-800'
-    }
-  ],
-  Thursday: [
-    {
-      id: 'TH1',
-      subject: 'Mathematics',
-      teacher: 'Mr. Johnson',
-      room: 'Room 201',
-      startTime: '08:00',
-      endTime: '09:30',
-      day: 'Thursday',
-      type: 'class',
-      color: 'bg-blue-100 border-blue-300 text-blue-800'
-    },
-    {
-      id: 'TH2',
-      subject: 'Break',
-      teacher: '',
-      room: 'Playground',
-      startTime: '09:30',
-      endTime: '10:00',
-      day: 'Thursday',
-      type: 'break',
-      color: 'bg-green-100 border-green-300 text-green-800'
-    },
-    {
-      id: 'TH3',
-      subject: 'Computer Science',
-      teacher: 'Mr. Lee',
-      room: 'Computer Lab',
-      startTime: '10:00',
-      endTime: '11:30',
-      day: 'Thursday',
-      type: 'class',
-      color: 'bg-cyan-100 border-cyan-300 text-cyan-800'
-    },
-    {
-      id: 'TH4',
-      subject: 'History',
-      teacher: 'Mrs. Brown',
-      room: 'Room 302',
-      startTime: '11:30',
-      endTime: '13:00',
-      day: 'Thursday',
-      type: 'class',
-      color: 'bg-amber-100 border-amber-300 text-amber-800'
-    },
-    {
-      id: 'TH5',
-      subject: 'Lunch Break',
-      teacher: '',
-      room: 'Cafeteria',
-      startTime: '13:00',
-      endTime: '14:00',
-      day: 'Thursday',
-      type: 'lunch',
-      color: 'bg-orange-100 border-orange-300 text-orange-800'
-    },
-    {
-      id: 'TH6',
-      subject: 'Science Lab',
-      teacher: 'Dr. Wilson',
-      room: 'Lab 2',
-      startTime: '14:00',
-      endTime: '15:30',
-      day: 'Thursday',
-      type: 'class',
-      color: 'bg-emerald-100 border-emerald-300 text-emerald-800'
-    }
-  ],
-  Friday: [
-    {
-      id: 'F1',
-      subject: 'English Grammar',
-      teacher: 'Ms. Smith',
-      room: 'Room 105',
-      startTime: '08:00',
-      endTime: '09:30',
-      day: 'Friday',
-      type: 'class',
-      color: 'bg-purple-100 border-purple-300 text-purple-800'
-    },
-    {
-      id: 'F2',
-      subject: 'Break',
-      teacher: '',
-      room: 'Playground',
-      startTime: '09:30',
-      endTime: '10:00',
-      day: 'Friday',
-      type: 'break',
-      color: 'bg-green-100 border-green-300 text-green-800'
-    },
-    {
-      id: 'F3',
-      subject: 'Physical Education',
-      teacher: 'Coach Davis',
-      room: 'Sports Field',
-      startTime: '10:00',
-      endTime: '11:30',
-      day: 'Friday',
-      type: 'sport',
-      color: 'bg-red-100 border-red-300 text-red-800'
-    },
-    {
-      id: 'F4',
-      subject: 'Mathematics',
-      teacher: 'Mr. Johnson',
-      room: 'Room 201',
-      startTime: '11:30',
-      endTime: '13:00',
-      day: 'Friday',
-      type: 'class',
-      color: 'bg-blue-100 border-blue-300 text-blue-800'
-    },
-    {
-      id: 'F5',
-      subject: 'Lunch Break',
-      teacher: '',
-      room: 'Cafeteria',
-      startTime: '13:00',
-      endTime: '14:00',
-      day: 'Friday',
-      type: 'lunch',
-      color: 'bg-orange-100 border-orange-300 text-orange-800'
-    },
-    {
-      id: 'F6',
-      subject: 'Library Period',
-      teacher: 'Ms. Rodriguez',
-      room: 'Library',
-      startTime: '14:00',
-      endTime: '15:30',
-      day: 'Friday',
-      type: 'class',
-      color: 'bg-slate-100 border-slate-300 text-slate-800'
-    }
-  ]
-};
+interface SundaySchedule {
+  grade: string;
+  schedule: { week: string; date: string; slots: { [time: string]: string } }[];
+}
 
-const timeSlots = [
-  '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', 
-  '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', 
-  '14:00', '14:30', '15:00', '15:30'
+interface HomeworkSchedule {
+  day: string;
+  subjects: { [grade: string]: string };
+}
+
+type TimetableType = "regular" | "sunday" | "swimming" | "prep" | "homework" | "lunch";
+
+// Swimming Timetable
+const swimmingSchedule: SwimmingSchedule[] = [
+  { week: "2", day: "Wednesday", date: "17/9/2025", classes: "P.1" },
+  { week: "2", day: "Thursday", date: "18/9/2025", classes: "P.2 & P.5" },
+  { week: "3", day: "Sunday", date: "21/9/2025", classes: "P.6 & P.7" },
+  { week: "3", day: "Thursday", date: "25/9/2025", classes: "P.3 & P.4" },
+  { week: "6", day: "Wednesday", date: "15/10/2025", classes: "P.1" },
+  { week: "6", day: "Thursday", date: "16/10/2025", classes: "P.2 & P.5" },
+  { week: "7", day: "Sunday", date: "19/10/2025", classes: "P.6 & P.7" },
+  { week: "7", day: "Thursday", date: "23/10/2025", classes: "P.3 & P.4" },
+  { week: "8", day: "Wednesday", date: "29/10/2025", classes: "P.5 & P.1" },
+  { week: "10", day: "Sunday", date: "8/11/2025", classes: "P.6" },
+  { week: "10", day: "Wednesday", date: "12/11/2025", classes: "P.2 & P.4" },
+  { week: "10", day: "Thursday", date: "13/11/2025", classes: "P.3 & P.5" },
+  { week: "11", day: "Sunday", date: "16/11/2025", classes: "P.6" },
+  { week: "11", day: "Wednesday", date: "19/11/2025", classes: "P.1" },
+  { week: "11", day: "Thursday", date: "20/11/2025", classes: "P.2 & P.4" },
+  { week: "12", day: "Monday", date: "24/11/2025", classes: "P.3" }
 ];
 
-const Timetable = () => {
-  const { userRole, userName, photoUrl, signOut } = useAuth();
-  const [selectedWeek, setSelectedWeek] = useState(new Date());
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterSubject, setFilterSubject] = useState("all");
-  const [viewMode, setViewMode] = useState<'week' | 'day'>('week');
-  const [selectedDay, setSelectedDay] = useState(new Date());
-
-  const weekStart = startOfWeek(selectedWeek, { weekStartsOn: 1 });
-  const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-  
-  const subjects = [...new Set(
-    Object.values(mockTimetable)
-      .flat()
-      .filter(slot => slot.type === 'class')
-      .map(slot => slot.subject)
-  )];
-
-  const filteredTimetable = Object.entries(mockTimetable).reduce((acc, [day, slots]) => {
-    const filteredSlots = slots.filter(slot => {
-      const matchesSearch = slot.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           slot.teacher.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           slot.room.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesSubject = filterSubject === "all" || slot.subject === filterSubject;
-      
-      return matchesSearch && matchesSubject;
-    });
-    acc[day] = filteredSlots;
-    return acc;
-  }, {} as WeekSchedule);
-
-  const getCurrentClass = () => {
-    const now = new Date();
-    const currentTime = format(now, 'HH:mm');
-    const currentDay = format(now, 'EEEE');
-    
-    const todaySlots = mockTimetable[currentDay] || [];
-    return todaySlots.find(slot => 
-      currentTime >= slot.startTime && currentTime <= slot.endTime
-    );
-  };
-
-  const getNextClass = () => {
-    const now = new Date();
-    const currentTime = format(now, 'HH:mm');
-    const currentDay = format(now, 'EEEE');
-    
-    const todaySlots = mockTimetable[currentDay] || [];
-    return todaySlots.find(slot => 
-      currentTime < slot.startTime
-    );
-  };
-
-  const currentClass = getCurrentClass();
-  const nextClass = getNextClass();
-
-  const handleLogout = async () => {
-    try {
-      await signOut();
-    } catch (error) {
-      console.error("Failed to logout:", error);
+// Prep Schedules
+const prepSchedules: PrepSchedule[] = [
+  {
+    grade: "P.1",
+    weekdays: {
+      MON: ["Ruth", "Prossy", "Angella", "Marima", "Judith", "Benitah", "Leirah", "Teddy", "Ruth", "Prossy", "Angella", "Marima"],
+      TUE: ["Benitah", "Leirah", "Teddy", "Ruth", "Prossy", "Angella", "Marima", "Judith", "Benitah", "Leirah", "Teddy", "Ruth"],
+      WED: ["Angella", "Marima", "Judith", "Benitah", "Leirah", "Teddy", "Ruth", "Prossy", "Angella", "Marima", "Judith", "Benitah"],
+      THU: ["Teddy", "Ruth", "Prossy", "Angella", "Marima", "Judith", "Benitah", "Leirah", "Teddy", "Ruth", "Prossy", "Angella"],
+      FRI: ["Judith", "Benitah", "Leirah", "Teddy", "Ruth", "Prossy", "Angella", "Marima", "Judith", "Benitah", "Leirah", "Teddy"]
     }
-  };
+  },
+  {
+    grade: "P.2",
+    weekdays: {
+      MON: ["Phiona", "Barbra", "Monica", "Sharon", "Edinah", "Alexander", "Monica", "Edinah", "Phiona", "Barbra", "Monica", "Sharon"],
+      TUE: ["Alexander", "Flavia", "Edinah", "Phiona", "Barbra", "Monica", "Sharon", "Olivia", "Alexander", "Flavia", "Edinah", "Phiona"],
+      WED: ["Monica", "Sharon", "Alexander", "Alexander", "Flavia", "Edinah", "Phiona", "Barbra", "Monica", "Sharon", "Olivia", "Alexander"],
+      THU: ["Edinah", "Monica", "Barbra", "Monica", "Sharon", "Olivia", "Alexander", "Phiona", "Edinah", "Phiona", "Barbra", "Monica"],
+      FRI: ["Olivia", "Olivia", "Flavia", "Edinah", "Phiona", "Flavia", "Barbra", "Sharon", "Olivia", "Alexander", "Flavia", "Edinah"]
+    }
+  }
+];
 
-  const navigateWeek = (direction: 'prev' | 'next') => {
-    setSelectedWeek(prev => addDays(prev, direction === 'next' ? 7 : -7));
-  };
+// Sunday Schedules
+const sundaySchedules: SundaySchedule[] = [
+  {
+    grade: "P.5",
+    schedule: [
+      { week: "1", date: "14/9/25", slots: { "SH": "Science - Mansur", "SR & SS": "Maths - Godfrey" }},
+      { week: "2", date: "21/9/25", slots: { "SH": "English - Patrick", "SR & SS": "SST - Okurut" }},
+      { week: "3", date: "28/9/25", slots: { "SH": "Maths - Godfrey", "SR & SS": "English - Imeldah" }},
+      { week: "4", date: "5/10/25", slots: { "SH": "SST - Joseph", "SR & SS": "RE - Jesse Paul" }},
+      { week: "5", date: "12/10/25", slots: { "SH": "Science - Mansur", "SR & SS": "Science - Vicent" }},
+      { week: "6", date: "19/10/25", slots: { "SH": "English - Patrick", "SR & SS": "Maths - Moses" }},
+      { week: "7", date: "26/10/25", slots: { "ALL": "BOARDERS' DAY OUT" }},
+      { week: "8", date: "2/11/25", slots: { "SH": "Maths - Godfrey", "SR & SS": "SST - Habert" }},
+      { week: "9", date: "9/11/25", slots: { "SH": "SST - Joseph", "SR & SS": "Science - Graciano" }},
+      { week: "10", date: "16/11/25", slots: { "SH": "Science - Mansur", "SR & SS": "English - Sylvia" }},
+      { week: "11", date: "23/11/25", slots: { "ALL": "END OF TERM PREP" }}
+    ]
+  },
+  {
+    grade: "P.6",
+    schedule: [
+      { week: "1", date: "14/9/25", slots: { "11am-5pm": "Entertainment / Lunch / Sports" }},
+      { week: "2", date: "21/9/25", slots: { "11am-5pm": "Entertainment / Lunch / Sports" }}
+    ]
+  }
+];
 
-  if (!userRole) return null;
+// Homework & Lunch schedules
+const homeworkSchedule: HomeworkSchedule[] = [
+  { day: "MON", subjects: { "P.4C": "SST", "P.4E": "MTC", "P.5SH": "MTC", "P.6VB": "SST" }},
+  { day: "TUE", subjects: { "P.4C": "MTC", "P.4E": "SST", "P.5SH": "SST", "P.6VB": "ENG" }},
+  { day: "WED", subjects: { "P.4C": "SCI", "P.4E": "ENG", "P.5SH": "SCI", "P.6VB": "MTC" }},
+  { day: "THU", subjects: { "P.4C": "ENG", "P.4E": "SCI", "P.5SH": "ENG", "P.6VB": "SCI" }},
+  { day: "FRI", subjects: { "P.4C": "WEEKEND HOMEWORK", "P.4E": "", "P.5SH": "", "P.6VB": "" }}
+];
+
+const lunchHourSchedule: HomeworkSchedule[] = [
+  { day: "MON", subjects: { "P.4C": "SST", "P.4E": "MTC", "P.5SH": "MTC", "P.6VB": "SST" }},
+  { day: "TUE", subjects: { "P.4C": "MTC", "P.4E": "SST", "P.5SH": "SST", "P.6VB": "ENG" }},
+  { day: "WED", subjects: { "P.4C": "SCI", "P.4E": "ENG", "P.5SH": "SCI", "P.6VB": "MTC" }},
+  { day: "THU", subjects: { "P.4C": "ENG", "P.4E": "SCI", "P.5SH": "ENG", "P.6VB": "SCI" }},
+  { day: "FRI", subjects: { "P.4C": "GENERAL CORRECTIONS", "P.4E": "", "P.5SH": "", "P.6VB": "" }}
+];
+
+export default function Timetable() {
+  const { user, userRole, userName, photoUrl, signOut } = useAuth();
+  const [timetableType, setTimetableType] = useState<TimetableType>("regular");
+  const [selectedGrade, setSelectedGrade] = useState("P.5");
 
   return (
     <DashboardLayout 
-      userRole={userRole} 
-      userName={userName || "Student"}
+      userRole={userRole || "student"}
+      userName={userName || "Guest User"}
       photoUrl={photoUrl}
-      onLogout={handleLogout}
+      onLogout={signOut}
     >
-        <div className="space-y-4 md:space-y-6 animate-fade-in px-2 md:px-0">
-        <div className="flex flex-col gap-4">
-          <div className="text-center md:text-left">
-            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-elegant bg-clip-text text-transparent">
-              My Timetable
-            </h1>
-            <p className="text-muted-foreground mt-1 text-sm md:text-base">
-              Your weekly class schedule and important timings
-            </p>
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">School Timetables</h1>
+            <p className="text-muted-foreground">Access all schedules - classes, swimming, prep, homework & more</p>
           </div>
-          <div className="flex flex-col sm:flex-row justify-center md:justify-end items-center gap-2">
-            <Select value={viewMode} onValueChange={(value: 'week' | 'day') => setViewMode(value)}>
-              <SelectTrigger className="w-full sm:w-32">
+          <Button variant="outline" className="gap-2">
+            <Download className="h-4 w-4" />
+            Download
+          </Button>
+        </div>
+
+        <Tabs value={timetableType} onValueChange={(v) => setTimetableType(v as TimetableType)}>
+          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 gap-1">
+            <TabsTrigger value="regular" className="flex items-center gap-1 text-xs lg:text-sm">
+              <BookOpen className="h-3 w-3 lg:h-4 lg:w-4" />
+              <span className="hidden sm:inline">Classes</span>
+            </TabsTrigger>
+            <TabsTrigger value="sunday" className="flex items-center gap-1 text-xs lg:text-sm">
+              <Sun className="h-3 w-3 lg:h-4 lg:w-4" />
+              <span className="hidden sm:inline">Sunday</span>
+            </TabsTrigger>
+            <TabsTrigger value="swimming" className="flex items-center gap-1 text-xs lg:text-sm">
+              <Waves className="h-3 w-3 lg:h-4 lg:w-4" />
+              <span className="hidden sm:inline">Swimming</span>
+            </TabsTrigger>
+            <TabsTrigger value="prep" className="flex items-center gap-1 text-xs lg:text-sm">
+              <Home className="h-3 w-3 lg:h-4 lg:w-4" />
+              <span className="hidden sm:inline">Prep</span>
+            </TabsTrigger>
+            <TabsTrigger value="homework" className="flex items-center gap-1 text-xs lg:text-sm">
+              <BookOpen className="h-3 w-3 lg:h-4 lg:w-4" />
+              <span className="hidden sm:inline">Homework</span>
+            </TabsTrigger>
+            <TabsTrigger value="lunch" className="flex items-center gap-1 text-xs lg:text-sm">
+              <Utensils className="h-3 w-3 lg:h-4 lg:w-4" />
+              <span className="hidden sm:inline">Lunch</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="sunday" className="space-y-4 mt-6">
+            <Select value={selectedGrade} onValueChange={setSelectedGrade}>
+              <SelectTrigger className="w-[200px]">
+                <GraduationCap className="h-4 w-4 mr-2" />
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="week">Week View</SelectItem>
-                <SelectItem value="day">Day View</SelectItem>
+                {sundaySchedules.map(s => <SelectItem key={s.grade} value={s.grade}>{s.grade}</SelectItem>)}
               </SelectContent>
             </Select>
-          </div>
-        </div>
-
-        {/* Current Status Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card className="hover-scale">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Play className="h-4 w-4" />
-                Current Class
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {currentClass ? (
-                <div className="space-y-2">
-                  <h3 className="text-xl font-bold">{currentClass.subject}</h3>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Users className="h-4 w-4" />
-                    <span>{currentClass.teacher}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <MapPin className="h-4 w-4" />
-                    <span>{currentClass.room}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Clock className="h-4 w-4" />
-                    <span>{currentClass.startTime} - {currentClass.endTime}</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-4">
-                  <Pause className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                  <p className="text-muted-foreground">No class in session</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="hover-scale">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Bell className="h-4 w-4" />
-                Next Class
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {nextClass ? (
-                <div className="space-y-2">
-                  <h3 className="text-xl font-bold">{nextClass.subject}</h3>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Users className="h-4 w-4" />
-                    <span>{nextClass.teacher}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <MapPin className="h-4 w-4" />
-                    <span>{nextClass.room}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Clock className="h-4 w-4" />
-                    <span>{nextClass.startTime} - {nextClass.endTime}</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-4">
-                  <Calendar className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                  <p className="text-muted-foreground">No more classes today</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Filters and Navigation */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5" />
-              Filter & Navigation
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center justify-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigateWeek('prev')}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <span className="text-sm font-medium text-center flex-1 min-w-0">
-                  Week of {format(weekStart, 'MMM dd, yyyy')}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigateWeek('next')}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-              
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="flex-1">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                    <Input 
-                      placeholder="Search subjects, teachers..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-                <Select value={filterSubject} onValueChange={setFilterSubject}>
-                  <SelectTrigger className="w-full sm:w-48">
-                    <SelectValue placeholder="All subjects" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Subjects</SelectItem>
-                    {subjects.map(subject => (
-                      <SelectItem key={subject} value={subject}>{subject}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Weekly Timetable */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Weekly Schedule
-            </CardTitle>
-            <CardDescription>
-              Your complete weekly timetable with all classes and activities
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {/* Desktop View */}
-            <div className="hidden xl:block">
-              <div className="overflow-x-auto">
-                <div className="min-w-0 w-full">
-                  {/* Header */}
-                  <div className="grid grid-cols-6 gap-2 mb-4">
-                    <div className="text-sm font-medium text-muted-foreground p-2 text-center">Time</div>
-                    {weekDays.map(day => (
-                      <div key={day} className="text-sm font-medium text-muted-foreground p-2 text-center">
-                        {day.slice(0, 3)}
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Time slots */}
-                  <div className="space-y-1">
-                    {timeSlots.map(timeSlot => {
-                      const getClassAtTime = (day: string) => {
-                        return filteredTimetable[day]?.find(slot => 
-                          slot.startTime <= timeSlot && slot.endTime > timeSlot
-                        );
-                      };
-
-                      return (
-                        <div key={timeSlot} className="grid grid-cols-6 gap-2">
-                          <div className="text-xs font-medium p-2 border rounded bg-muted/50 text-center">
-                            {timeSlot}
-                          </div>
-                          {weekDays.map(day => {
-                            const classAtTime = getClassAtTime(day);
-                            return (
-                              <div key={`${day}-${timeSlot}`} className="min-w-0">
-                                {classAtTime && (
-                                  <div className={`p-2 rounded border-2 ${classAtTime.color} transition-all hover:scale-105 cursor-pointer`}>
-                                    <div className="text-xs font-medium truncate" title={classAtTime.subject}>
-                                      {classAtTime.subject}
-                                    </div>
-                                    {classAtTime.teacher && (
-                                      <div className="text-xs opacity-75 truncate mt-1" title={classAtTime.teacher}>
-                                        {classAtTime.teacher}
-                                      </div>
-                                    )}
-                                    {classAtTime.room && (
-                                      <div className="text-xs opacity-75 truncate mt-1" title={classAtTime.room}>
-                                        {classAtTime.room}
-                                      </div>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
+            <Card>
+              <CardHeader>
+                <CardTitle>Sunday Schedule</CardTitle>
+                <CardDescription>Weekly Sunday activities</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {sundaySchedules.find(s => s.grade === selectedGrade)?.schedule.map((e, i) => (
+                  <Card key={i}>
+                    <CardContent className="pt-4">
+                      <div className="font-semibold mb-2">Week {e.week} - {e.date}</div>
+                      {Object.entries(e.slots).map(([k, v]) => (
+                        <div key={k} className="flex justify-between p-2 bg-muted rounded mt-2">
+                          <Badge variant="outline">{k}</Badge>
+                          <span className="text-sm">{v}</span>
                         </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                ))}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-            {/* Mobile/Tablet View */}
-            <div className="xl:hidden">
-              <div className="space-y-4">
-                {weekDays.map(day => {
-                  const daySlots = filteredTimetable[day] || [];
-                  
-                  return (
-                    <Card key={day} className="shadow-sm">
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-lg">{day}</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        {daySlots.length === 0 ? (
-                          <div className="text-center py-6 text-muted-foreground">
-                            <BookOpen className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                            <p>No classes scheduled</p>
-                          </div>
-                        ) : (
-                          <div className="space-y-3">
-                            {daySlots.map(slot => (
-                              <div 
-                                key={slot.id} 
-                                className={`p-4 rounded-lg border-2 ${slot.color} transition-all hover:scale-[1.02]`}
-                              >
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                                  <div className="flex-1 min-w-0">
-                                    <h4 className="font-semibold text-base truncate" title={slot.subject}>
-                                      {slot.subject}
-                                    </h4>
-                                    {slot.teacher && (
-                                      <div className="flex items-center gap-2 text-sm opacity-75 mt-1">
-                                        <Users className="h-4 w-4 flex-shrink-0" />
-                                        <span className="truncate" title={slot.teacher}>
-                                          {slot.teacher}
-                                        </span>
-                                      </div>
-                                    )}
-                                    {slot.room && (
-                                      <div className="flex items-center gap-2 text-sm opacity-75 mt-1">
-                                        <MapPin className="h-4 w-4 flex-shrink-0" />
-                                        <span className="truncate" title={slot.room}>
-                                          {slot.room}
-                                        </span>
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div className="flex items-center gap-2 text-sm font-medium whitespace-nowrap">
-                                    <Clock className="h-4 w-4" />
-                                    <span>{slot.startTime} - {slot.endTime}</span>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          <TabsContent value="swimming" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Swimming Schedule - Term III 2025</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {swimmingSchedule.map((s, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 border rounded">
+                    <Badge variant="outline">Week {s.week}</Badge>
+                    <span className="text-sm">{s.day}, {s.date}</span>
+                    <Badge className="bg-blue-100 text-blue-800">{s.classes}</Badge>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="prep" className="space-y-4 mt-6">
+            <Select value={selectedGrade} onValueChange={setSelectedGrade}>
+              <SelectTrigger className="w-[200px]">
+                <GraduationCap className="h-4 w-4 mr-2" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {prepSchedules.map(p => <SelectItem key={p.grade} value={p.grade}>{p.grade}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Card>
+              <CardHeader>
+                <CardTitle>Prep Supervision Schedule</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead><tr className="bg-muted"><th className="p-2">Day</th>{[...Array(12)].map((_, i) => <th key={i} className="p-2">W{i+1}</th>)}</tr></thead>
+                    <tbody>
+                      {Object.entries(prepSchedules.find(p => p.grade === selectedGrade)?.weekdays || {}).map(([day, teachers]) => (
+                        <tr key={day}><td className="p-2 font-semibold">{day}</td>{teachers.map((t, i) => <td key={i} className="p-2 text-center"><Badge variant="outline" className="text-xs">{t}</Badge></td>)}</tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="homework" className="mt-6">
+            <Card>
+              <CardHeader><CardTitle>Homework Schedule</CardTitle></CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse text-sm">
+                    <thead><tr className="bg-muted">{["Day", ...Object.keys(homeworkSchedule[0].subjects)].map(h => <th key={h} className="border p-2">{h}</th>)}</tr></thead>
+                    <tbody>{homeworkSchedule.map((d, i) => <tr key={i}><td className="border p-2 font-semibold">{d.day}</td>{Object.values(d.subjects).map((s, j) => <td key={j} className="border p-2 text-center">{s && <Badge variant="outline" className="text-xs">{s}</Badge>}</td>)}</tr>)}</tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="lunch" className="mt-6">
+            <Card>
+              <CardHeader><CardTitle>Lunch Hour Schedule (P.4-P.6)</CardTitle></CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse text-sm">
+                    <thead><tr className="bg-muted">{["Day", ...Object.keys(lunchHourSchedule[0].subjects)].map(h => <th key={h} className="border p-2">{h}</th>)}</tr></thead>
+                    <tbody>{lunchHourSchedule.map((d, i) => <tr key={i}><td className="border p-2 font-semibold">{d.day}</td>{Object.values(d.subjects).map((s, j) => <td key={j} className="border p-2 text-center">{s && <Badge variant="outline" className="text-xs">{s}</Badge>}</td>)}</tr>)}</tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="regular" className="mt-6">
+            <Card>
+              <CardHeader><CardTitle>Regular Class Timetables</CardTitle></CardHeader>
+              <CardContent><p className="text-muted-foreground">Select specific grade for daily schedules</p></CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );
-};
-
-export default Timetable;
+}

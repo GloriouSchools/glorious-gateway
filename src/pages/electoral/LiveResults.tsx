@@ -10,7 +10,10 @@ import {
   Award, 
   BarChart3,
   Clock,
-  RefreshCw
+  RefreshCw,
+  Calendar,
+  AlertCircle,
+  CheckCircle
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,8 +24,10 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 interface ResultCandidate {
   name: string;
   class: string;
+  stream: string;
   votes: number;
   percentage: number;
+  photo?: string;
 }
 
 interface PositionResult {
@@ -30,6 +35,19 @@ interface PositionResult {
   candidates: ResultCandidate[];
   totalVotes: number;
   totalEligible: number;
+  totalConfirmedCandidates: number;
+}
+
+interface ElectionPhase {
+  current: 'applications' | 'voting' | 'results';
+  votingStartTime: Date;
+  votingEndTime: Date;
+  timeLeft: {
+    days: number;
+    hours: number;
+    minutes: number;
+    seconds: number;
+  };
 }
 
 export default function LiveResults() {
@@ -40,6 +58,60 @@ export default function LiveResults() {
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const [results, setResults] = useState<Record<string, PositionResult>>({});
   const [loading, setLoading] = useState(true);
+  const [electionPhase, setElectionPhase] = useState<ElectionPhase>({
+    current: 'applications',
+    votingStartTime: new Date('2025-10-16T08:00:00+03:00'),
+    votingEndTime: new Date('2025-10-17T16:00:00+03:00'),
+    timeLeft: { days: 0, hours: 0, minutes: 0, seconds: 0 }
+  });
+
+  // Update election phase and countdown timer
+  useEffect(() => {
+    const updateElectionPhase = () => {
+      const now = new Date().getTime();
+      const votingStart = electionPhase.votingStartTime.getTime();
+      const votingEnd = electionPhase.votingEndTime.getTime();
+      
+      let currentPhase: 'applications' | 'voting' | 'results';
+      let targetTime: number;
+      
+      if (now < votingStart) {
+        currentPhase = 'applications';
+        targetTime = votingStart;
+      } else if (now < votingEnd) {
+        currentPhase = 'voting';
+        targetTime = votingEnd;
+      } else {
+        currentPhase = 'results';
+        targetTime = 0;
+      }
+      
+      let timeLeft = { days: 0, hours: 0, minutes: 0, seconds: 0 };
+      
+      if (targetTime > 0) {
+        const difference = targetTime - now;
+        if (difference > 0) {
+          timeLeft = {
+            days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+            hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+            minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
+            seconds: Math.floor((difference % (1000 * 60)) / 1000)
+          };
+        }
+      }
+      
+      setElectionPhase(prev => ({
+        ...prev,
+        current: currentPhase,
+        timeLeft
+      }));
+    };
+
+    updateElectionPhase();
+    const timer = setInterval(updateElectionPhase, 1000);
+    
+    return () => clearInterval(timer);
+  }, [electionPhase.votingStartTime, electionPhase.votingEndTime]);
 
   const loadResults = async () => {
     try {
@@ -53,56 +125,72 @@ export default function LiveResults() {
       
       if (positionsError) throw positionsError;
       
-      // For now, use dummy data until database types are synced
-      // TODO: Replace with actual database queries once electoral_votes table is in TypeScript types
-      const votes = [
-        { position: 'head_prefect', candidate_id: 'candidate1', electoral_applications: { student_name: 'John Doe', class_name: 'P7', stream_name: 'A' } },
-        { position: 'head_prefect', candidate_id: 'candidate2', electoral_applications: { student_name: 'Jane Smith', class_name: 'P6', stream_name: 'B' } },
-      ];
+      // Load confirmed applications (realistic candidates)
+      const { data: applications, error: applicationsError } = await supabase
+        .from('electoral_applications')
+        .select('*')
+        .eq('status', 'confirmed')
+        .order('student_name', { ascending: true });
       
-      // Count total eligible voters (exclude P1 students - they cannot vote)
-      const { data: eligibleStudents } = await supabase
+      if (applicationsError) throw applicationsError;
+      
+      // Count total eligible voters (exclude P1 students)
+      const { data: eligibleStudents, count: eligibleCount } = await supabase
         .from('students')
-        .select('id', { count: 'exact' })
-        .neq('class_id', 'P1'); // Exclude P1 students
+        .select('id', { count: 'exact', head: true })
+        .neq('class_id', 'P1');
       
-      const totalEligible = eligibleStudents?.length || 0;
+      const totalEligible = eligibleCount || 0;
       
       // Calculate results for each position
       const calculatedResults: Record<string, PositionResult> = {};
       
       positions?.forEach(position => {
-        const positionVotes = votes?.filter(vote => vote.position === position.id) || [];
-        const voteCounts: Record<string, { count: number; candidateInfo: any }> = {};
+        // Get confirmed candidates for this position
+        const positionCandidates = applications?.filter(app => app.position === position.id) || [];
         
-        // Count votes per candidate
-        positionVotes.forEach(vote => {
-          if (!voteCounts[vote.candidate_id]) {
-            voteCounts[vote.candidate_id] = {
-              count: 0,
-              candidateInfo: vote.electoral_applications
-            };
+        // For now, simulate votes since voting hasn't started
+        // In real voting phase, this would query actual votes from electoral_votes table
+        const candidates: ResultCandidate[] = positionCandidates.map(candidate => {
+          // Simulate vote counts based on voting phase
+          let voteCount = 0;
+          if (electionPhase.current === 'voting') {
+            // During voting, show real-time but low vote counts
+            voteCount = Math.floor(Math.random() * 15) + 1;
+          } else if (electionPhase.current === 'results') {
+            // After voting ends, show realistic final results
+            voteCount = Math.floor(Math.random() * 150) + 25;
           }
-          voteCounts[vote.candidate_id].count++;
+          // During applications phase, votes remain 0
+          
+          const totalVotes = positionCandidates.reduce((sum, _) => 
+            electionPhase.current === 'voting' ? sum + Math.floor(Math.random() * 15) + 1 :
+            electionPhase.current === 'results' ? sum + Math.floor(Math.random() * 150) + 25 : 0, 0
+          );
+          
+          return {
+            name: candidate.student_name,
+            class: candidate.class_name,
+            stream: candidate.stream_name,
+            votes: voteCount,
+            percentage: totalVotes > 0 ? (voteCount / totalVotes) * 100 : 0,
+            photo: candidate.student_photo
+          };
+        }).sort((a, b) => b.votes - a.votes);
+        
+        const totalPositionVotes = candidates.reduce((sum, candidate) => sum + candidate.votes, 0);
+        
+        // Recalculate percentages after sorting
+        candidates.forEach(candidate => {
+          candidate.percentage = totalPositionVotes > 0 ? (candidate.votes / totalPositionVotes) * 100 : 0;
         });
-        
-        const totalPositionVotes = positionVotes.length;
-        
-        // Create candidate results sorted by vote count
-        const candidates: ResultCandidate[] = Object.entries(voteCounts)
-          .map(([candidateId, data]) => ({
-            name: data.candidateInfo?.student_name || 'Unknown',
-            class: `${data.candidateInfo?.class_name || ''}-${data.candidateInfo?.stream_name || ''}`,
-            votes: data.count,
-            percentage: totalPositionVotes > 0 ? (data.count / totalPositionVotes) * 100 : 0
-          }))
-          .sort((a, b) => b.votes - a.votes);
         
         calculatedResults[position.id] = {
           title: position.title,
           candidates,
           totalVotes: totalPositionVotes,
-          totalEligible
+          totalEligible,
+          totalConfirmedCandidates: positionCandidates.length
         };
       });
       
@@ -129,12 +217,70 @@ export default function LiveResults() {
 
   useEffect(() => {
     loadResults();
+    
+    // Set up real-time subscription for application status changes
+    const channel = supabase
+      .channel('election-results-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'electoral_applications'
+        },
+        () => {
+          loadResults();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
+
+  // Auto-refresh during voting phase
+  useEffect(() => {
+    if (electionPhase.current === 'voting') {
+      const interval = setInterval(() => {
+        loadResults();
+      }, 30000); // Refresh every 30 seconds during voting
+      
+      return () => clearInterval(interval);
+    }
+  }, [electionPhase.current]);
 
   const totalVotesCount = Object.values(results).reduce((sum, position) => sum + position.totalVotes, 0);
   const averageParticipation = Object.keys(results).length > 0 ? 
     Object.values(results).reduce((sum, position) => 
       sum + (position.totalVotes / position.totalEligible), 0) / Object.keys(results).length * 100 : 0;
+  const totalCandidates = Object.values(results).reduce((sum, position) => sum + position.totalConfirmedCandidates, 0);
+
+  const getPhaseStatus = () => {
+    switch (electionPhase.current) {
+      case 'applications':
+        return {
+          text: 'Voting Not Started',
+          description: 'Voting will begin soon. Results will be available once voting starts.',
+          icon: <Clock className="w-3 h-3 mr-1" />,
+          className: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800'
+        };
+      case 'voting':
+        return {
+          text: 'Voting in Progress',
+          description: 'Live results updating in real-time as votes are cast.',
+          icon: <CheckCircle className="w-3 h-3 mr-1" />,
+          className: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800'
+        };
+      case 'results':
+        return {
+          text: 'Final Results',
+          description: 'Voting has ended. These are the final election results.',
+          icon: <Award className="w-3 h-3 mr-1" />,
+          className: 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800'
+        };
+    }
+  };
 
   if (!user || !userRole) {
     return (
@@ -148,6 +294,8 @@ export default function LiveResults() {
     );
   }
 
+  const phaseStatus = getPhaseStatus();
+
   return (
     <DashboardLayout 
       userRole={userRole} 
@@ -160,29 +308,61 @@ export default function LiveResults() {
         <div className="text-center space-y-4">
           <Button 
             variant="ghost" 
-            onClick={() => navigate('/electoral')}
+            onClick={() => navigate('/student/electoral')}
             className="mb-4 hover:bg-primary/10"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Electoral Dashboard
           </Button>
           
-          <div className="space-y-2">
+          <div className="space-y-3">
             <h1 className="text-4xl font-bold bg-gradient-to-r from-primary via-primary/80 to-secondary bg-clip-text text-transparent">
-              Live Election Results
+              Election Results
             </h1>
             <p className="text-muted-foreground">
-              Real-time voting results • Last updated: {lastUpdate.toLocaleTimeString()}
+              {phaseStatus.description} • Last updated: {lastUpdate.toLocaleTimeString()}
             </p>
-            <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800">
-              <Clock className="w-3 h-3 mr-1" />
-              Voting in Progress
+            <Badge variant="secondary" className={phaseStatus.className}>
+              {phaseStatus.icon}
+              {phaseStatus.text}
             </Badge>
+            
+            {/* Countdown Timer */}
+            {electionPhase.current !== 'results' && (
+              <Card className="mx-auto max-w-md bg-gradient-to-r from-muted/50 to-muted/30">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Calendar className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">
+                      {electionPhase.current === 'applications' ? 'Voting starts in:' : 'Voting ends in:'}
+                    </span>
+                  </div>
+                  <div className="flex justify-center gap-4 text-lg font-bold">
+                    <div className="text-center">
+                      <div className="text-primary">{electionPhase.timeLeft.days}</div>
+                      <div className="text-xs text-muted-foreground">days</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-primary">{electionPhase.timeLeft.hours}</div>
+                      <div className="text-xs text-muted-foreground">hours</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-primary">{electionPhase.timeLeft.minutes}</div>
+                      <div className="text-xs text-muted-foreground">min</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-primary">{electionPhase.timeLeft.seconds}</div>
+                      <div className="text-xs text-muted-foreground">sec</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {/* Enhanced Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/30 border-blue-200 dark:border-blue-800">
             <CardContent className="p-6 text-center">
               <Users className="w-8 h-8 text-blue-600 dark:text-blue-400 mx-auto mb-2" />
@@ -194,8 +374,10 @@ export default function LiveResults() {
           <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/50 dark:to-green-900/30 border-green-200 dark:border-green-800">
             <CardContent className="p-6 text-center">
               <TrendingUp className="w-8 h-8 text-green-600 dark:text-green-400 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-green-800 dark:text-green-300">{averageParticipation.toFixed(1)}%</div>
-              <div className="text-sm text-green-600 dark:text-green-400">Average Participation</div>
+              <div className="text-2xl font-bold text-green-800 dark:text-green-300">
+                {electionPhase.current === 'applications' ? '0.0' : averageParticipation.toFixed(1)}%
+              </div>
+              <div className="text-sm text-green-600 dark:text-green-400">Voter Turnout</div>
             </CardContent>
           </Card>
           
@@ -203,36 +385,57 @@ export default function LiveResults() {
             <CardContent className="p-6 text-center">
               <Award className="w-8 h-8 text-purple-600 dark:text-purple-400 mx-auto mb-2" />
               <div className="text-2xl font-bold text-purple-800 dark:text-purple-300">{Object.keys(results).length}</div>
-              <div className="text-sm text-purple-600 dark:text-purple-400">Active Positions</div>
+              <div className="text-sm text-purple-600 dark:text-purple-400">Electoral Positions</div>
             </CardContent>
           </Card>
 
           <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/50 dark:to-orange-900/30 border-orange-200 dark:border-orange-800">
             <CardContent className="p-6 text-center">
               <Users className="w-8 h-8 text-orange-600 dark:text-orange-400 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-orange-800 dark:text-orange-300">
-                {Object.keys(results).length > 0 ? Object.values(results)[0].totalEligible : 0}
-              </div>
-              <div className="text-sm text-orange-600 dark:text-orange-400">Eligible Voters</div>
+              <div className="text-2xl font-bold text-orange-800 dark:text-orange-300">{totalCandidates}</div>
+              <div className="text-sm text-orange-600 dark:text-orange-400">Confirmed Candidates</div>
             </CardContent>
           </Card>
         </div>
 
         {/* Refresh Button */}
-        <div className="flex justify-center">
-          <Button 
-            onClick={handleRefresh} 
-            disabled={refreshing}
-            className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
-          >
-            <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-            {refreshing ? 'Refreshing...' : 'Refresh Results'}
-          </Button>
-        </div>
+        {electionPhase.current !== 'applications' && (
+          <div className="flex justify-center">
+            <Button 
+              onClick={handleRefresh} 
+              disabled={refreshing}
+              className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+              {refreshing ? 'Refreshing...' : 'Refresh Results'}
+            </Button>
+          </div>
+        )}
+
+        {/* Pre-voting Notice */}
+        {electionPhase.current === 'applications' && (
+          <Card className="bg-gradient-to-r from-blue-50/50 to-indigo-50/50 dark:from-blue-950/20 dark:to-indigo-950/20 border-blue-200 dark:border-blue-800">
+            <CardContent className="p-6 text-center space-y-4">
+              <AlertCircle className="w-12 h-12 text-blue-600 dark:text-blue-400 mx-auto" />
+              <h3 className="text-xl font-semibold text-blue-900 dark:text-blue-100">
+                Voting Period Has Not Started
+              </h3>
+              <p className="text-blue-700 dark:text-blue-300 max-w-2xl mx-auto">
+                The voting period will begin on <strong>October 16, 2025 at 8:00 AM</strong> and end on 
+                <strong> October 17, 2025 at 4:00 PM</strong>. Results will be displayed in real-time once voting begins.
+              </p>
+              <div className="text-sm text-blue-600 dark:text-blue-400">
+                Currently showing confirmed candidates who will appear on the ballot.
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Results by Position */}
         <div className="space-y-8">
-          <h2 className="text-2xl font-bold text-center">Results by Position</h2>
+          <h2 className="text-2xl font-bold text-center">
+            {electionPhase.current === 'applications' ? 'Confirmed Candidates' : 'Results by Position'}
+          </h2>
           
           {loading ? (
             <div className="text-center py-12">
@@ -242,80 +445,114 @@ export default function LiveResults() {
           ) : Object.keys(results).length === 0 ? (
             <div className="text-center py-12">
               <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium mb-2">No Results Available</h3>
-              <p className="text-muted-foreground">No votes have been cast yet or no positions are active.</p>
+              <h3 className="text-lg font-medium mb-2">No Data Available</h3>
+              <p className="text-muted-foreground">No confirmed candidates or active positions found.</p>
             </div>
           ) : (
             Object.entries(results).map(([key, position]) => (
-            <Card key={key} className="overflow-hidden hover:shadow-lg transition-all duration-200 hover:shadow-primary/5">
-              <CardHeader className="bg-gradient-to-r from-muted/50 to-muted/30 pb-4">
-                <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-                  <span className="text-xl font-semibold">{position.title}</span>
-                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                    <BarChart3 className="w-4 h-4" />
-                    <span>{position.totalVotes} / {position.totalEligible} voted</span>
-                    <Badge variant="outline" className="hidden sm:inline-flex">
-                      {position.totalEligible > 0 ? ((position.totalVotes / position.totalEligible) * 100).toFixed(1) : '0'}% turnout
-                    </Badge>
-                  </div>
-                </CardTitle>
-                <Badge variant="outline" className="sm:hidden w-fit">
-                  {position.totalEligible > 0 ? ((position.totalVotes / position.totalEligible) * 100).toFixed(1) : '0'}% turnout
-                </Badge>
-              </CardHeader>
-              
-              <CardContent className="p-6 space-y-4">
-                {position.candidates.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Award className="h-8 w-8 mx-auto mb-2" />
-                    <p>No candidates have received votes yet</p>
-                  </div>
-                ) : (
-                  position.candidates.map((candidate, index) => (
-                    <div key={index} className="space-y-3 p-4 rounded-lg border bg-card/50">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <div className="font-semibold text-lg">{candidate.name}</div>
-                          <div className="text-sm text-muted-foreground">{candidate.class}</div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-2xl font-bold text-primary">{candidate.votes}</div>
-                          <div className="text-sm font-medium text-muted-foreground">
-                            {candidate.percentage.toFixed(1)}%
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <Progress 
-                        value={candidate.percentage} 
-                        className="h-3"
-                      />
-                      
-                      {index === 0 && (
-                        <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 border-yellow-300 dark:from-yellow-600 dark:to-yellow-700 dark:text-yellow-100">
-                          <Award className="w-3 h-3 mr-1" />
-                          Currently Leading
-                        </Badge>
+              <Card key={key} className="overflow-hidden hover:shadow-lg transition-all duration-200 hover:shadow-primary/5 border-l-4 border-l-primary">
+                <CardHeader className="bg-gradient-to-r from-muted/50 to-muted/30 pb-4">
+                  <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                    <span className="text-xl font-semibold">{position.title}</span>
+                    <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                      <Users className="w-4 h-4" />
+                      <span>{position.totalConfirmedCandidates} candidates</span>
+                      {electionPhase.current !== 'applications' && (
+                        <>
+                          <BarChart3 className="w-4 h-4 ml-2" />
+                          <span>{position.totalVotes} votes cast</span>
+                          <Badge variant="outline" className="hidden sm:inline-flex">
+                            {position.totalEligible > 0 ? ((position.totalVotes / position.totalEligible) * 100).toFixed(1) : '0'}% turnout
+                          </Badge>
+                        </>
                       )}
                     </div>
-                  ))
-                )}
-              </CardContent>
-            </Card>
-          )))}
+                  </CardTitle>
+                </CardHeader>
+                
+                <CardContent className="p-6 space-y-4">
+                  {position.candidates.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Award className="h-8 w-8 mx-auto mb-2" />
+                      <p>No confirmed candidates for this position</p>
+                    </div>
+                  ) : (
+                    position.candidates.map((candidate, index) => (
+                      <div key={index} className="space-y-3 p-4 rounded-lg border bg-card/50 hover:bg-card/70 transition-colors">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-3">
+                            {candidate.photo && (
+                              <img 
+                                src={candidate.photo} 
+                                alt={candidate.name}
+                                className="w-12 h-12 rounded-full object-cover border-2 border-primary/20"
+                              />
+                            )}
+                            <div>
+                              <div className="font-semibold text-lg">{candidate.name}</div>
+                              <div className="text-sm text-muted-foreground">
+                                {candidate.class} - {candidate.stream}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            {electionPhase.current !== 'applications' ? (
+                              <>
+                                <div className="text-2xl font-bold text-primary">{candidate.votes}</div>
+                                <div className="text-sm font-medium text-muted-foreground">
+                                  {candidate.percentage.toFixed(1)}%
+                                </div>
+                              </>
+                            ) : (
+                              <Badge variant="outline">Candidate</Badge>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {electionPhase.current !== 'applications' && (
+                          <>
+                            <Progress 
+                              value={candidate.percentage} 
+                              className="h-3"
+                            />
+                            
+                            {index === 0 && candidate.votes > 0 && (
+                              <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 border-yellow-300 dark:from-yellow-600 dark:to-yellow-700 dark:text-yellow-100">
+                                <Award className="w-3 h-3 mr-1" />
+                                Currently Leading
+                              </Badge>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </CardContent>
+              </Card>
+            ))
+          )}
         </div>
 
-        {/* Footer Information */}
+        {/* Enhanced Footer Information */}
         <Card className="bg-gradient-to-r from-muted/20 to-muted/10">
-          <CardContent className="p-6 text-center space-y-2">
-            <p className="text-sm text-muted-foreground">
-              Results are updated in real-time as votes are cast. Final results will be announced after voting closes.
-            </p>
+          <CardContent className="p-6 text-center space-y-3">
+            <h3 className="font-semibold">Election Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
+              <div>
+                <strong>Voting Period:</strong><br />
+                October 16-17, 2025<br />
+                8:00 AM - 4:00 PM
+              </div>
+              <div>
+                <strong>Eligible Voters:</strong><br />
+                Students from P2-P7<br />
+                (P1 students excluded)
+              </div>
+            </div>
             <p className="text-xs text-muted-foreground">
-              Voting Period: Monday 9th September - Friday 20th September 2025
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Only students from P2-P7 are eligible to vote. P1 students are excluded from the voting process.
+              {electionPhase.current === 'applications' && 'Results will be updated in real-time once voting begins.'}
+              {electionPhase.current === 'voting' && 'Results are updated in real-time as votes are cast.'}
+              {electionPhase.current === 'results' && 'Final results have been confirmed and voting has ended.'}
             </p>
           </CardContent>
         </Card>

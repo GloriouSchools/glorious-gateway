@@ -20,7 +20,8 @@ import {
   HelpCircle,
   Vote,
   Trophy,
-  Gamepad2
+  Gamepad2,
+  CalendarClock
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -79,6 +80,8 @@ export function AppSidebar({ userRole, userName, photoUrl, onLogout }: AppSideba
           { title: "Assignments", icon: ClipboardList, url: "/teacher/assignments" },
           { title: "Grades", icon: TrendingUp, url: "/teacher/grades" },
           { title: "Schedule", icon: Calendar, url: "/teacher/schedule" },
+          { title: "Timetable", icon: Clock, url: "/teacher/timetable" },
+          { title: "Duty Rota", icon: CalendarClock, url: "/teacher/duty-rota" },
           { title: "Attendance", icon: UserCheck, url: "/teacher/attendance" },
           { title: "Messages", icon: MessageSquare, url: "/teacher/messages" },
           { title: "Reports", icon: FileText, url: "/teacher/reports" },
@@ -90,6 +93,8 @@ export function AppSidebar({ userRole, userName, photoUrl, onLogout }: AppSideba
           { title: "Teachers", icon: Users, url: "/admin/teachers" },
           { title: "Classes", icon: BookOpen, url: "/admin/classes" },
           { title: "Streams", icon: Users, url: "/admin/streams" },
+          { title: "Timetable", icon: Clock, url: "/admin/timetable" },
+          { title: "Duty Rota", icon: CalendarClock, url: "/admin/duty-rota" },
           { title: "Electoral", icon: Vote, url: "/admin/electoral" },
           { title: "Courses", icon: BookOpen, url: "/admin/courses" },
           { title: "Analytics", icon: BarChart3, url: "/admin/analytics" },

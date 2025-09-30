@@ -136,6 +136,45 @@ export default function Candidates() {
 
     if (position) {
       loadApplications();
+      
+      // Set up real-time subscription for status changes
+      const channel = supabase
+        .channel('candidate-status-updates')
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'electoral_applications',
+            filter: `position=eq.${position}`
+          },
+          (payload) => {
+            console.log('Real-time update received:', payload);
+            // Update the specific application in state
+            if (payload.new) {
+              setApplications(apps => 
+                apps.map(app => 
+                  app.id === payload.new.id 
+                    ? { ...app, status: payload.new.status }
+                    : app
+                )
+              );
+              
+              // Show toast notification for status change
+              const statusText = payload.new.status === 'confirmed' ? 'confirmed' : 
+                               payload.new.status === 'rejected' ? 'rejected' : 'updated';
+              toast({
+                title: "Status Updated",
+                description: `${payload.new.student_name}'s application has been ${statusText}.`,
+              });
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [position, toast]);
 
@@ -187,7 +226,7 @@ export default function Candidates() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate('/electoral')}
+              onClick={() => navigate('/student/electoral')}
               className="flex items-center gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -200,9 +239,27 @@ export default function Candidates() {
               <CardTitle className="flex items-center gap-3 text-2xl">
                 <Users className="h-6 w-6 text-primary" />
                 Candidates for {positionTitle}
-                <Badge variant="secondary" className="text-sm">
-                  {filteredApplications.length} {filteredApplications.length === 1 ? 'Candidate' : 'Candidates'}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="text-sm">
+                    {filteredApplications.length} {filteredApplications.length === 1 ? 'Candidate' : 'Candidates'}
+                  </Badge>
+                  {applications.length > 0 && (
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <span className="inline-flex items-center gap-1">
+                        <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                        {applications.filter(app => app.status === 'confirmed').length} Confirmed
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                        {applications.filter(app => app.status === 'rejected').length} Rejected
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                        {applications.filter(app => app.status === 'pending').length} Pending
+                      </span>
+                    </div>
+                  )}
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -278,10 +335,20 @@ export default function Candidates() {
                                 <p className="text-sm text-muted-foreground">{application.student_email}</p>
                               </div>
                               <Badge 
-                                variant={application.status === 'pending' ? 'secondary' : 'default'}
-                                className="capitalize"
+                                variant={
+                                  application.status === 'pending' ? 'secondary' : 
+                                  application.status === 'confirmed' ? 'default' : 
+                                  'destructive'
+                                }
+                                className={`capitalize font-medium ${
+                                  application.status === 'confirmed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100' :
+                                  application.status === 'rejected' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100' :
+                                  'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100'
+                                }`}
                               >
-                                {application.status}
+                                {application.status === 'confirmed' ? 'Confirmed' : 
+                                 application.status === 'rejected' ? 'Rejected' : 
+                                 'Pending'}
                               </Badge>
                             </div>
                             

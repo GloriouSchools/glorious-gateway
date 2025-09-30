@@ -128,7 +128,7 @@ export default function ApplicationStatus() {
         <div className="space-y-6">
           <Button
             variant="ghost"
-            onClick={() => navigate('/electoral')}
+            onClick={() => navigate('/student/electoral')}
             className="mb-6"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -156,7 +156,7 @@ export default function ApplicationStatus() {
       <div className="space-y-6">
         <Button
           variant="ghost"
-          onClick={() => navigate('/electoral')}
+          onClick={() => navigate('/student/electoral')}
           className="mb-6"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />

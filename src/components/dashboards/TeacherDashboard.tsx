@@ -170,6 +170,26 @@ export function TeacherDashboard() {
       route: '/teacher/schedule'
     },
     {
+      id: 'timetable',
+      title: 'Timetable',
+      description: 'School timetables & schedules',
+      icon: Clock,
+      color: 'from-purple-400 to-pink-400',
+      stats: 'All Schedules',
+      action: 'View Timetables',
+      route: '/teacher/timetable'
+    },
+    {
+      id: 'duty-rota',
+      title: 'Duty Rota',
+      description: 'Weekly teacher duty schedule',
+      icon: Calendar,
+      color: 'from-cyan-400 to-blue-400',
+      stats: 'Term 3 Schedule',
+      action: 'View Duty Rota',
+      route: '/teacher/duty-rota'
+    },
+    {
       id: 'attendance',
       title: 'Attendance',
       description: 'Take roll call and track attendance',

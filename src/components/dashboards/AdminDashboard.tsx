@@ -21,7 +21,8 @@ import {
   Shield,
   Mail,
   Loader2,
-  Layers
+  Layers,
+  Clock
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { AccountVerificationForm } from "@/components/auth/AccountVerificationForm";
@@ -144,6 +145,100 @@ export function AdminDashboard() {
     { name: "Computer Science", teachers: 15, students: 380, performance: 91 },
   ];
 
+  const adminSections = [
+    {
+      id: 'students',
+      title: 'Students',
+      description: 'Manage student records',
+      icon: GraduationCap,
+      color: 'from-blue-400 to-cyan-400',
+      stats: `${stats.totalStudents} Students`,
+      action: 'Manage Students',
+      route: '/admin/students'
+    },
+    {
+      id: 'teachers',
+      title: 'Teachers',
+      description: 'Manage teaching staff',
+      icon: Users,
+      color: 'from-green-400 to-emerald-400',
+      stats: `${stats.totalTeachers} Teachers`,
+      action: 'Manage Teachers',
+      route: '/admin/teachers'
+    },
+    {
+      id: 'classes',
+      title: 'Classes',
+      description: 'Manage class structure',
+      icon: BookOpen,
+      color: 'from-purple-400 to-pink-400',
+      stats: `${stats.totalClasses} Classes`,
+      action: 'Manage Classes',
+      route: '/admin/classes'
+    },
+    {
+      id: 'streams',
+      title: 'Streams',
+      description: 'Organize student streams',
+      icon: Layers,
+      color: 'from-indigo-400 to-purple-400',
+      stats: `${stats.totalStreams} Streams`,
+      action: 'Manage Streams',
+      route: '/admin/streams'
+    },
+    {
+      id: 'timetable',
+      title: 'Timetable',
+      description: 'School schedules & timetables',
+      icon: Clock,
+      color: 'from-orange-400 to-red-400',
+      stats: 'All Schedules',
+      action: 'Manage Timetable',
+      route: '/admin/timetable'
+    },
+    {
+      id: 'duty-rota',
+      title: 'Duty Rota',
+      description: 'Teacher duty schedule management',
+      icon: Calendar,
+      color: 'from-cyan-400 to-blue-400',
+      stats: 'Term 3 Roster',
+      action: 'View Duty Rota',
+      route: '/admin/duty-rota'
+    },
+    {
+      id: 'electoral',
+      title: 'Electoral',
+      description: 'Manage school elections',
+      icon: Shield,
+      color: 'from-red-400 to-pink-400',
+      stats: `${electoralStats.pending} Pending`,
+      action: 'View Applications',
+      route: '/admin/electoral-applications',
+      isHighlight: electoralStats.pending > 0
+    },
+    {
+      id: 'analytics',
+      title: 'Analytics',
+      description: 'View school performance',
+      icon: BarChart3,
+      color: 'from-teal-400 to-green-400',
+      stats: 'Reports & Stats',
+      action: 'View Analytics',
+      route: '/admin/analytics'
+    },
+    {
+      id: 'finance',
+      title: 'Finance',
+      description: 'Financial management',
+      icon: DollarSign,
+      color: 'from-yellow-400 to-orange-400',
+      stats: 'Payments & Fees',
+      action: 'View Finance',
+      route: '/admin/finance'
+    }
+  ];
+
   const upcomingEvents = [
     { event: "Parent-Teacher Meeting", date: "March 15", status: "upcoming" },
     { event: "Mid-term Examinations", date: "March 20-25", status: "upcoming" },
@@ -177,66 +272,132 @@ export function AdminDashboard() {
         </DialogContent>
       </Dialog>
 
-        {/* Dashboard Stats Cards */}
-        <ScrollReveal animation="fadeInUp" delay={200}>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/admin/students')}>
-            <CardContent className="p-6">
+      {/* Quick Stats Overview */}
+      <ScrollReveal animation="fadeInUp" delay={200}>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-blue-600">Total Students</p>
-                  <p className="text-3xl font-bold text-blue-800">
-                    {loading ? <Skeleton className="h-8 w-20" /> : stats.totalStudents}
+                  <p className="text-2xl font-bold text-blue-800">
+                    {loading ? <Skeleton className="h-8 w-16" /> : stats.totalStudents}
                   </p>
                 </div>
-                <Users className="h-8 w-8 text-blue-600" />
+                <Users className="h-6 w-6 text-blue-600" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/admin/teachers')}>
-            <CardContent className="p-6">
+          <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-green-600">Total Teachers</p>
-                  <p className="text-3xl font-bold text-green-800">
-                    {loading ? <Skeleton className="h-8 w-20" /> : stats.totalTeachers}
+                  <p className="text-2xl font-bold text-green-800">
+                    {loading ? <Skeleton className="h-8 w-16" /> : stats.totalTeachers}
                   </p>
                 </div>
-                <GraduationCap className="h-8 w-8 text-green-600" />
+                <GraduationCap className="h-6 w-6 text-green-600" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/admin/classes')}>
-            <CardContent className="p-6">
+          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-purple-600">Total Classes</p>
-                  <p className="text-3xl font-bold text-purple-800">
-                    {loading ? <Skeleton className="h-8 w-20" /> : stats.totalClasses}
+                  <p className="text-2xl font-bold text-purple-800">
+                    {loading ? <Skeleton className="h-8 w-16" /> : stats.totalClasses}
                   </p>
                 </div>
-                <BookOpen className="h-8 w-8 text-purple-600" />
+                <BookOpen className="h-6 w-6 text-purple-600" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/admin/electoral-applications')}>
-            <CardContent className="p-6">
+          <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-indigo-600">Electoral Applications</p>
-                  <p className="text-3xl font-bold text-indigo-800">
-                    {loadingElectoral ? <Skeleton className="h-8 w-20" /> : (electoralStats.pending + electoralStats.confirmed + electoralStats.rejected)}
+                  <p className="text-sm font-medium text-orange-600">Total Streams</p>
+                  <p className="text-2xl font-bold text-orange-800">
+                    {loading ? <Skeleton className="h-8 w-16" /> : stats.totalStreams}
                   </p>
                 </div>
-                <Shield className="h-8 w-8 text-indigo-600" />
+                <Layers className="h-6 w-6 text-orange-600" />
               </div>
             </CardContent>
           </Card>
-          </div>
-        </ScrollReveal>
+        </div>
+      </ScrollReveal>
+
+      {/* Admin Sections Grid - Main Management Cards */}
+      <ScrollReveal animation="fadeInUp" delay={250}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {adminSections.map((section, index) => {
+            const Icon = section.icon;
+            
+            return (
+              <Card 
+                key={section.id}
+                className={`group relative overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 ${
+                  section.isHighlight ? 'border-red-400 bg-red-50/50' : ''
+                }`}
+                onClick={() => navigate(section.route)}
+              >
+                {/* Background Gradient */}
+                <div className={`absolute inset-0 bg-gradient-to-br ${section.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}></div>
+                
+                <CardHeader className="relative z-10 pb-2">
+                  <div className="flex items-center space-x-3">
+                    <div className={`p-3 rounded-full bg-gradient-to-r ${section.color} transition-transform duration-300 group-hover:scale-110`}>
+                      <Icon className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg font-bold group-hover:text-primary transition-colors duration-300">
+                        {section.title}
+                      </CardTitle>
+                    </div>
+                  </div>
+                </CardHeader>
+                
+                <CardContent className="relative z-10 space-y-4">
+                  <p className="text-muted-foreground font-medium">
+                    {section.description}
+                  </p>
+                  
+                  <div className="flex items-center justify-between">
+                    <Badge 
+                      variant="secondary" 
+                      className={`font-semibold ${section.isHighlight ? 'bg-red-100 text-red-700 animate-pulse' : ''}`}
+                    >
+                      {section.stats}
+                    </Badge>
+                    
+                    <Button 
+                      variant={section.isHighlight ? "default" : "outline"}
+                      size="sm" 
+                      className="font-medium"
+                    >
+                      {section.action}
+                    </Button>
+                  </div>
+                  
+                  {section.isHighlight && (
+                    <div className="text-center">
+                      <span className="text-xs font-medium text-red-600">
+                        Action Required
+                      </span>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      </ScrollReveal>
 
         {/* Electoral Applications Management */}
         <ScrollReveal animation="fadeInUp" delay={300}>

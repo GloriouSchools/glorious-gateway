@@ -450,7 +450,7 @@ export default function Apply() {
           <div className="flex items-center gap-4 mb-8">
           <Button 
             variant="outline" 
-            onClick={() => navigate('/electoral')}
+            onClick={() => navigate('/student/electoral')}
             className="flex items-center gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -566,7 +566,7 @@ export default function Apply() {
                         <p className="text-muted-foreground mb-4">
                           We couldn't find your student record in our database. Please contact the school administration.
                         </p>
-                        <Button variant="outline" onClick={() => navigate('/electoral')}>
+                        <Button variant="outline" onClick={() => navigate('/student/electoral')}>
                           Back to Electoral Hub
                         </Button>
                       </div>
@@ -578,7 +578,7 @@ export default function Apply() {
                           Students in {studentDetails?.class_name} are not eligible to participate in the electoral contest. 
                           Only students in classes P2 through P6 can apply for prefectorial positions.
                         </p>
-                        <Button variant="outline" onClick={() => navigate('/electoral')}>
+                        <Button variant="outline" onClick={() => navigate('/student/electoral')}>
                           Back to Electoral Hub
                         </Button>
                       </div>

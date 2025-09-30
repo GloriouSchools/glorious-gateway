@@ -429,7 +429,7 @@ export default function Vote() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate('/electoral')}
+            onClick={() => navigate('/student/electoral')}
             className="flex items-center gap-2"
           >
             <ArrowLeft className="h-4 w-4" />

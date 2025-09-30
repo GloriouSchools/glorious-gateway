@@ -43,6 +43,7 @@ import Assignments from "./pages/Assignments";
 import Grades from "./pages/Grades";
 import Timetable from "./pages/Timetable";
 import Attendance from "./pages/Attendance";
+import DutyRota from "./pages/DutyRota";
 import HallOfFame from "./pages/HallOfFame";
 import Birthdays from "./pages/Birthdays";
 import Communication from "./pages/Communication";
@@ -123,6 +124,11 @@ const App = () => (
                   <Timetable />
                 </ProtectedRoute>
               } />
+              <Route path="/student/duty-rota" element={
+                <ProtectedRoute>
+                  <DutyRota />
+                </ProtectedRoute>
+              } />
               <Route path="/student/attendance" element={
                 <ProtectedRoute>
                   <Attendance />
@@ -175,7 +181,7 @@ const App = () => (
                   <ApplicationStatus />
                 </ProtectedRoute>
               } />
-              <Route path="/student/electoral/candidates" element={
+              <Route path="/student/electoral/candidates/:position" element={
                 <ProtectedRoute>
                   <Candidates />
                 </ProtectedRoute>
@@ -235,6 +241,16 @@ const App = () => (
               <Route path="/teacher/reports" element={
                 <ProtectedRoute>
                   <AdminReports />
+                </ProtectedRoute>
+              } />
+              <Route path="/teacher/timetable" element={
+                <ProtectedRoute>
+                  <Timetable />
+                </ProtectedRoute>
+              } />
+              <Route path="/teacher/duty-rota" element={
+                <ProtectedRoute>
+                  <DutyRota />
                 </ProtectedRoute>
               } />
 
@@ -307,10 +323,24 @@ const App = () => (
                   </RoleBasedRoute>
                 </ProtectedRoute>
               } />
-              
-               <Route path="/404" element={<NotFound />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
+              <Route path="/admin/timetable" element={
+                <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={["admin"]}>
+                    <Timetable />
+                  </RoleBasedRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/duty-rota" element={
+                <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={["admin"]}>
+                    <DutyRota />
+                  </RoleBasedRoute>
+                </ProtectedRoute>
+              } />
+               
+                <Route path="/404" element={<NotFound />} />
+                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                 <Route path="*" element={<NotFound />} />
               </Routes>
             </PageTransition>
           </AuthProvider>
