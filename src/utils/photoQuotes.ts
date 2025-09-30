@@ -1,4 +1,4 @@
-// Utility to handle photo quotes from the src/assets/Quotations folder
+// Utility to handle photo quotes from the src/assets/Gallery folder
 export interface PhotoQuote {
   src: string;
   alt: string;
@@ -7,7 +7,7 @@ export interface PhotoQuote {
 // Get all quote images using Vite's import.meta.glob
 const getQuoteImages = () => {
   // Use Vite's import.meta.glob to dynamically import all images
-  const images = import.meta.glob('/src/assets/Quotations/*.jpg', { eager: true, as: 'url' });
+  const images = import.meta.glob('/src/assets/Gallery/*.jpg', { eager: true, as: 'url' });
   return Object.values(images) as string[];
 };
 

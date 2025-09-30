@@ -18,7 +18,7 @@ export interface FolderStructure {
 
 // Get all images from all folders recursively
 const getAllImagesRecursive = () => {
-  const images = import.meta.glob('/src/assets/Quotations/**/*.{jpg,jpeg,png,webp}', { 
+  const images = import.meta.glob('/src/assets/Gallery/**/*.{jpg,jpeg,png,webp}', { 
     eager: true, 
     as: 'url' 
   });
@@ -42,8 +42,8 @@ export const buildFolderStructure = (): FolderStructure => {
   folderMap.set('', root);
 
   paths.forEach(path => {
-    // Extract folder path (remove /src/assets/Quotations/ prefix and filename)
-    const relativePath = path.replace('/src/assets/Quotations/', '');
+    // Extract folder path (remove /src/assets/Gallery/ prefix and filename)
+    const relativePath = path.replace('/src/assets/Gallery/', '');
     const parts = relativePath.split('/');
     parts.pop(); // Remove filename
     
@@ -124,11 +124,11 @@ export const getPhotos = (folderFilter: string = 'all'): PhotoItem[] => {
   return Object.entries(images)
     .filter(([path]) => {
       if (!folderFilter || folderFilter === 'all') return true;
-      const relativePath = path.replace('/src/assets/Quotations/', '');
+      const relativePath = path.replace('/src/assets/Gallery/', '');
       return relativePath.startsWith(folderFilter + '/');
     })
     .map(([path, url], index) => {
-      const relativePath = path.replace('/src/assets/Quotations/', '');
+      const relativePath = path.replace('/src/assets/Gallery/', '');
       const parts = relativePath.split('/');
       const filename = parts.pop() || '';
       const folderPath = parts.join('/');
