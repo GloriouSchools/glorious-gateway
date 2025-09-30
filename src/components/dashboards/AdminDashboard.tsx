@@ -132,7 +132,7 @@ export function AdminDashboard() {
   const recentActivities = [
     { action: "New student enrolled", user: "John Doe", time: "2 minutes ago", type: "student" },
     { action: "Teacher joined", user: "Dr. Sarah Smith", time: "1 hour ago", type: "teacher" },
-    { action: "Course created", user: "Advanced Physics", time: "3 hours ago", type: "course" },
+    { action: "Quote added", user: "Inspirational Content", time: "3 hours ago", type: "quote" },
     { action: "Payment received", user: "$1,250 from Grade 11", time: "5 hours ago", type: "payment" },
     { action: "Report generated", user: "Monthly Performance", time: "Yesterday", type: "report" },
   ];

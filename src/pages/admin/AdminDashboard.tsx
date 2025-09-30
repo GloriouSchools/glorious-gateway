@@ -16,7 +16,8 @@ import {
   Vote,
   ArrowRight,
   Loader2,
-  ChevronRight
+  ChevronRight,
+  ClipboardList
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
@@ -205,6 +206,24 @@ export default function AdminDashboard() {
       color: 'from-indigo-400 to-purple-400',
       route: '/admin/electoral',
       stats: `${stats.pendingApplications} Pending`
+    },
+    {
+      id: 'timetable',
+      title: 'Timetable Management',
+      description: 'Create and manage class schedules and timetables',
+      icon: Calendar,
+      color: 'from-teal-400 to-cyan-400',
+      route: '/admin/timetable',
+      stats: 'Schedule'
+    },
+    {
+      id: 'duty-rota',
+      title: 'Duty Rota',
+      description: 'Manage staff duty rotas and schedules',
+      icon: ClipboardList,
+      color: 'from-pink-400 to-rose-400',
+      route: '/admin/duty-rota',
+      stats: 'Rotations'
     },
     {
       id: 'settings',

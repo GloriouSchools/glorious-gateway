@@ -21,7 +21,8 @@ import {
   Vote,
   Trophy,
   Gamepad2,
-  CalendarClock
+  CalendarClock,
+  Quote
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -96,7 +97,7 @@ export function AppSidebar({ userRole, userName, photoUrl, onLogout }: AppSideba
           { title: "Timetable", icon: Clock, url: "/admin/timetable" },
           { title: "Duty Rota", icon: CalendarClock, url: "/admin/duty-rota" },
           { title: "Electoral", icon: Vote, url: "/admin/electoral" },
-          { title: "Courses", icon: BookOpen, url: "/admin/courses" },
+          { title: "Quotes", icon: Quote, url: "/admin/quotes" },
           { title: "Analytics", icon: BarChart3, url: "/admin/analytics" },
           { title: "Finance", icon: DollarSign, url: "/admin/finance" },
           { title: "Reports", icon: FileText, url: "/admin/reports" },

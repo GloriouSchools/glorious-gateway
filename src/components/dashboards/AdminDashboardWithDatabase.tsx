@@ -37,7 +37,9 @@ import {
   Target,
   Settings,
   FileText,
-  Database
+  Database,
+  ClipboardList,
+  Quote
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { AccountVerificationForm } from "@/components/auth/AccountVerificationForm";
@@ -199,14 +201,14 @@ export function AdminDashboard() {
       route: '/admin/teachers'
     },
     {
-      id: 'courses',
-      title: 'Courses',
-      description: 'Configure courses and curriculum',
-      icon: BookOpen,
+      id: 'quotes',
+      title: 'Quotes',
+      description: 'Manage inspirational quotes and content',
+      icon: Quote,
       color: 'from-orange-400 to-red-400',
-      stats: 'Course Management',
-      action: 'Manage Courses',
-      route: '/admin/courses'
+      stats: 'Quote Management',
+      action: 'Manage Quotes',
+      route: '/admin/quotes'
     },
     {
       id: 'analytics',
@@ -238,6 +240,26 @@ export function AdminDashboard() {
       stats: 'Report Center',
       action: 'View Reports',
       route: '/admin/reports'
+    },
+    {
+      id: 'timetable',
+      title: 'Timetable',
+      description: 'Create and manage class schedules and timetables',
+      icon: Calendar,
+      color: 'from-teal-400 to-cyan-400',
+      stats: 'Schedule Management',
+      action: 'Manage Timetable',
+      route: '/admin/timetable'
+    },
+    {
+      id: 'duty-rota',
+      title: 'Duty Rota',
+      description: 'Manage staff duty rotas and schedules',
+      icon: ClipboardList,
+      color: 'from-pink-400 to-rose-400',
+      stats: 'Rotation Management',
+      action: 'Manage Duty Rota',
+      route: '/admin/duty-rota'
     },
     {
       id: 'settings',

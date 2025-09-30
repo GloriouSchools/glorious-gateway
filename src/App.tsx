@@ -27,7 +27,7 @@ import TeachersList from "./pages/admin/TeachersList";
 import ClassesList from "./pages/admin/ClassesList";
 import StreamsList from "./pages/admin/StreamsList";
 import ElectoralApplications from "./pages/admin/ElectoralApplications";
-import AdminCourses from "./pages/admin/AdminCourses";
+import AdminQuotes from "./pages/admin/AdminQuotes";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminFinance from "./pages/admin/AdminFinance";
 import AdminReports from "./pages/admin/AdminReports";
@@ -295,10 +295,10 @@ const App = () => (
                   </RoleBasedRoute>
                 </ProtectedRoute>
               } />
-              <Route path="/admin/courses" element={
+              <Route path="/admin/quotes" element={
                 <ProtectedRoute>
                   <RoleBasedRoute allowedRoles={["admin"]}>
-                    <AdminCourses />
+                    <AdminQuotes />
                   </RoleBasedRoute>
                 </ProtectedRoute>
               } />
