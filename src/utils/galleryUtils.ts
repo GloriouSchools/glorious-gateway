@@ -32,7 +32,7 @@ export const buildFolderStructure = (): FolderStructure => {
   
   // Build a tree structure
   const root: FolderStructure = {
-    name: 'All Quotes',
+    name: 'All Photos',
     path: '',
     count: 0,
     subfolders: []
@@ -93,7 +93,7 @@ export const getFlatFolderList = (structure: FolderStructure, level = 0): Array<
   
   if (level === 0) {
     result.push({
-      label: `All Quotes (${structure.count})`,
+      label: `All Photos (${structure.count})`,
       value: 'all',
       count: structure.count
     });

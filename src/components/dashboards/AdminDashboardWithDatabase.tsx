@@ -39,7 +39,7 @@ import {
   FileText,
   Database,
   ClipboardList,
-  Quote
+  Image
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { AccountVerificationForm } from "@/components/auth/AccountVerificationForm";
@@ -201,13 +201,13 @@ export function AdminDashboard() {
       route: '/admin/teachers'
     },
     {
-      id: 'quotes',
-      title: 'Quotes',
-      description: 'Manage inspirational quotes and content',
-      icon: Quote,
+      id: 'gallery',
+      title: 'Gallery',
+      description: 'Browse and manage photo gallery',
+      icon: Image,
       color: 'from-orange-400 to-red-400',
-      stats: 'Quote Management',
-      action: 'Manage Quotes',
+      stats: 'Photo Management',
+      action: 'Manage Gallery',
       route: '/admin/quotes'
     },
     {
