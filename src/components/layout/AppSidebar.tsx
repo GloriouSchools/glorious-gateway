@@ -22,7 +22,9 @@ import {
   Trophy,
   Gamepad2,
   CalendarClock,
-  Image
+  Image,
+  Package,
+  Video
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -65,10 +67,12 @@ export function AppSidebar({ userRole, userName, photoUrl, onLogout }: AppSideba
           { title: "Assignments", icon: ClipboardList, url: "/student/assignments" },
           { title: "My Grades", icon: Award, url: "/student/grades" },
           { title: "Timetable", icon: Clock, url: "/student/timetable" },
-          { title: "Attendance", icon: UserCheck, url: "/student/attendance" },
+          { title: "Entertainment", icon: Gamepad2, url: "/student/entertainment" },
           { title: "Elections", icon: Vote, url: "/student/electoral" },
           { title: "Hall of Fame", icon: Trophy, url: "/student/hall-of-fame" },
           { title: "Games", icon: Gamepad2, url: "/student/games" },
+          { title: "Gallery", icon: Image, url: "/student/gallery" },
+          { title: "E-Learning", icon: Video, url: "/student/e-learning" },
           { title: "Library", icon: Library, url: "/student/library" },
           { title: "Communication", icon: MessageSquare, url: "/student/communication" },
           { title: "Help & Support", icon: HelpCircle, url: "/student/help" },
@@ -84,6 +88,8 @@ export function AppSidebar({ userRole, userName, photoUrl, onLogout }: AppSideba
           { title: "Timetable", icon: Clock, url: "/teacher/timetable" },
           { title: "Duty Rota", icon: CalendarClock, url: "/teacher/duty-rota" },
           { title: "Attendance", icon: UserCheck, url: "/teacher/attendance" },
+          { title: "Gallery", icon: Image, url: "/teacher/gallery" },
+          { title: "E-Learning", icon: Video, url: "/teacher/e-learning" },
           { title: "Messages", icon: MessageSquare, url: "/teacher/messages" },
           { title: "Reports", icon: FileText, url: "/teacher/reports" },
         ];
@@ -97,7 +103,9 @@ export function AppSidebar({ userRole, userName, photoUrl, onLogout }: AppSideba
           { title: "Timetable", icon: Clock, url: "/admin/timetable" },
           { title: "Duty Rota", icon: CalendarClock, url: "/admin/duty-rota" },
           { title: "Electoral", icon: Vote, url: "/admin/electoral" },
-          { title: "Gallery", icon: Image, url: "/admin/quotes" },
+          { title: "Gallery", icon: Image, url: "/admin/gallery" },
+          { title: "E-Learning", icon: Video, url: "/admin/e-learning" },
+          { title: "Stock Management", icon: Package, url: "/admin/stock" },
           { title: "Analytics", icon: BarChart3, url: "/admin/analytics" },
           { title: "Finance", icon: DollarSign, url: "/admin/finance" },
           { title: "Reports", icon: FileText, url: "/admin/reports" },

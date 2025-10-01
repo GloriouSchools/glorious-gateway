@@ -35,7 +35,9 @@ import {
   GraduationCap,
   UserCheck,
   FileText,
-  Settings
+  Settings,
+  Image,
+  Video
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { AccountVerificationForm } from "@/components/auth/AccountVerificationForm";
@@ -201,11 +203,31 @@ export function TeacherDashboard() {
       isHighlight: true
     },
     {
+      id: 'gallery',
+      title: 'Gallery',
+      description: 'Browse school photos & memories',
+      icon: Image,
+      color: 'from-pink-400 to-rose-400',
+      stats: 'Latest Updates',
+      action: 'View Gallery',
+      route: '/teacher/gallery'
+    },
+    {
+      id: 'e-learning',
+      title: 'E-Learning',
+      description: 'Manage educational videos & resources',
+      icon: Video,
+      color: 'from-red-400 to-orange-400',
+      stats: '100+ Videos',
+      action: 'Manage Videos',
+      route: '/teacher/e-learning'
+    },
+    {
       id: 'messages',
       title: 'Messages',
       description: 'Communicate with students and staff',
       icon: Mail,
-      color: 'from-pink-400 to-rose-400',
+      color: 'from-blue-400 to-indigo-400',
       stats: 'Communication',
       action: 'View Messages',
       route: '/teacher/messages'

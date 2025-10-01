@@ -27,7 +27,8 @@ import TeachersList from "./pages/admin/TeachersList";
 import ClassesList from "./pages/admin/ClassesList";
 import StreamsList from "./pages/admin/StreamsList";
 import ElectoralApplications from "./pages/admin/ElectoralApplications";
-import AdminQuotes from "./pages/admin/AdminQuotes";
+import AdminGallery from "./pages/admin/AdminGallery";
+import StockManagement from "./pages/admin/StockManagement";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminFinance from "./pages/admin/AdminFinance";
 import AdminReports from "./pages/admin/AdminReports";
@@ -51,6 +52,8 @@ import HelpSupport from "./pages/HelpSupport";
 import Library from "./pages/Library";
 import Games from "./pages/Games";
 import TypingWizard from "./pages/games/TypingWizard";
+import ELearning from "./pages/ELearning";
+import Entertainment from "./pages/Entertainment";
 
 const queryClient = new QueryClient();
 
@@ -129,11 +132,6 @@ const App = () => (
                   <DutyRota />
                 </ProtectedRoute>
               } />
-              <Route path="/student/attendance" element={
-                <ProtectedRoute>
-                  <Attendance />
-                </ProtectedRoute>
-              } />
               <Route path="/student/hall-of-fame" element={
                 <ProtectedRoute>
                   <HallOfFame />
@@ -162,6 +160,21 @@ const App = () => (
               <Route path="/student/help" element={
                 <ProtectedRoute>
                   <HelpSupport />
+                </ProtectedRoute>
+              } />
+              <Route path="/student/gallery" element={
+                <ProtectedRoute>
+                  <AdminGallery />
+                </ProtectedRoute>
+              } />
+              <Route path="/student/e-learning" element={
+                <ProtectedRoute>
+                  <ELearning />
+                </ProtectedRoute>
+              } />
+              <Route path="/student/entertainment" element={
+                <ProtectedRoute>
+                  <Entertainment />
                 </ProtectedRoute>
               } />
               <Route path="/student/electoral" element={
@@ -253,6 +266,21 @@ const App = () => (
                   <DutyRota />
                 </ProtectedRoute>
               } />
+              <Route path="/teacher/gallery" element={
+                <ProtectedRoute>
+                  <AdminGallery />
+                </ProtectedRoute>
+              } />
+              <Route path="/teacher/e-learning" element={
+                <ProtectedRoute>
+                  <ELearning />
+                </ProtectedRoute>
+              } />
+              <Route path="/teacher/entertainment" element={
+                <ProtectedRoute>
+                  <Entertainment />
+                </ProtectedRoute>
+              } />
 
               {/* Admin Routes */}
               <Route path="/admin" element={
@@ -295,10 +323,17 @@ const App = () => (
                   </RoleBasedRoute>
                 </ProtectedRoute>
               } />
-              <Route path="/admin/quotes" element={
+              <Route path="/admin/gallery" element={
                 <ProtectedRoute>
                   <RoleBasedRoute allowedRoles={["admin"]}>
-                    <AdminQuotes />
+                    <AdminGallery />
+                  </RoleBasedRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/stock" element={
+                <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={["admin"]}>
+                    <StockManagement />
                   </RoleBasedRoute>
                 </ProtectedRoute>
               } />
@@ -337,7 +372,28 @@ const App = () => (
                   </RoleBasedRoute>
                 </ProtectedRoute>
               } />
-               
+              <Route path="/admin/attendance" element={
+                <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={["admin"]}>
+                    <Attendance />
+                  </RoleBasedRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/e-learning" element={
+                <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={["admin"]}>
+                    <ELearning />
+                  </RoleBasedRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/entertainment" element={
+                <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={["admin"]}>
+                    <Entertainment />
+                  </RoleBasedRoute>
+                </ProtectedRoute>
+              } />
+                
                 <Route path="/404" element={<NotFound />} />
                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                  <Route path="*" element={<NotFound />} />

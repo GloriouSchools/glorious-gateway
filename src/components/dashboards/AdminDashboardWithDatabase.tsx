@@ -39,7 +39,10 @@ import {
   FileText,
   Database,
   ClipboardList,
-  Image
+  Image,
+  UserCheck,
+  Package,
+  Video
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { AccountVerificationForm } from "@/components/auth/AccountVerificationForm";
@@ -208,7 +211,27 @@ export function AdminDashboard() {
       color: 'from-orange-400 to-red-400',
       stats: 'Photo Management',
       action: 'Manage Gallery',
-      route: '/admin/quotes'
+      route: '/admin/gallery'
+    },
+    {
+      id: 'e-learning',
+      title: 'E-Learning',
+      description: 'Manage educational video content',
+      icon: Video,
+      color: 'from-red-400 to-pink-400',
+      stats: '100+ Educational Videos',
+      action: 'Manage Videos',
+      route: '/admin/e-learning'
+    },
+    {
+      id: 'stock',
+      title: 'Stock Management',
+      description: 'Track school materials and inventory',
+      icon: Package,
+      color: 'from-amber-400 to-orange-400',
+      stats: 'Inventory Tracking',
+      action: 'Manage Stock',
+      route: '/admin/stock'
     },
     {
       id: 'analytics',
@@ -260,6 +283,16 @@ export function AdminDashboard() {
       stats: 'Rotation Management',
       action: 'Manage Duty Rota',
       route: '/admin/duty-rota'
+    },
+    {
+      id: 'attendance',
+      title: 'Attendance',
+      description: 'Monitor and manage student attendance',
+      icon: UserCheck,
+      color: 'from-emerald-400 to-teal-400',
+      stats: 'Attendance Tracking',
+      action: 'View Attendance',
+      route: '/admin/attendance'
     },
     {
       id: 'settings',

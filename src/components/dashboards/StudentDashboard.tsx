@@ -41,7 +41,9 @@ import {
   GraduationCap,
   Monitor,
   Quote,
-  Gamepad2
+  Gamepad2,
+  Image,
+  Video
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { AccountVerificationForm } from "@/components/auth/AccountVerificationForm";
@@ -197,16 +199,6 @@ export function StudentDashboard() {
       route: '/student/duty-rota'
     },
     {
-      id: 'attendance',
-      title: 'Attendance',
-      description: 'Track your presence streak!',
-      icon: UserCheck,
-      color: 'from-teal-400 to-green-400',
-      stats: '92% This Month',
-      action: 'Check Record',
-      route: '/student/attendance'
-    },
-    {
       id: 'hall-of-fame',
       title: 'Hall of Fame',
       description: 'See the amazing achievers!',
@@ -217,6 +209,17 @@ export function StudentDashboard() {
       route: '/student/hall-of-fame'
     },
     {
+      id: 'entertainment',
+      title: 'Entertainment Hub',
+      description: 'Games, Gallery & Videos - all in one place!',
+      icon: Sparkles,
+      color: 'from-purple-500 via-pink-500 to-orange-500',
+      stats: 'Fun Zone 🎉',
+      action: 'Explore Now',
+      route: '/student/entertainment',
+      isHighlight: true
+    },
+    {
       id: 'games',
       title: 'Educational Games',
       description: 'Learn while having fun!',
@@ -225,6 +228,26 @@ export function StudentDashboard() {
       stats: '12 New Games',
       action: 'Play Now',
       route: '/student/games'
+    },
+    {
+      id: 'gallery',
+      title: 'Gallery',
+      description: 'Browse amazing photos & memories',
+      icon: Image,
+      color: 'from-pink-400 to-rose-400',
+      stats: 'Latest Updates',
+      action: 'View Gallery',
+      route: '/student/gallery'
+    },
+    {
+      id: 'e-learning',
+      title: 'E-Learning',
+      description: 'Watch educational videos & tutorials',
+      icon: Video,
+      color: 'from-red-400 to-orange-400',
+      stats: '100+ Videos',
+      action: 'Watch Videos',
+      route: '/student/e-learning'
     },
     {
       id: 'library',
