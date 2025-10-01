@@ -17,7 +17,8 @@ import {
   ArrowRight,
   Loader2,
   ChevronRight,
-  ClipboardList
+  ClipboardList,
+  Film
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
@@ -224,6 +225,15 @@ export default function AdminDashboard() {
       color: 'from-pink-400 to-rose-400',
       route: '/admin/duty-rota',
       stats: 'Rotations'
+    },
+    {
+      id: 'entertainment',
+      title: 'Entertainment',
+      description: 'Manage entertainment content and events',
+      icon: Film,
+      color: 'from-amber-400 to-yellow-400',
+      route: '/admin/entertainment',
+      stats: 'Media'
     },
     {
       id: 'settings',

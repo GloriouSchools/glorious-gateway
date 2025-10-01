@@ -209,17 +209,6 @@ export function StudentDashboard() {
       route: '/student/hall-of-fame'
     },
     {
-      id: 'entertainment',
-      title: 'Entertainment Hub',
-      description: 'Games, Gallery & Videos - all in one place!',
-      icon: Sparkles,
-      color: 'from-purple-500 via-pink-500 to-orange-500',
-      stats: 'Fun Zone 🎉',
-      action: 'Explore Now',
-      route: '/student/entertainment',
-      isHighlight: true
-    },
-    {
       id: 'games',
       title: 'Educational Games',
       description: 'Learn while having fun!',

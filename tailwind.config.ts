@@ -20,8 +20,6 @@ export default {
 		extend: {
 			fontFamily: {
 				'century-gothic': ['"Century Gothic"', '"Gothic A1"', 'sans-serif'],
-				'merriweather': ['Merriweather', 'serif'],
-				'inter': ['Inter', 'sans-serif'],
 			},
 			fontSize: {
 				'application': ['14px', '1.4'],

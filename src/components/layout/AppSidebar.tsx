@@ -24,7 +24,8 @@ import {
   CalendarClock,
   Image,
   Package,
-  Video
+  Video,
+  Film
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -67,7 +68,6 @@ export function AppSidebar({ userRole, userName, photoUrl, onLogout }: AppSideba
           { title: "Assignments", icon: ClipboardList, url: "/student/assignments" },
           { title: "My Grades", icon: Award, url: "/student/grades" },
           { title: "Timetable", icon: Clock, url: "/student/timetable" },
-          { title: "Entertainment", icon: Gamepad2, url: "/student/entertainment" },
           { title: "Elections", icon: Vote, url: "/student/electoral" },
           { title: "Hall of Fame", icon: Trophy, url: "/student/hall-of-fame" },
           { title: "Games", icon: Gamepad2, url: "/student/games" },
@@ -103,6 +103,7 @@ export function AppSidebar({ userRole, userName, photoUrl, onLogout }: AppSideba
           { title: "Timetable", icon: Clock, url: "/admin/timetable" },
           { title: "Duty Rota", icon: CalendarClock, url: "/admin/duty-rota" },
           { title: "Electoral", icon: Vote, url: "/admin/electoral" },
+          { title: "Entertainment", icon: Film, url: "/admin/entertainment" },
           { title: "Gallery", icon: Image, url: "/admin/gallery" },
           { title: "E-Learning", icon: Video, url: "/admin/e-learning" },
           { title: "Stock Management", icon: Package, url: "/admin/stock" },
