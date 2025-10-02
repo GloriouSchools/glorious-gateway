@@ -1,25 +1,7 @@
 import { Movie } from "@/types/movie";
 
 export const movieData: Movie[] = [
-
-    {
-            "title": "Sperm's Journey to the Egg",
-            "year": 2001,
-            "cast": [
-                "Eddie Murphy",
-                "Raven-Symon\u00e9",
-                "Kevin Pollak"
-            ],
-            "genres": [
-                "Comedy",
-                "Fantasy"
-            ],
-            "href": "https://gloriouschools.vercel.app/How Fertilization happens - 3D Animation.mp4",
-            "extract": "Dr. Dolittle 2 is a 2001 American fantasy comedy film and a sequel to the 1998 film Dr. Dolittle. It was written by Larry Levin, one of the co-writers of Dr. Dolittle, and directed by Steve Carr. The film stars Eddie Murphy in the main role, Kristen Wilson, Jeffrey Jones, and Kevin Pollak.",
-            "thumbnail": "https://gloriouschools.vercel.app/pregnant.png",
-            "thumbnail_width": 236,
-            "thumbnail_height": 350
-        },   {
+ {
             "title": "Dr. Dolittle 2",
             "year": 2001,
             "cast": [
@@ -33,7 +15,7 @@ export const movieData: Movie[] = [
             ],
             "href": "https://mobifliks.info/downloadmp4.php?file=luganda/Dr.%20Dolittle%202%20by%20Vj%20Emmy%20-%20Mobifliks.com.mp4",
             "extract": "Dr. Dolittle 2 is a 2001 American fantasy comedy film and a sequel to the 1998 film Dr. Dolittle. It was written by Larry Levin, one of the co-writers of Dr. Dolittle, and directed by Steve Carr. The film stars Eddie Murphy in the main role, Kristen Wilson, Jeffrey Jones, and Kevin Pollak.",
-            "thumbnail": "thumbnails/Dr_dolittle_two_ver2.jpg",
+            "thumbnail": "src/assets/thumbnails/Dr_dolittle_two_ver2.jpg",
             "thumbnail_width": 236,
             "thumbnail_height": 350
         },
@@ -51,7 +33,7 @@ export const movieData: Movie[] = [
             ],
             "href": "https://mobifliks.info/downloadmp4.php?file=luganda/Dr%20Dolittle%203%20by%20Vj%20Emmy%20-%20Mobifliks.com.mp4",
             "extract": "Dr. Dolittle 3 is a 2001 American fantasy comedy film and a sequel to the 1998 film Dr. Dolittle. It was written by Larry Levin, one of the co-writers of Dr. Dolittle, and directed by Steve Carr. The film stars Eddie Murphy in the main role, Kristen Wilson, Jeffrey Jones, and Kevin Pollak.",
-            "thumbnail": "thumbnails/Dr_dolittle_two_ver2.jpg",
+            "thumbnail": "src/assets/thumbnails/Dr_dolittle_two_ver2.jpg",
             "thumbnail_width": 236,
             "thumbnail_height": 350
         },
@@ -68,7 +50,7 @@ export const movieData: Movie[] = [
             ],
             "href": "https://mobifliks.info/downloadmp4.php?file=luganda/Green%20Dragon%20Crescent%20Blade%20by%20Vj%20Ice%20P%20-%20Mobifliks.com.mp4",
             "extract": "Green Dragon is a 2001 American drama film directed by Timothy Linh Bui and starring Patrick Swayze, Forest Whitaker and Duong Don.",
-            "thumbnail": "thumbnails/Green-dragon-movie.jpg",
+            "thumbnail": "src/assets/thumbnails/Green-dragon-movie.jpg",
             "thumbnail_width": 263,
             "thumbnail_height": 378
         },
@@ -90,7 +72,7 @@ export const movieData: Movie[] = [
             ],
             "href": "https://mobifliks.info/downloadmp4.php?file=luganda/Heist%20by%20Vj%20Junior%20-%20Mobifliks.com.mp4",
             "extract": "Heist is a 2001 American heist film written and directed by David Mamet and starring Gene Hackman, Danny DeVito and Delroy Lindo, with Rebecca Pidgeon, Ricky Jay and Sam Rockwell in supporting roles.",
-            "thumbnail": "thumbnails/Heist_282001_movie_poster29.jpg",
+            "thumbnail": "src/assets/thumbnails/Heist_282001_movie_poster29.jpg",
             "thumbnail_width": 260,
             "thumbnail_height": 384
         },
@@ -107,7 +89,7 @@ export const movieData: Movie[] = [
             ],
             "href": "https://mobifliks.info/downloadmp4.php?file=luganda/I%20Am%20Sam%20by%20Vj%20Junior%20-%20Mobifliks.com.mp4",
             "extract": "I Am Sam is a 2001 American drama film co-written and directed by Jessie Nelson, and starring Sean Penn as a father with an intellectual disability, Dakota Fanning as his bright and inquisitive daughter, and Michelle Pfeiffer as his lawyer. Dianne Wiest, Loretta Devine, Richard Schiff, and Laura Dern appear in supporting roles.",
-            "thumbnail": "thumbnails/ImAmSamSeanMichelle.jpg",
+            "thumbnail": "src/assets/thumbnails/ImAmSamSeanMichelle.jpg",
             "thumbnail_width": 258,
             "thumbnail_height": 386
         },
@@ -135,7 +117,7 @@ export const movieData: Movie[] = [
             ],
             "href": "https://mobifliks.info/downloadmp4.php?file=luganda/Oceans%20Eleven%20by%20Vj%20Tom%20-%20Mobifliks.com.mp4",
             "extract": "Ocean's Eleven is a 2001 American heist comedy film directed by Steven Soderbergh from a screenplay by Ted Griffin. The first installment in the Ocean's film trilogy, it is a remake of the 1960 Rat Pack film of the same name. The film features an ensemble cast including George Clooney, Matt Damon, Andy Garc\u00eda, Brad Pitt, Julia Roberts, Casey Affleck, Scott Caan, Elliott Gould, Bernie Mac, Qin Shaobo, and Carl Reiner. The story follows friends Danny Ocean (Clooney) and Rusty Ryan (Pitt), who plan a heist of $160\u00a0million from casino owner Terry Benedict (Garc\u00eda), the lover of Ocean's ex-wife Tess (Roberts).",
-            "thumbnail": "thumbnails/Ocean27s_Eleven_2001_Poster.jpg",
+            "thumbnail": "src/assets/thumbnails/Ocean27s_Eleven_2001_Poster.jpg",
             "thumbnail_width": 220,
             "thumbnail_height": 326
         },
@@ -152,7 +134,7 @@ export const movieData: Movie[] = [
             ],
             "href": "https://mobifliks.info/downloadmp4.php?file=luganda/Out%20Cold%20by%20Vj%20Emmy%20-%20Mobifliks.com.mp4",
             "extract": "Out Cold is a 2001 American comedy film directed by the music video sibling directing team The Malloys. Starring Jason London, Willie Garson and Lee Majors, the film is about a group of snowboarders in Alaska. It presents itself as a parody of 1990s \"ski school\" films and makes a number of references to the film Casablanca. A number of elements of the latter, including plot and famous lines, were incorporated into the film.",
-            "thumbnail": "thumbnails/Out_cold_poster.jpg",
+            "thumbnail": "src/assets/thumbnails/Out_cold_poster.jpg",
             "thumbnail_width": 259,
             "thumbnail_height": 384
         },
@@ -173,7 +155,7 @@ export const movieData: Movie[] = [
             ],
             "href": "https://mobifliks.info/downloadmp4.php?file=luo/2%20Rats%20-%20Luo%20Translated%20-%20Mobifliks.com.mp4",
             "extract": "Rat Race is a 2001 American comedy film directed by Jerry Zucker. Inspired by Stanley Kramer's 1963 film It's a Mad, Mad, Mad, Mad World, the film features an ensemble cast consisting of Rowan Atkinson, Whoopi Goldberg, Cuba Gooding Jr., Wayne Knight, Jon Lovitz, Kathy Najimy, Lanei Chapman, Breckin Meyer, Amy Smart, Seth Green, Vince Vieluf, John Cleese and Dave Thomas.",
-            "thumbnail": "thumbnails/Rat_Race_poster.jpg",
+            "thumbnail": "src/assets/thumbnails/Rat_Race_poster.jpg",
             "thumbnail_width": 259,
             "thumbnail_height": 385
         },
@@ -191,7 +173,7 @@ export const movieData: Movie[] = [
             ],
             "href": "https://mobifliks.info/downloadmp4.php?file=luganda/Sugar%20by%20Vj%20Junior%20-%20Mobifliks.com.mp4",
             "extract": "Sugar & Spice is a 2001 American teen black comedy film directed by Francine McDougall and starring Marley Shelton, Marla Sokoloff and Mena Suvari. The plot follows a group of high school cheerleaders who conspire and commit armed robbery when one of them becomes pregnant and desperate for money.",
-            "thumbnail": "thumbnails/Movie_sugar_and_spice_poster.jpg",
+            "thumbnail": "src/assets/thumbnails/Movie_sugar_and_spice_poster.jpg",
             "thumbnail_width": 220,
             "thumbnail_height": 328
         },
@@ -210,7 +192,7 @@ export const movieData: Movie[] = [
             ],
             "href": "https://mobifliks.info/downloadmp4.php?file=luganda/Valentine%20-%20VJ%20Emmy%20-%20Luganda.mp4",
             "extract": "Valentine is a 2001 slasher film directed by Jamie Blanks and starring Denise Richards, David Boreanaz, Marley Shelton, Jessica Capshaw, and Katherine Heigl. Loosely based on the novel of the same name by Tom Savage, the film follows a group of women in San Francisco who are stalked by a killer wearing a Cupid mask in the days leading up to Valentine's Day.",
-            "thumbnail": "thumbnails/Valentine_film.jpg",
+            "thumbnail": "src/assets/thumbnails/Valentine_film.jpg",
             "thumbnail_width": 255,
             "thumbnail_height": 377
         },
@@ -230,7 +212,7 @@ export const movieData: Movie[] = [
             ],
             "href": "https://mobifliks.info/downloadmp4.php?file=luganda/Birthday%20Girl%20by%20Vj%20Junior%20-%20Mobifliks.com.mp4",
             "extract": "Birthday Girl is a 2001 erotic comedy thriller film directed by Jez Butterworth. The plot focuses on English bank clerk John Buckingham, who orders a Russian mail-order bride, Nadia. It becomes clear upon her arrival that Nadia cannot speak English, and early into her stay, two mysterious men come to the house claiming to be her cousin and cousin's friend. The film features Nicole Kidman, Ben Chaplin, Mathieu Kassovitz, and Vincent Cassel. English and Russian are spoken interchangeably in the film.",
-            "thumbnail": "thumbnails/Birthday_Girl_28movie_poster29.jpg",
+            "thumbnail": "src/assets/thumbnails/Birthday_Girl_28movie_poster29.jpg",
             "thumbnail_width": 201,
             "thumbnail_height": 300
         },
@@ -249,7 +231,7 @@ export const movieData: Movie[] = [
             ],
             "href": "https://mobifliks.info/downloadmp4.php?file=luganda/Blade%20of%20the%2047%20Ronin%20by%20Vj%20Emmy%20-%20Mobifliks.com.mp4",
             "extract": "Blade II is a 2002 American superhero horror film directed by Guillermo del Toro and written by David S. Goyer, based on the Marvel Comics superhero Blade created by Marv Wolfman and Gene Colan. The film is the sequel to Blade (1998) and the second installment in the Blade trilogy. The plot follows the human-vampire hybrid Blade in his continuing effort to protect humans from vampires, finding himself in a fierce battle against a group of mutant vampires who seek to commit global genocide of both vampire and human races. Blade and his human allies are coerced into joining forces with a special elite group of vampires.",
-            "thumbnail": "thumbnails/Blade_II_movie.jpg",
+            "thumbnail": "src/assets/thumbnails/Blade_II_movie.jpg",
             "thumbnail_width": 250,
             "thumbnail_height": 317
         },
@@ -270,7 +252,7 @@ export const movieData: Movie[] = [
             ],
             "href": "https://mobifliks.info/downloadmp4.php?file=luganda/The%20Bourne%20Identity_VJ%20Junior%20-%20Mobifliks.com.mp4",
             "extract": "The Bourne Identity is a 2002 action-thriller film based on Robert Ludlum's 1980 novel. It was directed and co-produced by Doug Liman and written by Tony Gilroy and William Blake Herron. It stars Matt Damon as Jason Bourne, a man suffering from psychogenic amnesia attempting to discover his identity amidst a clandestine conspiracy within the CIA. It also features Franka Potente, Chris Cooper, Clive Owen, Brian Cox, Walton Goggins, and Adewale Akinnuoye-Agbaje. The first installment in the Bourne film series, it was followed by The Bourne Supremacy (2004), The Bourne Ultimatum (2007), The Bourne Legacy (2012), and Jason Bourne (2016).",
-            "thumbnail": "thumbnails/BourneIdentityfilm.jpg",
+            "thumbnail": "src/assets/thumbnails/BourneIdentityfilm.jpg",
             "thumbnail_width": 220,
             "thumbnail_height": 321
         },
@@ -289,7 +271,7 @@ export const movieData: Movie[] = [
             ],
             "href": "https://mobifliks.info/downloadmp4.php?file=luganda/Cabin%20Fever%20-%20VJ%20Junior%20-%20Mobifliks.mp4",
             "extract": "Cabin Fever is a 2002 American horror comedy film co-written and directed by Eli Roth and starring Rider Strong, Jordan Ladd, James DeBello, Cerina Vincent, Joey Kern, and Giuseppe Andrews. The story follows a group of college graduates who rent a cabin in the woods and begin to fall victim to a flesh-eating virus. The inspiration for the film's story came from a real-life experience during a trip to Iceland when Roth developed a skin infection.",
-            "thumbnail": "thumbnails/Movie_poster_cabin_fever.jpg",
+            "thumbnail": "src/assets/thumbnails/Movie_poster_cabin_fever.jpg",
             "thumbnail_width": 220,
             "thumbnail_height": 313
         },
@@ -308,7 +290,7 @@ export const movieData: Movie[] = [
             ],
             "href": "https://mobifliks.info/downloadmp4.php?file=luganda/Empire%20State%20by%20Vj%20Junior%20-%20Mobifliks.com.mp4",
             "extract": "Empire is a 2002 American gangster film written and directed by Franc. Reyes. It stars John Leguizamo, Peter Sarsgaard, Denise Richards, S\u00f4nia Braga, Isabella Rossellini, Fat Joe, and Treach. The film premiered at the 2002 Sundance Film Festival and was given a theatrical release on December 6, 2002.",
-            "thumbnail": "thumbnails/Empire_ver2.jpg",
+            "thumbnail": "src/assets/thumbnails/Empire_ver2.jpg",
             "thumbnail_width": 261,
             "thumbnail_height": 381
         },
@@ -328,7 +310,7 @@ export const movieData: Movie[] = [
             ],
             "href": "https://mobifliks.info/downloadmp4.php?file=luganda/Equilibrium%20by%20Vj%20Junior%20-%20Mobifliks.com.mp4",
             "extract": "Equilibrium is a 2002 American science fiction film written and directed by Kurt Wimmer, and starring Christian Bale, Emily Watson, and Taye Diggs.",
-            "thumbnail": "thumbnails/Equilibriumposter.jpg",
+            "thumbnail": "src/assets/thumbnails/Equilibriumposter.jpg",
             "thumbnail_width": 237,
             "thumbnail_height": 350
         },
@@ -346,7 +328,7 @@ export const movieData: Movie[] = [
             ],
             "href": "https://mobifliks.info/downloadmp4.php?file=luganda/Friday%20the%2013th%20by%20Vj%20Emmy%20-%20Mobifliks.com.mp4",
             "extract": "Friday the 13th is a 2002 American biographical drama film directed by Julie Taymor which depicts the professional and private life of the surrealist Mexican artist Frida Kahlo.",
-            "thumbnail": "thumbnails/Fridaposter.jpg",
+            "thumbnail": "src/assets/thumbnails/Fridaposter.jpg",
             "thumbnail_width": 262,
             "thumbnail_height": 380
         },
@@ -364,7 +346,7 @@ export const movieData: Movie[] = [
             ],
             "href": "https://mobifliks.info/downloadmp4.php?file=luganda/High%20Crimes%20-%20VJ%20Junior%20-%20Mobifliks.com.mp4",
             "extract": "High Crimes is a 2002 American legal thriller film directed by Carl Franklin and starring Ashley Judd and Morgan Freeman, reunited from the 1997 film Kiss the Girls. The screenplay by Yuri Zeltser and Grace Cary Bickley is based on Joseph Finder's 1998 novel of the same name.",
-            "thumbnail": "thumbnails/High_Crimes_poster.JPG.jpg",
+            "thumbnail": "src/assets/thumbnails/High_Crimes_poster.JPG.jpg",
             "thumbnail_width": 260,
             "thumbnail_height": 382
         },
@@ -384,7 +366,7 @@ export const movieData: Movie[] = [
             ],
             "href": "https://mobifliks.info/downloadmp4.php?file=luganda/Narco%20Soldiers_VJ%20Jingo%20-%20Mobifliks.com.mp4",
             "extract": "Narc is a 2002 American neo-noir crime thriller film directed and written by Joe Carnahan and starring Jason Patric and Ray Liotta. The plot revolves around the efforts of two police detectives in search of the murderer of an undercover police officer. As they investigate, they engage in unethical behavior and uncover dark secrets that will challenge their fragile relationship.",
-            "thumbnail": "thumbnails/Narc_Poster.jpg",
+            "thumbnail": "src/assets/thumbnails/Narc_Poster.jpg",
             "thumbnail_width": 237,
             "thumbnail_height": 350
         },
