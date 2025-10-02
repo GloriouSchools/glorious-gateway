@@ -37,7 +37,8 @@ import {
   FileText,
   Settings,
   Image,
-  Video
+  Video,
+  Film
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { AccountVerificationForm } from "@/components/auth/AccountVerificationForm";
@@ -221,6 +222,16 @@ export function TeacherDashboard() {
       stats: '100+ Videos',
       action: 'Manage Videos',
       route: '/teacher/e-learning'
+    },
+    {
+      id: 'entertainment',
+      title: 'Entertainment',
+      description: 'Browse movies & entertainment content',
+      icon: Film,
+      color: 'from-purple-400 to-indigo-400',
+      stats: '50+ Movies',
+      action: 'Browse Movies',
+      route: '/teacher/entertainment'
     },
     {
       id: 'messages',

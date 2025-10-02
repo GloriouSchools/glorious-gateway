@@ -43,7 +43,8 @@ import {
   Quote,
   Gamepad2,
   Image,
-  Video
+  Video,
+  Film
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { AccountVerificationForm } from "@/components/auth/AccountVerificationForm";
@@ -237,6 +238,16 @@ export function StudentDashboard() {
       stats: '100+ Videos',
       action: 'Watch Videos',
       route: '/student/e-learning'
+    },
+    {
+      id: 'entertainment',
+      title: 'Entertainment',
+      description: 'Watch movies & enjoy fun content',
+      icon: Film,
+      color: 'from-purple-400 to-indigo-400',
+      stats: '50+ Movies',
+      action: 'Browse Movies',
+      route: '/student/entertainment'
     },
     {
       id: 'library',

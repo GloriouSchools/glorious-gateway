@@ -42,7 +42,8 @@ import {
   Image,
   UserCheck,
   Package,
-  Video
+  Video,
+  Film
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { AccountVerificationForm } from "@/components/auth/AccountVerificationForm";
@@ -222,6 +223,16 @@ export function AdminDashboard() {
       stats: '100+ Educational Videos',
       action: 'Manage Videos',
       route: '/admin/e-learning'
+    },
+    {
+      id: 'entertainment',
+      title: 'Entertainment',
+      description: 'Browse movies & entertainment content',
+      icon: Film,
+      color: 'from-purple-400 to-indigo-400',
+      stats: '50+ Movies Available',
+      action: 'Browse Movies',
+      route: '/admin/entertainment'
     },
     {
       id: 'stock',

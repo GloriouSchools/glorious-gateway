@@ -3,7 +3,6 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { MovieModal } from "@/components/entertainment/MovieModal";
 import { HeroSection } from "@/components/entertainment/HeroSection";
 import { MovieRow } from "@/components/entertainment/MovieRow";
 import { Input } from "@/components/ui/input";
@@ -16,8 +15,6 @@ const Entertainment = () => {
   const navigate = useNavigate();
   
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Featured movie (first movie)
   const featuredMovie = movieData[0];
@@ -32,16 +29,26 @@ const Entertainment = () => {
     }
   };
 
-  // Group movies by genre
+  // Group movies by genre - optimized to only compute once
   const moviesByGenre = useMemo(() => {
     const grouped: Record<string, Movie[]> = {};
     
+    // Initialize empty arrays for each genre
     movieGenres.forEach(genre => {
-      grouped[genre] = movieData.filter(movie => movie.genres.includes(genre));
+      grouped[genre] = [];
+    });
+    
+    // Single pass through movies instead of filtering for each genre
+    movieData.forEach(movie => {
+      movie.genres.forEach(genre => {
+        if (grouped[genre]) {
+          grouped[genre].push(movie);
+        }
+      });
     });
     
     return grouped;
-  }, []);
+  }, []); // Empty deps since movieData and movieGenres are static
 
   // Search results
   const searchResults = useMemo(() => {
@@ -55,8 +62,9 @@ const Entertainment = () => {
   }, [searchQuery]);
 
   const handleMovieClick = (movie: Movie) => {
-    setSelectedMovie(movie);
-    setIsModalOpen(true);
+    const movieIndex = movieData.findIndex(m => m.title === movie.title);
+    const basePath = userRole === "admin" ? "/admin" : userRole === "teacher" ? "/teacher" : "/student";
+    navigate(`${basePath}/entertainment/${movieIndex}`);
   };
 
   return (
@@ -117,12 +125,12 @@ const Entertainment = () => {
                 onMovieClick={handleMovieClick}
               />
 
-              {movieGenres.map(genre => (
-                moviesByGenre[genre].length > 0 && (
+              {movieGenres.slice(0, 5).map(genre => (
+                moviesByGenre[genre]?.length > 0 && (
                   <MovieRow 
                     key={genre}
                     title={genre}
-                    movies={moviesByGenre[genre]}
+                    movies={moviesByGenre[genre].slice(0, 12)}
                     onMovieClick={handleMovieClick}
                   />
                 )
@@ -136,16 +144,6 @@ const Entertainment = () => {
             </div>
           </>
         )}
-
-        {/* Movie Modal */}
-        <MovieModal 
-          movie={selectedMovie}
-          open={isModalOpen}
-          onClose={() => {
-            setIsModalOpen(false);
-            setSelectedMovie(null);
-          }}
-        />
       </div>
     </DashboardLayout>
   );

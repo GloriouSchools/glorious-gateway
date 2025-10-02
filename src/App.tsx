@@ -54,6 +54,7 @@ import Games from "./pages/Games";
 import TypingWizard from "./pages/games/TypingWizard";
 import ELearning from "./pages/ELearning";
 import Entertainment from "./pages/Entertainment";
+import MovieDetail from "./pages/MovieDetail";
 
 const queryClient = new QueryClient();
 
@@ -177,6 +178,11 @@ const App = () => (
                   <Entertainment />
                 </ProtectedRoute>
               } />
+              <Route path="/student/entertainment/:movieId" element={
+                <ProtectedRoute>
+                  <MovieDetail />
+                </ProtectedRoute>
+              } />
               <Route path="/student/electoral" element={
                 <ProtectedRoute>
                   <RoleBasedRoute allowedRoles={["student"]}>
@@ -279,6 +285,11 @@ const App = () => (
               <Route path="/teacher/entertainment" element={
                 <ProtectedRoute>
                   <Entertainment />
+                </ProtectedRoute>
+              } />
+              <Route path="/teacher/entertainment/:movieId" element={
+                <ProtectedRoute>
+                  <MovieDetail />
                 </ProtectedRoute>
               } />
 
@@ -390,6 +401,13 @@ const App = () => (
                 <ProtectedRoute>
                   <RoleBasedRoute allowedRoles={["admin"]}>
                     <Entertainment />
+                  </RoleBasedRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/entertainment/:movieId" element={
+                <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={["admin"]}>
+                    <MovieDetail />
                   </RoleBasedRoute>
                 </ProtectedRoute>
               } />
