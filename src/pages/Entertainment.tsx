@@ -16,8 +16,18 @@ const Entertainment = () => {
   
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Featured movie (first movie)
-  const featuredMovie = movieData[0];
+  // Shuffle movies on component mount for random display
+  const shuffledMovies = useMemo(() => {
+    const shuffled = [...movieData];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  }, []);
+
+  // Featured movie (random movie)
+  const featuredMovie = shuffledMovies[0];
 
   const handleLogout = async () => {
     try {
@@ -29,7 +39,7 @@ const Entertainment = () => {
     }
   };
 
-  // Group movies by genre - optimized to only compute once
+  // Group movies by genre using shuffled data
   const moviesByGenre = useMemo(() => {
     const grouped: Record<string, Movie[]> = {};
     
@@ -38,8 +48,8 @@ const Entertainment = () => {
       grouped[genre] = [];
     });
     
-    // Single pass through movies instead of filtering for each genre
-    movieData.forEach(movie => {
+    // Use shuffled movies for genre grouping
+    shuffledMovies.forEach(movie => {
       movie.genres.forEach(genre => {
         if (grouped[genre]) {
           grouped[genre].push(movie);
@@ -47,8 +57,18 @@ const Entertainment = () => {
       });
     });
     
+    // Shuffle each genre's movies independently
+    Object.keys(grouped).forEach(genre => {
+      const genreMovies = [...grouped[genre]];
+      for (let i = genreMovies.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [genreMovies[i], genreMovies[j]] = [genreMovies[j], genreMovies[i]];
+      }
+      grouped[genre] = genreMovies;
+    });
+    
     return grouped;
-  }, []); // Empty deps since movieData and movieGenres are static
+  }, [shuffledMovies]);
 
   // Search results
   const searchResults = useMemo(() => {
@@ -121,7 +141,7 @@ const Entertainment = () => {
             <div className="space-y-4 sm:space-y-6 lg:space-y-8">
               <MovieRow 
                 title="Trending Now"
-                movies={movieData.slice(0, 10)}
+                movies={shuffledMovies.slice(0, 10)}
                 onMovieClick={handleMovieClick}
               />
 
@@ -138,7 +158,7 @@ const Entertainment = () => {
 
               <MovieRow 
                 title="Popular Picks"
-                movies={movieData.slice().reverse().slice(0, 10)}
+                movies={shuffledMovies.slice(10, 20)}
                 onMovieClick={handleMovieClick}
               />
             </div>
