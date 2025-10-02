@@ -1,25 +1,7 @@
 import { Movie } from "@/types/movie";
 
 export const movieData: Movie[] = [
-
-    {
-            "title": "Sperm's Journey to the Egg",
-            "year": 2001,
-            "cast": [
-                "Eddie Murphy",
-                "Raven-Symon\u00e9",
-                "Kevin Pollak"
-            ],
-            "genres": [
-                "Comedy",
-                "Fantasy"
-            ],
-            "href": "https://gloriouschools.vercel.app/How Fertilization happens - 3D Animation.mp4",
-            "extract": "Dr. Dolittle 2 is a 2001 American fantasy comedy film and a sequel to the 1998 film Dr. Dolittle. It was written by Larry Levin, one of the co-writers of Dr. Dolittle, and directed by Steve Carr. The film stars Eddie Murphy in the main role, Kristen Wilson, Jeffrey Jones, and Kevin Pollak.",
-            "thumbnail": "https://gloriouschools.vercel.app/pregnant.png",
-            "thumbnail_width": 236,
-            "thumbnail_height": 350
-        },   {
+  {
             "title": "Dr. Dolittle 2",
             "year": 2001,
             "cast": [
