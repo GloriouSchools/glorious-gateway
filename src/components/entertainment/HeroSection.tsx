@@ -13,7 +13,7 @@ export function HeroSection({ movie, onPlay }: HeroSectionProps) {
       {/* Background Image */}
       <div className="absolute inset-0">
         <img 
-          src={movie.thumbnail}
+          src={movie.thumbnail.startsWith('src/') ? `/${movie.thumbnail}` : movie.thumbnail}
           alt={movie.title}
           className="w-full h-full object-cover"
         />

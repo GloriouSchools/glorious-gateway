@@ -28,7 +28,7 @@ export function MovieCard({ movie, onClick }: MovieCardProps) {
       {/* Thumbnail with Play Overlay */}
       <div className="relative w-full pt-[150%] bg-muted">
         <img 
-          src={movie.thumbnail}
+          src={movie.thumbnail.startsWith('src/') ? `/${movie.thumbnail}` : movie.thumbnail}
           alt={movie.title}
           className="absolute top-0 left-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
           loading="lazy"
