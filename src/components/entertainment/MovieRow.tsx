@@ -42,13 +42,7 @@ export const MovieRow = memo(function MovieRow({ title, movies, onMovieClick }: 
     if (!scrollRef.current || !isVisible) return;
     
     const checkScroll = () => {
-      if (!scrollRef.current) return;
-      
-      const element = scrollRef.current;
-      const hasHorizontalScroll = element.scrollWidth > element.clientWidth;
-      
-      setCanScrollLeft(element.scrollLeft > 0);
-      setCanScrollRight(hasHorizontalScroll && element.scrollLeft < element.scrollWidth - element.clientWidth - 10);
+      handleScroll();
     };
     
     // Check immediately
@@ -56,13 +50,8 @@ export const MovieRow = memo(function MovieRow({ title, movies, onMovieClick }: 
     
     // Check after images might have loaded
     const timer = setTimeout(checkScroll, 100);
-    // Check again after a longer delay to ensure images are fully loaded
-    const timer2 = setTimeout(checkScroll, 500);
     
-    return () => {
-      clearTimeout(timer);
-      clearTimeout(timer2);
-    };
+    return () => clearTimeout(timer);
   }, [isVisible, movies]);
 
   const scroll = (direction: 'left' | 'right') => {

@@ -73,6 +73,7 @@ export function AppSidebar({ userRole, userName, photoUrl, onLogout }: AppSideba
           { title: "Games", icon: Gamepad2, url: "/student/games" },
           { title: "Gallery", icon: Image, url: "/student/gallery" },
           { title: "E-Learning", icon: Video, url: "/student/e-learning" },
+          { title: "Events", icon: Film, url: "/student/events" },
           { title: "Library", icon: Library, url: "/student/library" },
           { title: "Communication", icon: MessageSquare, url: "/student/communication" },
           { title: "Help & Support", icon: HelpCircle, url: "/student/help" },
@@ -90,6 +91,7 @@ export function AppSidebar({ userRole, userName, photoUrl, onLogout }: AppSideba
           { title: "Attendance", icon: UserCheck, url: "/teacher/attendance" },
           { title: "Gallery", icon: Image, url: "/teacher/gallery" },
           { title: "E-Learning", icon: Video, url: "/teacher/e-learning" },
+          { title: "Events", icon: Film, url: "/teacher/events" },
           { title: "Messages", icon: MessageSquare, url: "/teacher/messages" },
           { title: "Reports", icon: FileText, url: "/teacher/reports" },
         ];
@@ -106,6 +108,7 @@ export function AppSidebar({ userRole, userName, photoUrl, onLogout }: AppSideba
           { title: "Entertainment", icon: Film, url: "/admin/entertainment" },
           { title: "Gallery", icon: Image, url: "/admin/gallery" },
           { title: "E-Learning", icon: Video, url: "/admin/e-learning" },
+          { title: "Events", icon: Film, url: "/admin/events" },
           { title: "Stock Management", icon: Package, url: "/admin/stock" },
           { title: "Analytics", icon: BarChart3, url: "/admin/analytics" },
           { title: "Finance", icon: DollarSign, url: "/admin/finance" },

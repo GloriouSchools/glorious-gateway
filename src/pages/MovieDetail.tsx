@@ -27,12 +27,10 @@ const MovieDetail = () => {
   const recommendedMovies = useMemo(() => {
     if (!movie) return [];
     const currentSlug = movieTitleToSlug(movie.title);
-    const restrictedGenres = ['Romance', 'Erotic', 'Adult'];
-    // Get movies that share at least one genre with current movie, excluding restricted genres
+    // Get movies that share at least one genre with current movie
     const matches = movieData.filter(
       (m) =>
         m.genres.some(genre => movie.genres.includes(genre)) &&
-        !m.genres.some(genre => restrictedGenres.includes(genre)) &&
         movieTitleToSlug(m.title) !== currentSlug
     );
     // Shuffle and return
@@ -40,18 +38,12 @@ const MovieDetail = () => {
   }, [movie, movieId]);
 
   const moviesByGenre = useMemo(() => {
-    const restrictedGenres = ['Romance', 'Erotic', 'Adult'];
     const grouped: Record<string, Movie[]> = {};
-    movieGenres
-      .filter(genre => !restrictedGenres.includes(genre))
-      .forEach(genre => {
-        const genreMovies = movieData.filter(m => 
-          m.genres.includes(genre) && 
-          !m.genres.some(g => restrictedGenres.includes(g))
-        );
-        // Shuffle movies within each genre
-        grouped[genre] = genreMovies.sort(() => Math.random() - 0.5).slice(0, 15);
-      });
+    movieGenres.forEach(genre => {
+      const genreMovies = movieData.filter(m => m.genres.includes(genre));
+      // Shuffle movies within each genre
+      grouped[genre] = genreMovies.sort(() => Math.random() - 0.5).slice(0, 15);
+    });
     return grouped;
   }, []);
 

@@ -53,6 +53,7 @@ import Library from "./pages/Library";
 import Games from "./pages/Games";
 import TypingWizard from "./pages/games/TypingWizard";
 import ELearning from "./pages/ELearning";
+import Events from "./pages/Events";
 import Entertainment from "./pages/Entertainment";
 import MovieDetail from "./pages/MovieDetail";
 
@@ -173,6 +174,11 @@ const App = () => (
                   <ELearning />
                 </ProtectedRoute>
               } />
+              <Route path="/student/events" element={
+                <ProtectedRoute>
+                  <Events />
+                </ProtectedRoute>
+              } />
               <Route path="/student/entertainment" element={
                 <ProtectedRoute>
                   <Entertainment />
@@ -280,6 +286,11 @@ const App = () => (
               <Route path="/teacher/e-learning" element={
                 <ProtectedRoute>
                   <ELearning />
+                </ProtectedRoute>
+              } />
+              <Route path="/teacher/events" element={
+                <ProtectedRoute>
+                  <Events />
                 </ProtectedRoute>
               } />
               <Route path="/teacher/entertainment" element={
@@ -394,6 +405,13 @@ const App = () => (
                 <ProtectedRoute>
                   <RoleBasedRoute allowedRoles={["admin"]}>
                     <ELearning />
+                  </RoleBasedRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/events" element={
+                <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={["admin"]}>
+                    <Events />
                   </RoleBasedRoute>
                 </ProtectedRoute>
               } />

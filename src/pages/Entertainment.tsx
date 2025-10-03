@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
@@ -27,7 +27,6 @@ const Entertainment = () => {
   const [selectedGenre, setSelectedGenre] = useState<string>("all");
   const [selectedYear, setSelectedYear] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
-  const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
 
   // Get unique years from movie data
   const availableYears = useMemo(() => {
@@ -35,7 +34,7 @@ const Entertainment = () => {
     return years;
   }, []);
 
-  // Shuffle movies once and cache with session storage (excluding restricted genres)
+  // Shuffle movies once and cache with session storage
   const shuffledMovies = useMemo(() => {
     const cacheKey = 'shuffled-movies-cache';
     const cached = sessionStorage.getItem(cacheKey);
@@ -48,12 +47,7 @@ const Entertainment = () => {
       }
     }
     
-    const restrictedGenres = ['Romance', 'Erotic', 'Adult'];
-    const allowedMovies = movieData.filter(movie => 
-      !movie.genres.some(genre => restrictedGenres.includes(genre))
-    );
-    
-    const shuffled = [...allowedMovies];
+    const shuffled = [...movieData];
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
@@ -63,24 +57,8 @@ const Entertainment = () => {
     return shuffled;
   }, []);
 
-  // Featured movies (5 random animated movies)
-  const featuredMovies = useMemo(() => {
-    const animatedMovies = shuffledMovies.filter(movie => movie.genres.includes('Animated'));
-    return animatedMovies.slice(0, 5);
-  }, [shuffledMovies]);
-
-  // Auto-rotate hero movies every 5 seconds
-  useEffect(() => {
-    if (featuredMovies.length === 0) return;
-    
-    const interval = setInterval(() => {
-      setCurrentHeroIndex((prev) => (prev + 1) % featuredMovies.length);
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [featuredMovies.length]);
-
-  const featuredMovie = featuredMovies[currentHeroIndex] || shuffledMovies[0];
+  // Featured movie (random movie)
+  const featuredMovie = shuffledMovies[0];
 
   const handleLogout = async () => {
     try {
@@ -92,9 +70,12 @@ const Entertainment = () => {
     }
   };
 
-  // Filter movies based on selected filters (already excludes Romance/Erotic from shuffledMovies)
+  // Filter movies based on selected filters and exclude Romance/Erotic content
   const filteredMovies = useMemo(() => {
-    let filtered = shuffledMovies;
+    const restrictedGenres = ['Romance', 'Erotic', 'Adult'];
+    let filtered = shuffledMovies.filter(movie => 
+      !movie.genres.some(genre => restrictedGenres.includes(genre))
+    );
     
     if (selectedGenre !== "all") {
       filtered = filtered.filter(movie => movie.genres.includes(selectedGenre));
@@ -107,28 +88,17 @@ const Entertainment = () => {
     return filtered;
   }, [shuffledMovies, selectedGenre, selectedYear]);
 
-  // Animated movies
+  // Animated and You May Also Like sections
   const animationMovies = useMemo(() => {
     return filteredMovies.filter(movie => movie.genres.includes('Animated')).slice(0, 15);
   }, [filteredMovies]);
 
   const randomMixedMovies = useMemo(() => {
+    const restrictedGenres = ['Romance', 'Erotic', 'Adult', 'Animated'];
     return filteredMovies
-      .filter(movie => !movie.genres.includes('Animated'))
+      .filter(movie => !movie.genres.some(genre => restrictedGenres.includes(genre)))
       .slice(0, 15);
   }, [filteredMovies]);
-
-  const peopleAlsoWatched = useMemo(() => {
-    return shuffledMovies.slice(15, 30);
-  }, [shuffledMovies]);
-
-  const trendingNow = useMemo(() => {
-    return shuffledMovies.slice(30, 45);
-  }, [shuffledMovies]);
-
-  const suggestedForYou = useMemo(() => {
-    return shuffledMovies.slice(45, 60);
-  }, [shuffledMovies]);
 
   // All movies organized by genre (excluding restricted genres)
   const moviesByGenre = useMemo(() => {
@@ -153,18 +123,15 @@ const Entertainment = () => {
 
   const hasActiveFilters = selectedGenre !== "all" || selectedYear !== "all";
 
-  // Search results (excluding restricted genres)
+  // Search results
   const searchResults = useMemo(() => {
     if (!searchQuery) return null;
     
-    const restrictedGenres = ['Romance', 'Erotic', 'Adult'];
-    return movieData
-      .filter(movie => !movie.genres.some(genre => restrictedGenres.includes(genre)))
-      .filter(movie =>
-        movie.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        movie.genres.some(genre => genre.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        movie.cast.some(actor => actor.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
+    return movieData.filter(movie =>
+      movie.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      movie.genres.some(genre => genre.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      movie.cast.some(actor => actor.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
   }, [searchQuery]);
 
   const handleMovieClick = (movie: Movie) => {
@@ -274,10 +241,8 @@ const Entertainment = () => {
           <>
             {/* Hero Section */}
             <HeroSection 
-              movies={featuredMovies}
-              currentIndex={currentHeroIndex}
+              movie={featuredMovie}
               onPlay={() => handleMovieClick(featuredMovie)}
-              onIndexChange={setCurrentHeroIndex}
             />
 
             {/* Movie Rows */}
@@ -296,33 +261,6 @@ const Entertainment = () => {
                 <MovieRow 
                   title="You May Also Like"
                   movies={randomMixedMovies}
-                  onMovieClick={handleMovieClick}
-                />
-              )}
-
-              {/* People Also Watched */}
-              {peopleAlsoWatched.length > 0 && (
-                <MovieRow 
-                  title="People Also Watched"
-                  movies={peopleAlsoWatched}
-                  onMovieClick={handleMovieClick}
-                />
-              )}
-
-              {/* Trending Now */}
-              {trendingNow.length > 0 && (
-                <MovieRow 
-                  title="Trending Now"
-                  movies={trendingNow}
-                  onMovieClick={handleMovieClick}
-                />
-              )}
-
-              {/* Suggested for You */}
-              {suggestedForYou.length > 0 && (
-                <MovieRow 
-                  title="Suggested for You"
-                  movies={suggestedForYou}
                   onMovieClick={handleMovieClick}
                 />
               )}
