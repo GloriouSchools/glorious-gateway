@@ -8,4 +8,5 @@ export interface Movie {
   thumbnail: string;
   thumbnail_width?: number;
   thumbnail_height?: number;
+  trailerUrl?: string;
 }

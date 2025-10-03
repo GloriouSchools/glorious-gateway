@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Play, ArrowLeft } from "lucide-react";
 import { Movie } from "@/types/movie";
 import { movieData, movieGenres } from "@/data/movieData";
+import { movieTitleToSlug, findMovieBySlug } from "@/utils/movieUtils";
 
 const MovieDetail = () => {
   const { movieId } = useParams<{ movieId: string }>();
@@ -19,30 +20,38 @@ const MovieDetail = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const movie = useMemo(() => {
-    return movieData.find((m, index) => index.toString() === movieId);
+    if (!movieId) return undefined;
+    return findMovieBySlug(movieId, movieData);
   }, [movieId]);
-
-  const relatedMovies = useMemo(() => {
-    if (!movie) return [];
-    return movieData.filter(
-      (m, index) =>
-        m.genres.some(genre => movie.genres.includes(genre)) &&
-        index.toString() !== movieId
-    ).slice(0, 12);
-  }, [movie, movieId]);
 
   const recommendedMovies = useMemo(() => {
     if (!movie) return [];
-    return movieData.filter(
-      (m, index) => index.toString() !== movieId
-    ).slice(0, 12);
+    const currentSlug = movieTitleToSlug(movie.title);
+    const restrictedGenres = ['Romance', 'Erotic', 'Adult'];
+    // Get movies that share at least one genre with current movie, excluding restricted genres
+    const matches = movieData.filter(
+      (m) =>
+        m.genres.some(genre => movie.genres.includes(genre)) &&
+        !m.genres.some(genre => restrictedGenres.includes(genre)) &&
+        movieTitleToSlug(m.title) !== currentSlug
+    );
+    // Shuffle and return
+    return matches.sort(() => Math.random() - 0.5).slice(0, 12);
   }, [movie, movieId]);
 
   const moviesByGenre = useMemo(() => {
+    const restrictedGenres = ['Romance', 'Erotic', 'Adult'];
     const grouped: Record<string, Movie[]> = {};
-    movieGenres.forEach(genre => {
-      grouped[genre] = movieData.filter(m => m.genres.includes(genre)).slice(0, 12);
-    });
+    movieGenres
+      .filter(genre => !restrictedGenres.includes(genre))
+      .forEach(genre => {
+        const genreMovies = movieData.filter(m => 
+          m.genres.includes(genre) && 
+          !m.genres.some(g => restrictedGenres.includes(g))
+        );
+        // Shuffle movies within each genre
+        grouped[genre] = genreMovies.sort(() => Math.random() - 0.5).slice(0, 15);
+      });
     return grouped;
   }, []);
 
@@ -57,9 +66,9 @@ const MovieDetail = () => {
   };
 
   const handleMovieClick = (clickedMovie: Movie) => {
-    const movieIndex = movieData.findIndex(m => m.title === clickedMovie.title);
+    const movieSlug = movieTitleToSlug(clickedMovie.title);
     const basePath = userRole === "admin" ? "/admin" : userRole === "teacher" ? "/teacher" : "/student";
-    navigate(`${basePath}/entertainment/${movieIndex}`);
+    navigate(`${basePath}/entertainment/${movieSlug}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -116,11 +125,11 @@ const MovieDetail = () => {
           <Card className="overflow-hidden border-0 shadow-xl">
             <div className="relative bg-gradient-to-br from-muted/50 to-background">
               <CardContent className="p-0">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 p-4 sm:p-6 lg:p-8">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 p-4 sm:p-6 lg:p-8">
                   
-                  {/* Poster Column */}
-                  <div className="lg:col-span-3 flex flex-col space-y-4">
-                    <div className="w-full max-w-[250px] mx-auto lg:max-w-none">
+                  {/* Left: Poster & Play Button */}
+                  <div className="lg:col-span-3 flex flex-col items-center lg:items-start gap-4">
+                    <div className="w-full max-w-[280px]">
                       <img 
                         src={movie.thumbnail}
                         alt={movie.title}
@@ -131,129 +140,82 @@ const MovieDetail = () => {
                       />
                     </div>
                     
-                    {/* Desktop CTA */}
-                    <div className="hidden lg:block">
-                      <Button 
-                        size="lg" 
-                        onClick={handlePlayMovie}
-                        className="w-full gap-2"
-                      >
-                        <Play className="w-4 h-4 fill-current" />
-                        Play Now
-                      </Button>
-                    </div>
+                    {/* Play Button */}
+                    <Button 
+                      size="lg" 
+                      onClick={handlePlayMovie}
+                      className="w-full max-w-[280px] gap-2"
+                    >
+                      <Play className="w-5 h-5 fill-current" />
+                      Play Movie
+                    </Button>
                   </div>
 
-                  {/* Content Column */}
-                  <div className="lg:col-span-9 space-y-4 sm:space-y-6">
-                    {/* Title & Meta */}
-                    <div className="space-y-3">
+                  {/* Right: Movie Details */}
+                  <div className="lg:col-span-9 space-y-6">
+                    {/* Title */}
+                    <div className="space-y-2">
                       <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground leading-tight">
                         {movie.title}
                       </h1>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
-                        <span className="font-semibold text-foreground">{movie.year}</span>
-                        <span>•</span>
-                        <span>{movie.genres.join(", ")}</span>
+                      {/* Year & Genres as compact labels */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="px-2 py-0.5 rounded text-xs font-medium bg-muted text-muted-foreground">
+                          {movie.year}
+                        </span>
+                        {movie.genres && movie.genres.length > 0 && (
+                          <>
+                            {movie.genres.map((genre) => (
+                              <span 
+                                key={genre}
+                                className="px-2 py-0.5 rounded text-xs font-medium bg-muted text-muted-foreground"
+                              >
+                                {genre}
+                              </span>
+                            ))}
+                          </>
+                        )}
                       </div>
                     </div>
 
-                    {/* Trailer Card */}
-                    <Card className="overflow-hidden border-2 border-border/50">
-                      <div 
-                        className="relative aspect-video bg-black cursor-pointer group"
-                        onClick={handlePlayMovie}
-                      >
-                        <img 
-                          src={movie.thumbnail}
-                          alt={`${movie.title} trailer`}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                        <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors" />
-                        
-                        {/* Play Button */}
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-primary flex items-center justify-center group-hover:scale-110 transition-transform shadow-2xl">
-                            <Play className="w-8 h-8 sm:w-10 sm:h-10 text-primary-foreground fill-current ml-1" />
-                          </div>
-                        </div>
+                    {/* The Story */}
+                    {movie.extract && (
+                      <div>
+                        <h2 className="text-xl font-bold text-foreground mb-3">The Story</h2>
+                        <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">
+                          {movie.extract}
+                        </p>
                       </div>
-                    </Card>
+                    )}
 
-                    {/* Mobile CTA */}
-                    <div className="lg:hidden">
-                      <Button 
-                        size="lg" 
-                        onClick={handlePlayMovie}
-                        className="w-full gap-2"
-                      >
-                        <Play className="w-5 h-5 fill-current" />
-                        Play Now
-                      </Button>
-                    </div>
+                    {/* Cast */}
+                    {movie.cast && movie.cast.length > 0 && (
+                      <div>
+                        <h3 className="text-lg font-bold text-foreground mb-2">Cast</h3>
+                        <p className="text-muted-foreground leading-relaxed text-sm">
+                          {movie.cast.join(", ")}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </CardContent>
             </div>
           </Card>
 
-          {/* Description Card */}
-          <Card>
-            <CardContent className="p-4 sm:p-6 lg:p-8 space-y-6">
-              <div>
-                <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-3">The Story</h2>
-                <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">
-                  {movie.extract}
-                </p>
-              </div>
-
-              {movie.cast && movie.cast.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-bold text-foreground mb-2">Cast</h3>
-                  <p className="text-muted-foreground leading-relaxed text-sm">
-                    {movie.cast.join(", ")}
-                  </p>
-                </div>
-              )}
-
-              <div>
-                <h3 className="text-lg font-bold text-foreground mb-2">Genres</h3>
-                <div className="flex flex-wrap gap-2">
-                  {movie.genres.map((genre) => (
-                    <span 
-                      key={genre}
-                      className="px-3 py-1.5 rounded-full bg-muted text-foreground text-xs sm:text-sm font-medium"
-                    >
-                      {genre}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Related Movies */}
-          {relatedMovies.length > 0 && (
+          {/* You May Also Like - Movies from same genres */}
+          {recommendedMovies.length > 0 && (
             <div>
               <MovieRow 
-                title="Related Movies"
-                movies={relatedMovies}
+                title="You May Also Like"
+                movies={recommendedMovies}
                 onMovieClick={handleMovieClick}
               />
             </div>
           )}
 
-          {/* Movies You May Like */}
-          <div>
-            <MovieRow 
-              title="Movies You May Like"
-              movies={recommendedMovies}
-              onMovieClick={handleMovieClick}
-            />
-          </div>
-
-          {/* Other Categories */}
-          {movieGenres.slice(0, 3).map(genre => (
+          {/* Genre Categories */}
+          {movieGenres.map(genre => (
             moviesByGenre[genre].length > 0 && (
               <div key={genre}>
                 <MovieRow 

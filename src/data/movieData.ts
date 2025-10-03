@@ -22806,7 +22806,7 @@ export const movieData: Movie[] = [
                 "JD Pardo"
             ],
             "genres": [
-                "Action", "Mystery", "Thriller"
+                "Action, Mystery, Thriller"
             ],
             "href": "https://mobifliks.info/downloadmp4.php?file=luganda/Hypnotic%202023%20by%20Vj%20Junior%20-%20Mobifliks.com.mp4",
             "extract": "A detective investigates a mystery involving his missing daughter and a secret government program.",
@@ -23456,7 +23456,7 @@ export const movieData: Movie[] = [
                 "Evan Ross"
             ],
             "genres": [
-                "Comedy", "Drama"
+                "Comedy, Drama"
             ],
             "href": "https://mobifliks.info/downloadmp4.php?file=luganda/She%20Ball%20by%20Vj%20Junior%20-%20Mobifliks.com.mp4",
             "extract": "The Kissing Booth 3 is a 2021 American teen romantic comedy film directed by Vince Marcello and written by Marcello and Jay Arnold. The third and final installment in The Kissing Booth trilogy based on Beth Reekles' novel of the same name, the film stars Joey King, Joel Courtney, Jacob Elordi, Taylor Zakhar Perez, Maisie Richardson-Sellers, Meganne Young and Molly Ringwald.",
