@@ -18,7 +18,12 @@ import {
   Loader2,
   ChevronRight,
   ClipboardList,
-  Film
+  Film,
+  Image,
+  Video,
+  Package,
+  DollarSign,
+  Library
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
@@ -227,13 +232,94 @@ export default function AdminDashboard() {
       stats: 'Rotations'
     },
     {
+      id: 'library',
+      title: 'Library',
+      description: 'Manage library resources and materials',
+      icon: Library,
+      color: 'from-amber-400 to-yellow-400',
+      route: '/admin/library',
+      stats: 'Resources'
+    },
+    {
       id: 'entertainment',
       title: 'Entertainment',
       description: 'Manage entertainment content and events',
       icon: Film,
-      color: 'from-amber-400 to-yellow-400',
+      color: 'from-violet-400 to-purple-400',
       route: '/admin/entertainment',
       stats: 'Media'
+    },
+    {
+      id: 'gallery',
+      title: 'Gallery',
+      description: 'Manage school photos and memories',
+      icon: Image,
+      color: 'from-pink-400 to-rose-400',
+      route: '/admin/gallery',
+      stats: 'Photos'
+    },
+    {
+      id: 'e-learning',
+      title: 'E-Learning',
+      description: 'Manage educational videos and resources',
+      icon: Video,
+      color: 'from-red-400 to-orange-400',
+      route: '/admin/e-learning',
+      stats: 'Videos'
+    },
+    {
+      id: 'events',
+      title: 'Events',
+      description: 'Manage school events and activities',
+      icon: Film,
+      color: 'from-purple-400 to-pink-400',
+      route: '/admin/events',
+      stats: 'Activities'
+    },
+    {
+      id: 'stock',
+      title: 'Stock Management',
+      description: 'Manage inventory and supplies',
+      icon: Package,
+      color: 'from-emerald-400 to-teal-400',
+      route: '/admin/stock',
+      stats: 'Inventory'
+    },
+    {
+      id: 'library',
+      title: 'Library',
+      description: 'Manage library resources and materials',
+      icon: Library,
+      color: 'from-amber-400 to-yellow-400',
+      route: '/admin/library',
+      stats: 'Resources'
+    },
+    {
+      id: 'analytics',
+      title: 'Analytics',
+      description: 'View performance metrics and insights',
+      icon: BarChart3,
+      color: 'from-blue-400 to-indigo-400',
+      route: '/admin/analytics',
+      stats: 'Insights'
+    },
+    {
+      id: 'finance',
+      title: 'Finance',
+      description: 'Manage school finances and payments',
+      icon: DollarSign,
+      color: 'from-green-400 to-emerald-400',
+      route: '/admin/finance',
+      stats: 'Financial'
+    },
+    {
+      id: 'reports',
+      title: 'Reports',
+      description: 'Generate and view system reports',
+      icon: FileText,
+      color: 'from-slate-400 to-gray-400',
+      route: '/admin/reports',
+      stats: 'Documents'
     },
     {
       id: 'settings',

@@ -352,6 +352,13 @@ const App = () => (
                   </RoleBasedRoute>
                 </ProtectedRoute>
               } />
+              <Route path="/admin/library" element={
+                <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={["admin"]}>
+                    <Library />
+                  </RoleBasedRoute>
+                </ProtectedRoute>
+              } />
               <Route path="/admin/stock" element={
                 <ProtectedRoute>
                   <RoleBasedRoute allowedRoles={["admin"]}>

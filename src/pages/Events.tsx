@@ -17,7 +17,6 @@ const Events = () => {
   
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [selectedYear, setSelectedYear] = useState("all");
   const [selectedEvent, setSelectedEvent] = useState<EventVideo | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -34,7 +33,6 @@ const Events = () => {
   };
 
   const categories = ["all", ...Object.keys(eventCategories)];
-  const years = ["all", ...Array.from(new Set(eventData.map(e => e.year))).sort().reverse()];
 
   const filteredEvents = useMemo(() => {
     let filtered = [...eventData];
@@ -50,12 +48,8 @@ const Events = () => {
       filtered = filtered.filter(event => event.category === selectedCategory);
     }
 
-    if (selectedYear !== "all") {
-      filtered = filtered.filter(event => event.year === selectedYear);
-    }
-
     return filtered;
-  }, [searchQuery, selectedCategory, selectedYear]);
+  }, [searchQuery, selectedCategory]);
 
   const totalPages = Math.ceil(filteredEvents.length / itemsPerPage);
   const paginatedEvents = useMemo(() => {
@@ -65,7 +59,7 @@ const Events = () => {
 
   useMemo(() => {
     setCurrentPage(1);
-  }, [searchQuery, selectedCategory, selectedYear, itemsPerPage]);
+  }, [searchQuery, selectedCategory, itemsPerPage]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -103,8 +97,8 @@ const Events = () => {
         </div>
 
         <div className="max-w-5xl mx-auto space-y-4">
-          <p className="text-center text-lg font-semibold text-foreground mb-4">Filter by:</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <p className="text-center text-lg font-semibold text-foreground mb-4">Filter by Category:</p>
+          <div className="max-w-md mx-auto">
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
               <SelectTrigger className="h-14 text-lg rounded-xl border-2 shadow-md">
                 <SelectValue placeholder="🎨 Pick a Category" />
@@ -117,27 +111,13 @@ const Events = () => {
                 ))}
               </SelectContent>
             </Select>
-
-            <Select value={selectedYear} onValueChange={setSelectedYear}>
-              <SelectTrigger className="h-14 text-lg rounded-xl border-2 shadow-md">
-                <SelectValue placeholder="📅 Pick a Year" />
-              </SelectTrigger>
-              <SelectContent className="text-base">
-                {years.map(year => (
-                  <SelectItem key={year} value={year} className="text-base py-3">
-                    {year === "all" ? "📅 All Years" : `📆 ${year}`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
           
-          {(selectedCategory !== "all" || selectedYear !== "all" || searchQuery) && (
+          {(selectedCategory !== "all" || searchQuery) && (
             <div className="text-center">
               <Button 
                 onClick={() => {
                   setSelectedCategory("all");
-                  setSelectedYear("all");
                   setSearchQuery("");
                   toast.success("Filters cleared!");
                 }}
@@ -151,7 +131,7 @@ const Events = () => {
           )}
         </div>
 
-        {(searchQuery || selectedCategory !== "all" || selectedYear !== "all") && (
+        {(searchQuery || selectedCategory !== "all") && (
           <div className="text-center">
             <div className="inline-block bg-primary/10 px-6 py-3 rounded-full border-2 border-primary/20">
               <p className="text-lg font-bold text-primary">
@@ -179,7 +159,6 @@ const Events = () => {
             <Button 
               onClick={() => {
                 setSelectedCategory("all");
-                setSelectedYear("all");
                 setSearchQuery("");
               }}
               size="lg"

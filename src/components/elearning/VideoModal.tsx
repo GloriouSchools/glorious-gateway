@@ -18,9 +18,6 @@ export function VideoModal({ video, open, onClose }: VideoModalProps) {
           <DialogTitle className="text-xl md:text-2xl font-bold pr-10 leading-relaxed">
             🎬 {video.title}
           </DialogTitle>
-          <p className="text-primary-foreground/80 text-base mt-2">
-            {video.category} • {video.class} • {video.topic}
-          </p>
         </DialogHeader>
         
         <div className="relative w-full pt-[56.25%] bg-black">

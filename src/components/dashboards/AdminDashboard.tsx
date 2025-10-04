@@ -22,7 +22,9 @@ import {
   Mail,
   Loader2,
   Layers,
-  Clock
+  Clock,
+  Film,
+  CalendarClock
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { AccountVerificationForm } from "@/components/auth/AccountVerificationForm";
@@ -216,6 +218,16 @@ export function AdminDashboard() {
       action: 'View Applications',
       route: '/admin/electoral-applications',
       isHighlight: electoralStats.pending > 0
+    },
+    {
+      id: 'events',
+      title: 'Events',
+      description: 'Manage school events and activities',
+      icon: CalendarClock,
+      color: 'from-purple-400 to-pink-400',
+      stats: 'Activities',
+      action: 'Manage Events',
+      route: '/admin/events'
     },
     {
       id: 'analytics',

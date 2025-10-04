@@ -44,7 +44,8 @@ import {
   Gamepad2,
   Image,
   Video,
-  Film
+  Film,
+  CalendarClock
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { AccountVerificationForm } from "@/components/auth/AccountVerificationForm";
@@ -244,10 +245,20 @@ export function StudentDashboard() {
       title: 'Entertainment',
       description: 'Watch movies & enjoy fun content',
       icon: Film,
-      color: 'from-purple-400 to-indigo-400',
+      color: 'from-amber-400 to-yellow-400',
       stats: '50+ Movies',
       action: 'Browse Movies',
       route: '/student/entertainment'
+    },
+    {
+      id: 'events',
+      title: 'Events',
+      description: 'Watch school events & activities',
+      icon: CalendarClock,
+      color: 'from-purple-400 to-indigo-400',
+      stats: 'Latest Events',
+      action: 'Browse Events',
+      route: '/student/events'
     },
     {
       id: 'library',

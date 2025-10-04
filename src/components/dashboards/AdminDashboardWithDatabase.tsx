@@ -43,7 +43,9 @@ import {
   UserCheck,
   Package,
   Video,
-  Film
+  Film,
+  CalendarClock,
+  Library
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { AccountVerificationForm } from "@/components/auth/AccountVerificationForm";
@@ -215,6 +217,16 @@ export function AdminDashboard() {
       route: '/admin/gallery'
     },
     {
+      id: 'library',
+      title: 'Library',
+      description: 'Manage library resources and materials',
+      icon: Library,
+      color: 'from-amber-400 to-yellow-400',
+      stats: 'Resources',
+      action: 'Manage Library',
+      route: '/admin/library'
+    },
+    {
       id: 'e-learning',
       title: 'E-Learning',
       description: 'Manage educational video content',
@@ -233,6 +245,16 @@ export function AdminDashboard() {
       stats: '50+ Movies Available',
       action: 'Browse Movies',
       route: '/admin/entertainment'
+    },
+    {
+      id: 'events',
+      title: 'Events',
+      description: 'Manage school events and activities',
+      icon: CalendarClock,
+      color: 'from-purple-400 to-pink-400',
+      stats: 'Activities',
+      action: 'Manage Events',
+      route: '/admin/events'
     },
     {
       id: 'stock',

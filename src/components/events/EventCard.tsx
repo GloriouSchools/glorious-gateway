@@ -1,5 +1,5 @@
 import { EventVideo } from "@/data/eventData";
-import { Play, Calendar } from "lucide-react";
+import { Play } from "lucide-react";
 
 interface EventCardProps {
   event: EventVideo;
@@ -35,10 +35,6 @@ export function EventCard({ event, onClick }: EventCardProps) {
             <Play className="w-10 h-10 text-primary fill-primary ml-1" />
           </div>
         </div>
-        <div className={`absolute -top-1 -right-1 bg-gradient-to-br ${gradientColor} text-white px-6 py-2 text-xs font-bold shadow-2xl transform rotate-3 origin-top-right`}>
-          <div className="absolute inset-0 bg-black/10"></div>
-          <span className="relative z-10">{event.category}</span>
-        </div>
       </div>
       
       <div className="p-5">
@@ -46,9 +42,8 @@ export function EventCard({ event, onClick }: EventCardProps) {
           {event.title}
         </h3>
         <div className="flex items-center gap-2">
-          <span className="px-3 py-2 bg-gradient-to-r from-primary/20 to-primary/10 rounded-lg text-sm font-semibold text-primary border border-primary/20 flex items-center gap-1">
-            <Calendar className="w-4 h-4" />
-            {event.year}
+          <span className={`px-3 py-2 bg-gradient-to-r ${gradientColor} text-white rounded-lg text-sm font-bold shadow-md`}>
+            {event.category}
           </span>
         </div>
       </div>

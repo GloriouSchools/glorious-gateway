@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
@@ -25,13 +26,15 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { format, addDays, parseISO } from "date-fns";
+import { parseStudentCSV, StudentCSVRow } from '@/utils/csvParser';
+import studentsCSV from '@/data/students.csv?raw';
 
 interface Student {
   id: string;
   name: string;
-  studentId: string;
-  grade: string;
-  section: string;
+  email: string;
+  class: string;
+  stream: string;
   photoUrl?: string;
 }
 
@@ -48,105 +51,51 @@ interface ClassInfo {
   totalStudents: number;
 }
 
-// Mock student data
-const mockStudents: Student[] = [
-  {
-    id: 'S001',
-    name: 'John Smith',
-    studentId: 'STU001',
-    grade: 'Primary 5',
-    section: 'A'
-  },
-  {
-    id: 'S002',
-    name: 'Emma Wilson',
-    studentId: 'STU002',
-    grade: 'Primary 5',
-    section: 'A'
-  },
-  {
-    id: 'S003',
-    name: 'Michael Brown',
-    studentId: 'STU003',
-    grade: 'Primary 5',
-    section: 'A'
-  },
-  {
-    id: 'S004',
-    name: 'Sarah Davis',
-    studentId: 'STU004',
-    grade: 'Primary 5',
-    section: 'A'
-  },
-  {
-    id: 'S005',
-    name: 'James Johnson',
-    studentId: 'STU005',
-    grade: 'Primary 5',
-    section: 'A'
-  },
-  {
-    id: 'S006',
-    name: 'Lisa Anderson',
-    studentId: 'STU006',
-    grade: 'Primary 5',
-    section: 'A'
-  },
-  {
-    id: 'S007',
-    name: 'Robert Garcia',
-    studentId: 'STU007',
-    grade: 'Primary 5',
-    section: 'A'
-  },
-  {
-    id: 'S008',
-    name: 'Maria Rodriguez',
-    studentId: 'STU008',
-    grade: 'Primary 5',
-    section: 'A'
-  },
-  {
-    id: 'S009',
-    name: 'David Lee',
-    studentId: 'STU009',
-    grade: 'Primary 5',
-    section: 'A'
-  },
-  {
-    id: 'S010',
-    name: 'Jennifer Taylor',
-    studentId: 'STU010',
-    grade: 'Primary 5',
-    section: 'A'
-  }
-];
+// Parse CSV and convert to student array
+const convertCSVToStudents = (): Student[] => {
+  const csvData = parseStudentCSV(studentsCSV);
+  
+  return csvData.map(row => ({
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    class: row.class_id,
+    stream: row.stream_id,
+    photoUrl: row.photo_url
+  }));
+};
 
-// Real class and stream data from CSV
-const realClasses: ClassInfo[] = [
-  { id: 'P1-PEARLS', name: 'P1 - PEARLS', class_id: 'P1', totalStudents: 30 },
-  { id: 'P1-STARS', name: 'P1 - STARS', class_id: 'P1', totalStudents: 28 },
-  { id: 'P1-DIAMONDS', name: 'P1 - DIAMONDS', class_id: 'P1', totalStudents: 32 },
-  { id: 'P2-GOLDEN', name: 'P2 - GOLDEN', class_id: 'P2', totalStudents: 29 },
-  { id: 'P2-KITES', name: 'P2 - KITES', class_id: 'P2', totalStudents: 31 },
-  { id: 'P2-MARIGOLD', name: 'P2 - MARIGOLD', class_id: 'P2', totalStudents: 27 },
-  { id: 'P3-CRANES', name: 'P3 - CRANES', class_id: 'P3', totalStudents: 33 },
-  { id: 'P3-PARROTS', name: 'P3 - PARROTS', class_id: 'P3', totalStudents: 30 },
-  { id: 'P3-SPARROWS', name: 'P3 - SPARROWS', class_id: 'P3', totalStudents: 29 },
-  { id: 'P4-CUBS', name: 'P4 - CUBS', class_id: 'P4', totalStudents: 26 },
-  { id: 'P4-EAGLETS', name: 'P4 - EAGLETS', class_id: 'P4', totalStudents: 28 },
-  { id: 'P4-SPARKLES', name: 'P4 - SPARKLES', class_id: 'P4', totalStudents: 31 },
-  { id: 'P4-BUNNIES', name: 'P4 - BUNNIES', class_id: 'P4', totalStudents: 29 },
-  { id: 'P5-SKYHIGH', name: 'P5 - SKY-HIGH', class_id: 'P5', totalStudents: 32 },
-  { id: 'P5-SUNSET', name: 'P5 - SUNSET', class_id: 'P5', totalStudents: 30 },
-  { id: 'P5-SUNRISE', name: 'P5 - SUNRISE', class_id: 'P5', totalStudents: 28 },
-  { id: 'P6-RADIANT', name: 'P6 - RADIANT', class_id: 'P6', totalStudents: 27 },
-  { id: 'P6-VIBRANT', name: 'P6 - VIBRANT', class_id: 'P6', totalStudents: 29 },
-  { id: 'P6-VICTORS', name: 'P6 - VICTORS', class_id: 'P6', totalStudents: 31 },
-  { id: 'P7-WINNERS', name: 'P7 - WINNERS', class_id: 'P7', totalStudents: 25 },
-  { id: 'P7-ACHIEVERS', name: 'P7 - ACHIEVERS', class_id: 'P7', totalStudents: 33 },
-  { id: 'P7-SUCCESS', name: 'P7 - SUCCESS', class_id: 'P7', totalStudents: 30 }
-];
+const allStudents = convertCSVToStudents();
+
+// Build class list from actual data
+const buildClassList = (): ClassInfo[] => {
+  const classStreamMap = new Map<string, Set<string>>();
+
+  allStudents.forEach(student => {
+    if (!classStreamMap.has(student.stream)) {
+      classStreamMap.set(student.stream, new Set());
+    }
+  });
+
+  const classList: ClassInfo[] = [];
+  
+  classStreamMap.forEach((_, streamId) => {
+    const studentsInStream = allStudents.filter(s => s.stream === streamId);
+    const className = streamId.split('-')[0]; // e.g., "P1" from "P1-PEARLS"
+    
+    classList.push({
+      id: streamId,
+      name: streamId.replace('-', ' - '),
+      class_id: className,
+      totalStudents: studentsInStream.length
+    });
+  });
+
+  // Sort by class and stream
+  return classList.sort((a, b) => a.id.localeCompare(b.id));
+};
+
+const realClasses: ClassInfo[] = buildClassList();
 
 const Attendance = () => {
   const { userRole, userName, photoUrl, signOut } = useAuth();
@@ -155,11 +104,17 @@ const Attendance = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [attendanceRecords, setAttendanceRecords] = useState<{ [key: string]: AttendanceRecord }>({});
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const currentClass = realClasses.find(cls => cls.id === selectedClass);
-  const filteredStudents = mockStudents.filter(student => 
+  
+  // Filter students based on selected class and search term
+  const classStudents = allStudents.filter(student => student.stream === selectedClass);
+
+  const filteredStudents = classStudents.filter(student => 
     student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    student.studentId.toLowerCase().includes(searchTerm.toLowerCase())
+    student.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const markAttendance = (studentId: string, status: 'present' | 'absent') => {
@@ -171,6 +126,7 @@ const Attendance = () => {
         timeMarked: new Date().toISOString()
       }
     }));
+    toast.success(`Marked as ${status}`);
   };
 
   const getAttendanceStats = () => {
@@ -246,6 +202,18 @@ const Attendance = () => {
 
   const navigateDate = (direction: 'prev' | 'next') => {
     setSelectedDate(prev => addDays(prev, direction === 'next' ? 1 : -1));
+  };
+
+  const handleStudentClick = (student: Student) => {
+    setSelectedStudent(student);
+    setIsModalOpen(true);
+  };
+
+  const handleModalAttendance = (status: 'present' | 'absent') => {
+    if (selectedStudent) {
+      markAttendance(selectedStudent.id, status);
+      setIsModalOpen(false);
+    }
   };
 
   const stats = getAttendanceStats();
@@ -453,48 +421,67 @@ const Attendance = () => {
                       className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-lg border bg-card hover:bg-accent/20 transition-colors"
                     >
                       <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        {student.photoUrl ? (
+                          <img 
+                            src={student.photoUrl} 
+                            alt={student.name}
+                            className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                            onError={(e) => {
+                              // Fallback to initials if image fails to load
+                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                            }}
+                          />
+                        ) : null}
+                        <div className={`w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 ${student.photoUrl ? 'hidden' : ''}`}>
                           <span className="text-sm font-semibold">
-                            {student.name.split(' ').map(n => n[0]).join('')}
+                            {student.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                           </span>
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h3 className="font-semibold truncate">{student.name}</h3>
+                          <h3 
+                            className="font-semibold truncate cursor-pointer hover:text-primary transition-colors"
+                            onClick={() => handleStudentClick(student)}
+                          >
+                            {student.name}
+                          </h3>
                           <p className="text-sm text-muted-foreground truncate">
-                            ID: {student.studentId} | {student.grade} {student.section}
+                            {student.email}
                           </p>
                         </div>
                       </div>
                       
-                      <div className="flex gap-2 w-full sm:w-auto">
-                        <Button
-                          size="sm"
-                          variant={record?.status === 'present' ? 'default' : 'outline'}
-                          onClick={() => markAttendance(student.id, 'present')}
-                          className={`flex-1 sm:flex-none ${record?.status === 'present' ? getStatusColor('present') : 'hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200'}`}
-                        >
-                          <CheckCircle className="h-4 w-4 mr-1" />
-                          Present
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant={record?.status === 'absent' ? 'default' : 'outline'}
-                          onClick={() => markAttendance(student.id, 'absent')}
-                          className={`flex-1 sm:flex-none ${record?.status === 'absent' ? getStatusColor('absent') : 'hover:bg-red-50 hover:text-red-600 hover:border-red-200'}`}
-                        >
-                          <XCircle className="h-4 w-4 mr-1" />
-                          Absent
-                        </Button>
-                      </div>
-                      
-                      {record && (
-                        <div className="flex items-center gap-2 w-full sm:w-auto">
-                          <Badge className={getStatusColor(record.status)}>
-                            {getStatusIcon(record.status)}
-                            <span className="ml-1 capitalize">{record.status}</span>
-                          </Badge>
+                      <div className="flex items-center gap-2 w-full sm:w-auto">
+                        {/* Segmented Control for Attendance */}
+                        <div className="flex rounded-lg border bg-muted p-1 w-full sm:w-auto">
+                          <button
+                            onClick={() => markAttendance(student.id, 'present')}
+                            className={`flex-1 sm:flex-none px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                              record?.status === 'present'
+                                ? 'bg-emerald-600 text-white shadow-sm'
+                                : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                          >
+                            <div className="flex items-center justify-center gap-1">
+                              <CheckCircle className="h-4 w-4" />
+                              <span>Present</span>
+                            </div>
+                          </button>
+                          <button
+                            onClick={() => markAttendance(student.id, 'absent')}
+                            className={`flex-1 sm:flex-none px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                              record?.status === 'absent'
+                                ? 'bg-red-600 text-white shadow-sm'
+                                : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                          >
+                            <div className="flex items-center justify-center gap-1">
+                              <XCircle className="h-4 w-4" />
+                              <span>Absent</span>
+                            </div>
+                          </button>
                         </div>
-                      )}
+                      </div>
                     </div>
                   );
                 })
@@ -502,6 +489,99 @@ const Attendance = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Student Details Modal */}
+        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-lg">Student Details</DialogTitle>
+              <DialogDescription className="text-sm">
+                View and mark attendance for this student
+              </DialogDescription>
+            </DialogHeader>
+            
+            {selectedStudent && (
+              <div className="space-y-4">
+                {/* Student Photo */}
+                <div className="flex justify-center">
+                  {selectedStudent.photoUrl ? (
+                    <img 
+                      src={selectedStudent.photoUrl} 
+                      alt={selectedStudent.name}
+                      className="w-20 h-20 rounded-full object-cover border-2 border-primary/20"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                      }}
+                    />
+                  ) : null}
+                  <div className={`w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center border-2 border-primary/20 ${selectedStudent.photoUrl ? 'hidden' : ''}`}>
+                    <span className="text-xl font-bold">
+                      {selectedStudent.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Student Information */}
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-muted-foreground">Full Name</label>
+                    <p className="font-semibold">{selectedStudent.name}</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground">Class</label>
+                      <p className="text-sm font-semibold">{selectedStudent.class}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground">Stream</label>
+                      <p className="text-sm font-semibold">{selectedStudent.stream}</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-muted-foreground">Email</label>
+                    <p className="text-sm break-all">{selectedStudent.email}</p>
+                  </div>
+
+                  {/* Current Status */}
+                  {attendanceRecords[selectedStudent.id] && (
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground">Current Status</label>
+                      <div>
+                        <Badge className={getStatusColor(attendanceRecords[selectedStudent.id].status)}>
+                          {getStatusIcon(attendanceRecords[selectedStudent.id].status)}
+                          <span className="ml-1 capitalize">{attendanceRecords[selectedStudent.id].status}</span>
+                        </Badge>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Attendance Actions */}
+                <div className="flex gap-2 pt-3 border-t">
+                  <Button
+                    onClick={() => handleModalAttendance('present')}
+                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                    size="sm"
+                  >
+                    <CheckCircle className="h-4 w-4 mr-1" />
+                    Present
+                  </Button>
+                  <Button
+                    onClick={() => handleModalAttendance('absent')}
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                    size="sm"
+                  >
+                    <XCircle className="h-4 w-4 mr-1" />
+                    Absent
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );

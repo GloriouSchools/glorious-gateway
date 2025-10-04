@@ -38,7 +38,8 @@ import {
   Settings,
   Image,
   Video,
-  Film
+  Film,
+  CalendarClock
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { AccountVerificationForm } from "@/components/auth/AccountVerificationForm";
@@ -228,10 +229,20 @@ export function TeacherDashboard() {
       title: 'Entertainment',
       description: 'Browse movies & entertainment content',
       icon: Film,
-      color: 'from-purple-400 to-indigo-400',
+      color: 'from-amber-400 to-yellow-400',
       stats: '50+ Movies',
       action: 'Browse Movies',
       route: '/teacher/entertainment'
+    },
+    {
+      id: 'events',
+      title: 'Events',
+      description: 'Browse school events & activities',
+      icon: CalendarClock,
+      color: 'from-purple-400 to-indigo-400',
+      stats: 'Latest Events',
+      action: 'Browse Events',
+      route: '/teacher/events'
     },
     {
       id: 'messages',
