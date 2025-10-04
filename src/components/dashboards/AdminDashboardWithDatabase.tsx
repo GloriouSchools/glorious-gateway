@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -6,10 +6,12 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProfessionalCard } from "@/components/ui/professional-card";
 import { ProfessionalButton } from "@/components/ui/professional-button";
-import { QuoteModal } from "@/components/ui/quote-modal";
+import { AnimatedButton } from "@/components/ui/animated-button";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
-import { getQuoteOfTheDay, getRandomPhotoQuote, PhotoQuote } from "@/utils/photoQuotes";
+import { PhotoJumbotron, PhotoJumbotronRef } from "@/components/ui/photo-jumbotron";
+import { QuoteModal } from "@/components/ui/quote-modal";
 import { formatGreetingName, getTimeBasedGreeting } from "@/utils/greetingUtils";
+import { getQuoteOfTheDay, getRandomPhotoQuote, PhotoQuote } from "@/utils/photoQuotes";
 import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import { 
@@ -33,6 +35,7 @@ import {
   Star,
   Heart,
   Smile,
+  Quote,
   ArrowRight,
   Target,
   Settings,
@@ -45,7 +48,8 @@ import {
   Video,
   Film,
   CalendarClock,
-  Library
+  Library,
+  Shuffle
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { AccountVerificationForm } from "@/components/auth/AccountVerificationForm";
@@ -68,54 +72,18 @@ export function AdminDashboard() {
   const [statsLoading, setStatsLoading] = useState(true);
   const [showConfetti, setShowConfetti] = useState(false);
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
-  const [dailyPhotoQuote, setDailyPhotoQuote] = useState<PhotoQuote>({ src: "", alt: "" });
   const [greeting, setGreeting] = useState("");
-  const [quoteLoading, setQuoteLoading] = useState(true);
-  const [showQuoteModal, setShowQuoteModal] = useState(false);
+  const [currentQuote, setCurrentQuote] = useState<PhotoQuote>(getQuoteOfTheDay());
+  const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
+  const photoJumbotronRef = useRef<PhotoJumbotronRef>(null);
+  const [isShuffling, setIsShuffling] = useState(false);
   const navigate = useNavigate();
 
-  // Get quote of the day and time-based greeting on component mount
+  // Get time-based greeting on component mount
   useEffect(() => {
     fetchDashboardStats();
-    loadQuoteOfTheDay();
     setGreeting(getTimeBasedGreeting());
   }, []);
-
-  // Function to load quote of the day (persistent)
-  const loadQuoteOfTheDay = () => {
-    try {
-      setQuoteLoading(true);
-      const photoQuote = getQuoteOfTheDay();
-      setDailyPhotoQuote(photoQuote);
-    } catch (error) {
-      console.log('Error loading photo quote:', error);
-      // Fallback to a default image or text
-      setDailyPhotoQuote({ 
-        src: "/placeholder.svg", 
-        alt: "Inspirational quote of the day" 
-      });
-    } finally {
-      setQuoteLoading(false);
-    }
-  };
-
-  // Function to load a new random quote
-  const loadNewPhotoQuote = () => {
-    try {
-      setQuoteLoading(true);
-      const photoQuote = getRandomPhotoQuote();
-      setDailyPhotoQuote(photoQuote);
-    } catch (error) {
-      console.log('Error loading new photo quote:', error);
-      // Fallback to a default image or text
-      setDailyPhotoQuote({ 
-        src: "/placeholder.svg", 
-        alt: "Inspirational quote" 
-      });
-    } finally {
-      setQuoteLoading(false);
-    }
-  };
 
   const fetchDashboardStats = async () => {
     try {
@@ -353,49 +321,58 @@ export function AdminDashboard() {
     navigate(route);
   };
 
+  const scrollToContent = () => {
+    const contentElement = document.getElementById('admin-dashboard-content');
+    if (contentElement) {
+      contentElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
     <div className="space-y-8 animate-fade-in">
       <Confetti isActive={showConfetti} onComplete={() => setShowConfetti(false)} />
       
-      {/* Hero Welcome Section */}
+      {/* Hero Welcome Section with Photo Jumbotron */}
       <ScrollReveal animation="fadeInUp" delay={100}>
-        <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-r from-red-500 via-purple-500 to-blue-500 p-4 md:p-6 text-white">
-          <div className="absolute inset-0 bg-black/20"></div>
-          <div className="relative z-10 text-center space-y-2 md:space-y-3">
-            <div className="flex justify-center items-center space-x-2 mb-2">
-              <Shield className="h-5 w-5 text-white/80" />
-              <span className="text-sm font-medium tracking-wider">ADMIN PORTAL</span>
-              <Shield className="h-5 w-5 text-white/80" />
-            </div>
-            <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold animate-slide-in-right">
-              {greeting}, {formatGreetingName(userName || '', 'admin') || 'Administrator'}! 
-            </h1>
-            <p className="text-sm md:text-lg lg:text-xl font-medium opacity-90">
-              School Management Dashboard
-            </p>
-            <div className="bg-black/20 backdrop-blur-sm rounded-lg md:rounded-xl p-3 md:p-4 mt-2 md:mt-4 max-w-xs md:max-w-2xl mx-auto border border-white/10">
-              {quoteLoading ? (
-                <div className="flex justify-center items-center h-32 md:h-48">
-                  <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin text-white/80" />
-                </div>
-              ) : (
-                <div className="relative group cursor-pointer" onClick={() => setShowQuoteModal(true)}>
-                  <img 
-                    src={dailyPhotoQuote.src} 
-                    alt={dailyPhotoQuote.alt}
-                    className="w-full h-32 md:h-48 object-contain rounded-lg md:rounded-xl shadow-lg transition-transform duration-300 group-hover:scale-105"
-                    onError={(e) => {
-                      // Fallback to placeholder if image fails to load
-                      (e.target as HTMLImageElement).src = "/placeholder.svg";
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg md:rounded-xl flex items-center justify-center">
-                    <p className="text-sm text-white font-medium bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm">Click to view</p>
-                  </div>
-                </div>
-              )}
+        <div className="relative overflow-hidden rounded-xl shadow-2xl">
+          <PhotoJumbotron ref={photoJumbotronRef} onScrollDown={scrollToContent} />
+          
+          {/* Greeting Overlay */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-transparent" />
+            <div className="relative z-10 text-center space-y-4 pt-8 md:pt-12">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-orange-500 px-4 font-poppins drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] [text-shadow:_2px_2px_4px_rgb(0_0_0_/_80%)]">
+                {greeting}, {formatGreetingName(userName || '', 'admin') || 'Administrator'}! 
+              </h1>
+              
+              {/* Shuffle Button */}
+              <div className="flex justify-center pointer-events-auto">
+                <AnimatedButton
+                  variant="default"
+                  size="sm"
+                  animation="bounce"
+                  onClick={async () => {
+                    if (isShuffling) return;
+                    setIsShuffling(true);
+                    await photoJumbotronRef.current?.refreshPhotos();
+                    setIsShuffling(false);
+                  }}
+                  disabled={isShuffling}
+                  className="bg-white/10 backdrop-blur-md hover:bg-white/20 border-2 border-white/30 shadow-lg hover:shadow-xl transition-all text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label="Shuffle photos"
+                >
+                  <Shuffle className={`h-4 w-4 mr-2 ${isShuffling ? 'animate-spin' : ''}`} />
+                  {isShuffling ? 'Shuffling...' : 'Shuffle Photos'}
+                </AnimatedButton>
+              </div>
             </div>
           </div>
+        </div>
+      </ScrollReveal>
+
+      {/* Divider */}
+      <ScrollReveal animation="fadeInUp" delay={175}>
+        <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent">
           
           {/* Professional Corner Elements - Hidden on mobile */}
           <div className="hidden md:block absolute top-4 left-4 opacity-20">
@@ -409,7 +386,7 @@ export function AdminDashboard() {
 
       {/* Quick Stats */}
       <ScrollReveal animation="fadeInUp" delay={200}>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div id="admin-dashboard-content" className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {statsLoading ? (
             Array.from({ length: 4 }).map((_, index) => (
               <Card key={index}>
@@ -517,29 +494,42 @@ export function AdminDashboard() {
         </div>
       </ScrollReveal>
 
-      {/* Motivational Footer */}
+      {/* Quote of the Day */}
       <ScrollReveal animation="fadeInUp" delay={400}>
-        <Card className="bg-gradient-to-r from-red-400 to-purple-500 text-white border-0">
-          <CardContent className="p-6 text-center">
-            <div className="flex justify-center items-center space-x-2 mb-4">
-              <Target className="h-6 w-6 animate-pulse" />
-              <span className="text-2xl font-bold">Leading with Excellence! 🌟</span>
-              <Target className="h-6 w-6 animate-pulse" />
+        <Card 
+          className="group cursor-pointer hover:shadow-2xl transition-all duration-300 border-2 hover:border-primary/50 overflow-hidden relative"
+          onClick={() => setIsQuoteModalOpen(true)}
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <CardHeader className="relative z-10">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <Quote className="h-6 w-6 text-primary" />
+                Quote of the Day
+              </CardTitle>
+              <Badge variant="secondary" className="font-semibold">
+                Inspiration
+              </Badge>
             </div>
-            <p className="text-lg opacity-90">
-              Your leadership shapes the future of education. Keep making great decisions! ⚡🎓
-            </p>
+          </CardHeader>
+          <CardContent className="relative z-10">
+            <div className="relative rounded-lg overflow-hidden shadow-lg group-hover:shadow-xl transition-shadow duration-300">
+              <img
+                src={currentQuote.src}
+                alt={currentQuote.alt}
+                className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-500"
+                loading="lazy"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+              <div className="absolute bottom-4 left-4 right-4 text-white">
+                <p className="text-sm font-medium opacity-90">
+                  Click to view, download, or get a new quote
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </ScrollReveal>
-
-      {/* Quote Modal */}
-      <QuoteModal 
-        isOpen={showQuoteModal}
-        onClose={() => setShowQuoteModal(false)}
-        quote={dailyPhotoQuote}
-        onNewQuote={loadNewPhotoQuote}
-      />
 
       {/* Verification Dialog */}
       <Dialog open={showVerificationDialog} onOpenChange={setShowVerificationDialog}>
@@ -554,6 +544,14 @@ export function AdminDashboard() {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Quote Modal */}
+      <QuoteModal
+        isOpen={isQuoteModalOpen}
+        onClose={() => setIsQuoteModalOpen(false)}
+        quote={currentQuote}
+        onNewQuote={() => setCurrentQuote(getRandomPhotoQuote())}
+      />
     </div>
   );
 }

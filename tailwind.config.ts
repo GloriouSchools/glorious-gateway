@@ -20,6 +20,7 @@ export default {
 		extend: {
 			fontFamily: {
 				'century-gothic': ['"Century Gothic"', '"Gothic A1"', 'sans-serif'],
+				'poppins': ['Poppins', 'sans-serif'],
 			},
 			fontSize: {
 				'application': ['14px', '1.4'],

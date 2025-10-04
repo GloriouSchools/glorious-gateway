@@ -6,10 +6,11 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProfessionalCard } from "@/components/ui/professional-card";
 import { ProfessionalButton } from "@/components/ui/professional-button";
+import { PhotoJumbotron } from "@/components/ui/photo-jumbotron";
 import { QuoteModal } from "@/components/ui/quote-modal";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
-import { getQuoteOfTheDay, getRandomPhotoQuote, PhotoQuote } from "@/utils/photoQuotes";
 import { formatGreetingName, getTimeBasedGreeting } from "@/utils/greetingUtils";
+import { getQuoteOfTheDay, getRandomPhotoQuote, PhotoQuote } from "@/utils/photoQuotes";
 import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import { 
@@ -39,7 +40,8 @@ import {
   Image,
   Video,
   Film,
-  CalendarClock
+  CalendarClock,
+  Quote
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { AccountVerificationForm } from "@/components/auth/AccountVerificationForm";
@@ -53,52 +55,14 @@ export function TeacherDashboard() {
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
-  const [dailyPhotoQuote, setDailyPhotoQuote] = useState<PhotoQuote>({ src: "", alt: "" });
   const [greeting, setGreeting] = useState("");
-  const [quoteLoading, setQuoteLoading] = useState(true);
-  const [showQuoteModal, setShowQuoteModal] = useState(false);
+  const [currentQuote, setCurrentQuote] = useState<PhotoQuote>(getQuoteOfTheDay());
+  const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
 
-  // Get quote of the day and time-based greeting on component mount
+  // Get time-based greeting on component mount
   useEffect(() => {
-    loadQuoteOfTheDay();
     setGreeting(getTimeBasedGreeting());
   }, []);
-
-  // Function to load quote of the day (persistent)
-  const loadQuoteOfTheDay = () => {
-    try {
-      setQuoteLoading(true);
-      const photoQuote = getQuoteOfTheDay();
-      setDailyPhotoQuote(photoQuote);
-    } catch (error) {
-      console.log('Error loading photo quote:', error);
-      // Fallback to a default image or text
-      setDailyPhotoQuote({ 
-        src: "/placeholder.svg", 
-        alt: "Inspirational quote of the day" 
-      });
-    } finally {
-      setQuoteLoading(false);
-    }
-  };
-
-  // Function to load a new random quote
-  const loadNewPhotoQuote = () => {
-    try {
-      setQuoteLoading(true);
-      const photoQuote = getRandomPhotoQuote();
-      setDailyPhotoQuote(photoQuote);
-    } catch (error) {
-      console.log('Error loading new photo quote:', error);
-      // Fallback to a default image or text
-      setDailyPhotoQuote({ 
-        src: "/placeholder.svg", 
-        alt: "Inspirational quote" 
-      });
-    } finally {
-      setQuoteLoading(false);
-    }
-  };
 
   // Show loading state while authentication is being resolved
   if (isLoading) {
@@ -300,28 +264,11 @@ export function TeacherDashboard() {
             <p className="text-sm md:text-lg lg:text-xl font-medium opacity-90">
               Teaching Management System
             </p>
-            <div className="bg-black/20 backdrop-blur-sm rounded-lg md:rounded-xl p-3 md:p-4 mt-2 md:mt-4 max-w-xs md:max-w-2xl mx-auto border border-white/10">
-              {quoteLoading ? (
-                <div className="flex justify-center items-center h-32 md:h-48">
-                  <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin text-white/80" />
-                </div>
-              ) : (
-                <div className="relative group cursor-pointer" onClick={() => setShowQuoteModal(true)}>
-                  <img 
-                    src={dailyPhotoQuote.src} 
-                    alt={dailyPhotoQuote.alt}
-                    className="w-full h-32 md:h-48 object-contain rounded-lg md:rounded-xl shadow-lg transition-transform duration-300 group-hover:scale-105"
-                    onError={(e) => {
-                      // Fallback to placeholder if image fails to load
-                      (e.target as HTMLImageElement).src = "/placeholder.svg";
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg md:rounded-xl flex items-center justify-center">
-                    <p className="text-sm text-white font-medium bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm">Click to view</p>
-                  </div>
-                </div>
-              )}
-            </div>
+          </div>
+          
+          {/* Photo Jumbotron */}
+          <div className="relative z-10 mt-4 max-w-5xl mx-auto">
+            <PhotoJumbotron />
           </div>
           
           {/* Professional Corner Elements - Hidden on mobile */}
@@ -448,19 +395,56 @@ export function TeacherDashboard() {
         </Card>
       </ScrollReveal>
 
-      {/* Quote Modal */}
-      <QuoteModal 
-        isOpen={showQuoteModal}
-        onClose={() => setShowQuoteModal(false)}
-        quote={dailyPhotoQuote}
-        onNewQuote={loadNewPhotoQuote}
-      />
+      {/* Quote of the Day */}
+      <ScrollReveal animation="fadeInUp" delay={450}>
+        <Card 
+          className="group cursor-pointer hover:shadow-2xl transition-all duration-300 border-2 hover:border-primary/50 overflow-hidden relative"
+          onClick={() => setIsQuoteModalOpen(true)}
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <CardHeader className="relative z-10">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <Quote className="h-6 w-6 text-primary" />
+                Quote of the Day
+              </CardTitle>
+              <Badge variant="secondary" className="font-semibold">
+                Inspiration
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="relative z-10">
+            <div className="relative rounded-lg overflow-hidden shadow-lg group-hover:shadow-xl transition-shadow duration-300">
+              <img
+                src={currentQuote.src}
+                alt={currentQuote.alt}
+                className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-500"
+                loading="lazy"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+              <div className="absolute bottom-4 left-4 right-4 text-white">
+                <p className="text-sm font-medium opacity-90">
+                  Click to view, download, or get a new quote
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </ScrollReveal>
 
       <Dialog open={showVerificationDialog} onOpenChange={setShowVerificationDialog}>
         <DialogContent className="max-w-md">
           <AccountVerificationForm userType="teacher" />
         </DialogContent>
       </Dialog>
+
+      {/* Quote Modal */}
+      <QuoteModal
+        isOpen={isQuoteModalOpen}
+        onClose={() => setIsQuoteModalOpen(false)}
+        quote={currentQuote}
+        onNewQuote={() => setCurrentQuote(getRandomPhotoQuote())}
+      />
     </div>
   );
 }
