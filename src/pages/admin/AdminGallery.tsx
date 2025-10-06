@@ -20,18 +20,23 @@ export default function AdminGallery() {
   const [isShuffled, setIsShuffled] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [photosPerPage, setPhotosPerPage] = useState(20);
+  const [allPhotos, setAllPhotos] = useState<PhotoItem[]>([]);
 
   // Load folder structure on mount
   useEffect(() => {
-    setLoading(true);
-    try {
-      const structure = buildFolderStructure();
-      setFolderStructure(structure);
-    } catch (error) {
-      console.error('Error loading folder structure:', error);
-    } finally {
-      setLoading(false);
-    }
+    const loadFolderStructure = async () => {
+      setLoading(true);
+      try {
+        const structure = await buildFolderStructure();
+        setFolderStructure(structure);
+      } catch (error) {
+        console.error('Error loading folder structure:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadFolderStructure();
   }, []);
 
   const handleLogout = () => {
@@ -39,9 +44,14 @@ export default function AdminGallery() {
   };
 
   // Get photos based on selected folder
-  const allPhotos = useMemo(() => {
-    const photos = getPhotos(selectedFolder);
-    return isShuffled ? shuffleArray(photos) : photos;
+  useEffect(() => {
+    const loadPhotos = async () => {
+      const loadedPhotos = await getPhotos(selectedFolder);
+      const finalPhotos = isShuffled ? shuffleArray(loadedPhotos) : loadedPhotos;
+      setAllPhotos(finalPhotos);
+    };
+    
+    loadPhotos();
   }, [selectedFolder, isShuffled]);
 
   // Filter photos by search query

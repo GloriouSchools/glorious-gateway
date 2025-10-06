@@ -2,12 +2,38 @@ import { Movie } from "@/types/movie";
 import { ArrowLeft, ArrowRight, Play } from "lucide-react";
 import { useRef, useState, useEffect, memo } from "react";
 import { Button } from "@/components/ui/button";
+import { getThumbnailUrl, extractThumbnailFilename } from "@/utils/movieThumbnailUtils";
 
 interface MovieRowProps {
   title: string;
   movies: Movie[];
   onMovieClick: (movie: Movie) => void;
 }
+
+const MovieThumbnail = memo(({ movie }: { movie: Movie }) => {
+  const [thumbnailUrl, setThumbnailUrl] = useState<string>(movie.thumbnail);
+
+  useEffect(() => {
+    const loadThumbnail = async () => {
+      const filename = extractThumbnailFilename(movie.thumbnail);
+      const url = await getThumbnailUrl(filename);
+      setThumbnailUrl(url);
+    };
+    loadThumbnail();
+  }, [movie.thumbnail]);
+
+  return (
+    <img 
+      src={thumbnailUrl}
+      alt={movie.title}
+      className="w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-110"
+      loading="lazy"
+      onError={(e) => {
+        e.currentTarget.src = "https://via.placeholder.com/300x450/e5e7eb/6b7280?text=Movie";
+      }}
+    />
+  );
+});
 
 export const MovieRow = memo(function MovieRow({ title, movies, onMovieClick }: MovieRowProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -111,15 +137,7 @@ export const MovieRow = memo(function MovieRow({ title, movies, onMovieClick }: 
               onClick={() => onMovieClick(movie)}
             >
               <div className="relative aspect-[2/3] rounded-lg overflow-hidden shadow-xl group-hover/card:shadow-2xl transition-all duration-300 group-hover/card:ring-4 group-hover/card:ring-primary/60">
-                <img 
-                  src={movie.thumbnail}
-                  alt={movie.title}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-110"
-                  loading="lazy"
-                  onError={(e) => {
-                    e.currentTarget.src = "https://via.placeholder.com/300x450/e5e7eb/6b7280?text=Movie";
-                  }}
-                />
+                <MovieThumbnail movie={movie} />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-0 group-hover/card:opacity-100 transition-all duration-300 flex items-center justify-center">
                   <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-full bg-white/95 flex items-center justify-center shadow-2xl scale-0 group-hover/card:scale-100 transition-all duration-300 animate-pulse">
                     <Play className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-black fill-black ml-1" />

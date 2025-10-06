@@ -56,12 +56,13 @@ export function TeacherDashboard() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
   const [greeting, setGreeting] = useState("");
-  const [currentQuote, setCurrentQuote] = useState<PhotoQuote>(getQuoteOfTheDay());
+  const [currentQuote, setCurrentQuote] = useState<PhotoQuote>({ src: '/placeholder.svg', alt: 'Loading quote...' });
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
 
-  // Get time-based greeting on component mount
+  // Get time-based greeting and load quote on component mount
   useEffect(() => {
     setGreeting(getTimeBasedGreeting());
+    getQuoteOfTheDay().then(setCurrentQuote);
   }, []);
 
   // Show loading state while authentication is being resolved
@@ -443,7 +444,10 @@ export function TeacherDashboard() {
         isOpen={isQuoteModalOpen}
         onClose={() => setIsQuoteModalOpen(false)}
         quote={currentQuote}
-        onNewQuote={() => setCurrentQuote(getRandomPhotoQuote())}
+        onNewQuote={async () => {
+          const newQuote = await getRandomPhotoQuote();
+          setCurrentQuote(newQuote);
+        }}
       />
     </div>
   );

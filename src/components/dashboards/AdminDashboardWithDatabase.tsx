@@ -73,11 +73,16 @@ export function AdminDashboard() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
   const [greeting, setGreeting] = useState("");
-  const [currentQuote, setCurrentQuote] = useState<PhotoQuote>(getQuoteOfTheDay());
+  const [currentQuote, setCurrentQuote] = useState<PhotoQuote>({ src: '/placeholder.svg', alt: 'Loading quote...' });
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
   const photoJumbotronRef = useRef<PhotoJumbotronRef>(null);
   const [isShuffling, setIsShuffling] = useState(false);
   const navigate = useNavigate();
+
+  // Load quote on mount
+  useEffect(() => {
+    getQuoteOfTheDay().then(setCurrentQuote);
+  }, []);
 
   // Get time-based greeting on component mount
   useEffect(() => {
@@ -550,7 +555,10 @@ export function AdminDashboard() {
         isOpen={isQuoteModalOpen}
         onClose={() => setIsQuoteModalOpen(false)}
         quote={currentQuote}
-        onNewQuote={() => setCurrentQuote(getRandomPhotoQuote())}
+        onNewQuote={async () => {
+          const newQuote = await getRandomPhotoQuote();
+          setCurrentQuote(newQuote);
+        }}
       />
     </div>
   );

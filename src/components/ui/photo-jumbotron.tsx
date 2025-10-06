@@ -31,19 +31,15 @@ export const PhotoJumbotron = forwardRef<PhotoJumbotronRef, PhotoJumbotronProps>
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [currentAnimation, setCurrentAnimation] = useState(animations[0]);
 
-  const loadRandomPhotos = () => {
-    return new Promise<void>((resolve) => {
-      const allPhotos = getPhotos();
-      const shuffled = shuffleArray(allPhotos);
-      const selectedPhotos = shuffled.slice(0, 5).map(photo => ({
-        src: photo.src,
-        alt: photo.alt
-      }));
-      setPhotos(selectedPhotos);
-      setCurrentIndex(0);
-      // Simulate loading time for visual feedback
-      setTimeout(() => resolve(), 800);
-    });
+  const loadRandomPhotos = async () => {
+    const allPhotos = await getPhotos();
+    const shuffled = shuffleArray(allPhotos);
+    const selectedPhotos = shuffled.slice(0, 5).map(photo => ({
+      src: photo.src,
+      alt: photo.alt
+    }));
+    setPhotos(selectedPhotos);
+    setCurrentIndex(0);
   };
 
   useEffect(() => {

@@ -11,6 +11,7 @@ import { Play, ArrowLeft } from "lucide-react";
 import { Movie } from "@/types/movie";
 import { movieData, movieGenres } from "@/data/movieData";
 import { movieTitleToSlug, findMovieBySlug } from "@/utils/movieUtils";
+import { getThumbnailUrl, extractThumbnailFilename } from "@/utils/movieThumbnailUtils";
 
 const MovieDetail = () => {
   const { movieId } = useParams<{ movieId: string }>();
@@ -18,6 +19,7 @@ const MovieDetail = () => {
   const { userRole, userName, photoUrl, signOut } = useAuth();
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [thumbnailUrl, setThumbnailUrl] = useState<string>("");
 
   const movie = useMemo(() => {
     if (!movieId) return undefined;
@@ -78,6 +80,17 @@ const MovieDetail = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [movieId]);
 
+  useEffect(() => {
+    const loadThumbnail = async () => {
+      if (movie?.thumbnail) {
+        const filename = extractThumbnailFilename(movie.thumbnail);
+        const url = await getThumbnailUrl(filename);
+        setThumbnailUrl(url);
+      }
+    };
+    loadThumbnail();
+  }, [movie]);
+
   if (!movie) {
     return (
       <DashboardLayout 
@@ -123,7 +136,7 @@ const MovieDetail = () => {
                   <div className="lg:col-span-3 flex flex-col items-center lg:items-start gap-4">
                     <div className="w-full max-w-[280px]">
                       <img 
-                        src={movie.thumbnail}
+                        src={thumbnailUrl || movie.thumbnail}
                         alt={movie.title}
                         className="w-full aspect-[2/3] object-cover rounded-lg shadow-lg"
                         onError={(e) => {

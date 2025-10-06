@@ -378,15 +378,25 @@ const AttendanceMarking = () => {
               </Button>
               <Button 
                 variant="outline"
+                onClick={() => {
+                  const csvContent = [
+                    ['Name', 'Email', 'Class', 'Stream', 'Status'].join(','),
+                    ...filteredStudents.map(s => {
+                      const record = attendanceRecords[s.id];
+                      return [s.name, s.email, s.class, s.stream, record?.status || 'not-marked'].join(',');
+                    })
+                  ].join('\n');
+                  const blob = new Blob([csvContent], { type: 'text/csv' });
+                  const url = window.URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `attendance-${currentClass?.name}-${format(selectedDate, 'yyyy-MM-dd')}.csv`;
+                  a.click();
+                  window.URL.revokeObjectURL(url);
+                }}
               >
                 <Download className="h-4 w-4 mr-2" />
                 Export Report
-              </Button>
-              <Button 
-                variant="outline"
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                Import Previous
               </Button>
             </div>
           </CardContent>

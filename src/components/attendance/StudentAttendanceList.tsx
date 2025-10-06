@@ -1,12 +1,16 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, UserCheck, UserX } from "lucide-react";
+import { Search, UserCheck, UserX, Download } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { parseStudentCSV } from '@/utils/csvParser';
 import studentsCSV from '@/data/students.csv?raw';
+import { toast } from "sonner";
+import { format } from "date-fns";
+import { generateAttendancePDF } from '@/utils/pdfGenerator';
 
 interface StudentAttendance {
   id: string;
@@ -25,17 +29,15 @@ interface StudentAttendanceListProps {
 
 export const StudentAttendanceList = ({ students }: StudentAttendanceListProps) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterType, setFilterType] = useState("all");
-  const [selectedClass, setSelectedClass] = useState("all");
   const [selectedStream, setSelectedStream] = useState("all");
   const [displayedStudents, setDisplayedStudents] = useState<StudentAttendance[]>([]);
   const [page, setPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
   const observerTarget = useRef<HTMLDivElement>(null);
   const ITEMS_PER_PAGE = 20;
 
-  // Get unique classes and streams
+  // Get unique streams
   const allStudentsData = parseStudentCSV(studentsCSV);
-  const classes = Array.from(new Set(allStudentsData.map(s => s.class_id))).sort();
   const streams = Array.from(new Set(allStudentsData.map(s => s.stream_id))).sort();
 
   // Filter students based on selected criteria
@@ -45,48 +47,84 @@ export const StudentAttendanceList = ({ students }: StudentAttendanceListProps) 
     student.class.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Apply filter type
-  if (filterType === "class" && selectedClass !== "all") {
-    filteredStudents = filteredStudents.filter(s => s.class === selectedClass);
-  } else if (filterType === "stream" && selectedStream !== "all") {
+  // Apply stream filter
+  if (selectedStream !== "all") {
     filteredStudents = filteredStudents.filter(s => s.stream === selectedStream);
   }
 
-  // Sort chronologically (by class then stream) for "all" filter
-  if (filterType === "all") {
-    filteredStudents = filteredStudents.sort((a, b) => {
-      const classCompare = a.class.localeCompare(b.class);
-      if (classCompare !== 0) return classCompare;
-      return a.stream.localeCompare(b.stream);
-    });
-  }
+  // Sort chronologically by class then stream
+  filteredStudents = filteredStudents.sort((a, b) => {
+    const classCompare = a.class.localeCompare(b.class);
+    if (classCompare !== 0) return classCompare;
+    return a.stream.localeCompare(b.stream);
+  });
 
   // Infinite scroll implementation
   useEffect(() => {
-    setDisplayedStudents(filteredStudents.slice(0, ITEMS_PER_PAGE * page));
-  }, [filteredStudents, page]);
+    const newDisplayed = filteredStudents.slice(0, ITEMS_PER_PAGE * page);
+    setDisplayedStudents(newDisplayed);
+    setIsLoading(false);
+  }, [page]);
+
+  useEffect(() => {
+    setDisplayedStudents(filteredStudents.slice(0, ITEMS_PER_PAGE));
+    setPage(1);
+  }, [filteredStudents]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && displayedStudents.length < filteredStudents.length) {
-          setPage(prev => prev + 1);
+        if (entries[0].isIntersecting && !isLoading) {
+          const hasMore = displayedStudents.length < filteredStudents.length;
+          if (hasMore) {
+            setIsLoading(true);
+            setPage(prev => prev + 1);
+          }
         }
       },
-      { threshold: 1 }
+      { threshold: 0.5 }
     );
 
-    if (observerTarget.current) {
-      observer.observe(observerTarget.current);
+    const target = observerTarget.current;
+    if (target) {
+      observer.observe(target);
     }
 
-    return () => observer.disconnect();
-  }, [displayedStudents.length, filteredStudents.length]);
+    return () => {
+      if (target) {
+        observer.unobserve(target);
+      }
+      observer.disconnect();
+    };
+  }, [displayedStudents.length, filteredStudents.length, isLoading]);
 
-  // Reset page when filters change
-  useEffect(() => {
-    setPage(1);
-  }, [searchTerm, filterType, selectedClass, selectedStream]);
+
+  const handleDownloadPDF = async () => {
+    toast.loading("Generating PDF...");
+    
+    try {
+      // Use all filtered students (not just displayed ones) for the PDF
+      const studentsForPDF = filteredStudents.map(student => ({
+        name: student.name,
+        class: student.class,
+        stream: student.stream,
+        status: student.status,
+        timeMarked: student.timeMarked,
+        photoUrl: student.photoUrl
+      }));
+      
+      const pdf = await generateAttendancePDF(
+        studentsForPDF,
+        'Student Attendance Report'
+      );
+      
+      pdf.save(`student-attendance-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+      toast.success("PDF downloaded successfully!");
+    } catch (error) {
+      console.error("Failed to generate PDF:", error);
+      toast.error("Failed to generate PDF. Please try again.");
+    }
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -116,10 +154,18 @@ export const StudentAttendanceList = ({ students }: StudentAttendanceListProps) 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Individual Student Tracking</CardTitle>
-        <CardDescription>
-          View attendance status for each student
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>Individual Student Tracking</CardTitle>
+            <CardDescription>
+              View attendance status for each student
+            </CardDescription>
+          </div>
+          <Button onClick={handleDownloadPDF}>
+            <Download className="h-4 w-4 mr-2" />
+            Download PDF
+          </Button>
+        </div>
         <div className="space-y-4 mt-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -131,49 +177,18 @@ export const StudentAttendanceList = ({ students }: StudentAttendanceListProps) 
             />
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Select value={filterType} onValueChange={(value) => {
-              setFilterType(value);
-              setSelectedClass("all");
-              setSelectedStream("all");
-            }}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by" />
+          <div className="flex gap-4">
+            <Select value={selectedStream} onValueChange={setSelectedStream}>
+              <SelectTrigger className="bg-background border z-50">
+                <SelectValue placeholder="Filter by stream" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Students</SelectItem>
-                <SelectItem value="class">Specific Class</SelectItem>
-                <SelectItem value="stream">Specific Stream</SelectItem>
+              <SelectContent className="bg-background border z-50">
+                <SelectItem value="all">All Classes</SelectItem>
+                {streams.map(stream => (
+                  <SelectItem key={stream} value={stream}>{stream.replace('-', ' - ')}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
-
-            {filterType === "class" && (
-              <Select value={selectedClass} onValueChange={setSelectedClass}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select class" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Classes</SelectItem>
-                  {classes.map(cls => (
-                    <SelectItem key={cls} value={cls}>{cls}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-
-            {filterType === "stream" && (
-              <Select value={selectedStream} onValueChange={setSelectedStream}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select stream" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Streams</SelectItem>
-                  {streams.map(stream => (
-                    <SelectItem key={stream} value={stream}>{stream}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
           </div>
         </div>
       </CardHeader>

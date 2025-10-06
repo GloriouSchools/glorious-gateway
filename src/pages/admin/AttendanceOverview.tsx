@@ -11,6 +11,7 @@ import { StudentAttendanceList } from "@/components/attendance/StudentAttendance
 import { format, addDays } from "date-fns";
 import { parseStudentCSV } from '@/utils/csvParser';
 import studentsCSV from '@/data/students.csv?raw';
+import { useNavigate } from "react-router-dom";
 
 // Parse student data
 const allStudents = parseStudentCSV(studentsCSV).map(row => ({
@@ -55,8 +56,8 @@ const generateMockAttendance = () => {
 
 const AttendanceOverview = () => {
   const { userRole, userName, photoUrl, signOut } = useAuth();
+  const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [selectedFilter, setSelectedFilter] = useState("all");
   const [attendanceData] = useState(generateMockAttendance());
 
   const handleLogout = async () => {
@@ -102,7 +103,25 @@ const AttendanceOverview = () => {
   }));
 
   const handleClassClick = (classId: string) => {
-    window.location.href = `/admin/attendance/details?class=${classId}`;
+    navigate(`/admin/attendance/details?class=${classId}`);
+  };
+
+  const handleExportReport = () => {
+    // Export all attendance data
+    const csvContent = [
+      ['Name', 'Email', 'Class', 'Stream', 'Status', 'Time Marked'].join(','),
+      ...studentAttendanceList.map(s => 
+        [s.name, s.email, s.class, s.stream, s.status, s.timeMarked || 'N/A'].join(',')
+      )
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `attendance-report-${format(selectedDate, 'yyyy-MM-dd')}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
   };
 
   if (!userRole) return null;
@@ -126,11 +145,7 @@ const AttendanceOverview = () => {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline">
-              <Filter className="h-4 w-4 mr-2" />
-              Filters
-            </Button>
-            <Button variant="outline">
+            <Button variant="outline" onClick={handleExportReport}>
               <Download className="h-4 w-4 mr-2" />
               Export Report
             </Button>
@@ -156,16 +171,6 @@ const AttendanceOverview = () => {
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
-              <Select value={selectedFilter} onValueChange={setSelectedFilter}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filter by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Students</SelectItem>
-                  <SelectItem value="present">Present Only</SelectItem>
-                  <SelectItem value="absent">Absent Only</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </CardContent>
         </Card>

@@ -1,5 +1,7 @@
 import { Movie } from "@/types/movie";
 import { Play, Film } from "lucide-react";
+import { useState, useEffect } from "react";
+import { getThumbnailUrl, extractThumbnailFilename } from "@/utils/movieThumbnailUtils";
 
 interface MovieCardProps {
   movie: Movie;
@@ -17,8 +19,18 @@ const genreColors: Record<string, string> = {
 };
 
 export function MovieCard({ movie, onClick }: MovieCardProps) {
+  const [thumbnailUrl, setThumbnailUrl] = useState<string>(movie.thumbnail);
   const primaryGenre = movie.genres[0] || "Drama";
   const gradientColor = genreColors[primaryGenre] || "from-gray-500 to-gray-700";
+
+  useEffect(() => {
+    const loadThumbnail = async () => {
+      const filename = extractThumbnailFilename(movie.thumbnail);
+      const url = await getThumbnailUrl(filename);
+      setThumbnailUrl(url);
+    };
+    loadThumbnail();
+  }, [movie.thumbnail]);
 
   return (
     <div 
@@ -28,7 +40,7 @@ export function MovieCard({ movie, onClick }: MovieCardProps) {
       {/* Thumbnail with Play Overlay */}
       <div className="relative w-full pt-[150%] bg-muted">
         <img 
-          src={movie.thumbnail}
+          src={thumbnailUrl}
           alt={movie.title}
           className="absolute top-0 left-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
           loading="lazy"
