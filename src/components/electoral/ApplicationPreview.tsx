@@ -1,8 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Download, CheckCircle, XCircle, Clock } from "lucide-react";
-import schoolLogo from "@/assets/school-logo.png";
-import headerImage from "@/assets/header.png";
 
 import { useState } from "react";
 import jsPDF from 'jspdf';
@@ -174,14 +172,14 @@ export default function ApplicationPreview({ application, showActions = true, on
           <div id="application-preview-content" className="w-full max-w-2xl mx-auto bg-white font-century-gothic text-application">
             {/* Header */}
             <div className="text-center border-b-2 border-black px-4 py-3 bg-white">
-              <img src={headerImage} alt="School Header" className="w-full max-w-2xl mx-auto object-contain" />
+              <img src="https://raw.githubusercontent.com/Fresh-Teacher/glorious-gateway-65056-78561-35497/main/src/assets/header.png" alt="School Header" className="w-full max-w-2xl mx-auto object-contain" />
             </div>
 
             {/* Content */}
             <div className="px-6 py-4 relative bg-white text-black">
               {/* Watermark overlay */}
               <div className="absolute inset-0 pointer-events-none" style={{
-                backgroundImage: `url(${schoolLogo})`,
+                backgroundImage: `url(https://raw.githubusercontent.com/Fresh-Teacher/glorious-gateway-65056-78561-35497/main/src/assets/school-logo.png)`,
                 backgroundRepeat: 'no-repeat',
                 backgroundPosition: 'center center',
                 backgroundSize: '350px 350px',

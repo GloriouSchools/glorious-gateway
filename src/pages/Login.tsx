@@ -1,7 +1,8 @@
 import { LoginForm } from "@/components/auth/LoginForm";
 import { Footer } from "@/components/layout/Footer";
 import { CookieConsent } from "@/components/CookieConsent";
-import schoolLogo from "@/assets/school-logo.png";
+
+const schoolLogo = "https://raw.githubusercontent.com/Fresh-Teacher/glorious-gateway-65056-78561-35497/main/src/assets/school-logo.png";
 
 export function LoginPage() {
   return (

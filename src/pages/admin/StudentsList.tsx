@@ -18,9 +18,10 @@ import {
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import defaultAvatar from "@/assets/default-avatar.png";
-import headerImage from "@/assets/header.png";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+
+const defaultAvatar = "https://raw.githubusercontent.com/Fresh-Teacher/glorious-gateway-65056-78561-35497/main/src/assets/default-avatar.png";
+const headerImage = "https://raw.githubusercontent.com/Fresh-Teacher/glorious-gateway-65056-78561-35497/main/src/assets/header.png";
 import { useAuth } from "@/hooks/useAuth";
 import { StudentsFilters } from "@/components/admin/StudentsFilters";
 import { StudentsActions } from "@/components/admin/StudentsActions";

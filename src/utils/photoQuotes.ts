@@ -1,20 +1,17 @@
-// Utility to handle photo quotes from GitHub repository
+// Utility to handle photo quotes from local JSON file
 export interface PhotoQuote {
   src: string;
   alt: string;
 }
 
-// GitHub repository configuration
-const GITHUB_REPO = 'Fresh-Teacher/glorious-gateway-65056-78561-35497';
-const GITHUB_FOLDER = 'src/assets/Quotations';
-const GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_FOLDER}`;
-const CACHE_KEY = 'github-quote-images';
+const CACHE_KEY = 'quote-images';
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
-interface GitHubFile {
-  name: string;
-  download_url: string;
-  type: string;
+interface QuotationsData {
+  "": {
+    path: string;
+    images: string[];
+  };
 }
 
 interface CachedImages {
@@ -22,7 +19,7 @@ interface CachedImages {
   timestamp: number;
 }
 
-// Get all quote images from GitHub API
+// Get all quote images from local JSON file
 const getQuoteImages = async (): Promise<string[]> => {
   // Check cache first
   const cached = localStorage.getItem(CACHE_KEY);
@@ -37,17 +34,15 @@ const getQuoteImages = async (): Promise<string[]> => {
     }
   }
 
-  // Fetch from GitHub API
+  // Fetch from local JSON file
   try {
-    const response = await fetch(GITHUB_API_URL);
+    const response = await fetch('/quotations.json');
     if (!response.ok) {
-      throw new Error(`GitHub API error: ${response.status}`);
+      throw new Error(`Error loading quotations: ${response.status}`);
     }
     
-    const files: GitHubFile[] = await response.json();
-    const imageUrls = files
-      .filter(file => file.type === 'file' && /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name))
-      .map(file => file.download_url);
+    const data: QuotationsData = await response.json();
+    const imageUrls = data[""]?.images || [];
 
     // Cache the results
     const cacheData: CachedImages = {
@@ -58,7 +53,7 @@ const getQuoteImages = async (): Promise<string[]> => {
 
     return imageUrls;
   } catch (error) {
-    console.error('Error fetching images from GitHub:', error);
+    console.error('Error fetching quotations:', error);
     
     // Return cached data even if expired, as fallback
     const cached = localStorage.getItem(CACHE_KEY);

@@ -4,7 +4,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import defaultAvatar from "@/assets/default-avatar.png";
+
+const defaultAvatar = "https://raw.githubusercontent.com/Fresh-Teacher/glorious-gateway-65056-78561-35497/main/src/assets/default-avatar.png";
 
 interface PhotoDialogProps {
   photoUrl?: string | null;

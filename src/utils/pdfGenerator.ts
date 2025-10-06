@@ -4,35 +4,44 @@ import { format } from 'date-fns';
 
 interface StudentAttendanceData {
   name: string;
-  class: string;
+  email: string;
   stream: string;
   status: 'present' | 'absent' | 'not-marked';
   timeMarked?: string;
   photoUrl?: string;
 }
 
-export const generateAttendancePDF = async (
+export const generateAttendancePDF = (
   students: StudentAttendanceData[],
   title: string = 'Student Attendance Report'
 ) => {
-  const doc = new jsPDF('landscape', 'mm', 'a4');
+  const doc = new jsPDF('portrait', 'mm', 'a4');
   
-  // Add header with logo and title
-  doc.setFontSize(20);
-  doc.setTextColor(30, 41, 59);
-  doc.text(title, doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
+  // Add school header image
+  const headerImg = new Image();
+  headerImg.src = 'https://raw.githubusercontent.com/Fresh-Teacher/glorious-gateway-65056-78561-35497/main/src/assets/header.png';
   
-  // Add date and time
+  // Add header image at the top
+  const imgWidth = 190;
+  const imgHeight = 30;
+  doc.addImage(headerImg, 'PNG', 10, 10, imgWidth, imgHeight);
+  
+  // Add title below header
+  doc.setFontSize(16);
+  doc.setTextColor(0, 0, 0);
+  doc.text(title, doc.internal.pageSize.getWidth() / 2, 48, { align: 'center' });
+  
+  // Add date
   doc.setFontSize(10);
-  doc.setTextColor(100, 116, 139);
+  doc.setTextColor(100, 100, 100);
   doc.text(
-    `Generated on: ${format(new Date(), 'MMMM dd, yyyy - HH:mm:ss')}`,
+    `Generated: ${format(new Date(), 'MMM dd, yyyy HH:mm')}`,
     doc.internal.pageSize.getWidth() / 2,
-    28,
+    55,
     { align: 'center' }
   );
   
-  // Add summary statistics
+  // Add summary
   const presentCount = students.filter(s => s.status === 'present').length;
   const absentCount = students.filter(s => s.status === 'absent').length;
   const notMarkedCount = students.filter(s => s.status === 'not-marked').length;
@@ -40,123 +49,64 @@ export const generateAttendancePDF = async (
   const attendanceRate = totalCount > 0 ? ((presentCount / totalCount) * 100).toFixed(1) : '0';
   
   doc.setFontSize(9);
-  doc.setTextColor(71, 85, 105);
-  const summaryY = 35;
-  doc.text(`Total Students: ${totalCount}`, 20, summaryY);
-  doc.text(`Present: ${presentCount}`, 65, summaryY);
-  doc.text(`Absent: ${absentCount}`, 100, summaryY);
-  doc.text(`Not Marked: ${notMarkedCount}`, 135, summaryY);
-  doc.text(`Attendance Rate: ${attendanceRate}%`, 180, summaryY);
+  doc.text(`Total: ${totalCount} | Present: ${presentCount} | Absent: ${absentCount} | Not Marked: ${notMarkedCount} | Rate: ${attendanceRate}%`, 
+    doc.internal.pageSize.getWidth() / 2, 61, { align: 'center' });
   
-  // Prepare table data
-  const tableData = await Promise.all(
-    students.map(async (student) => {
-      let imgData = '';
-      
-      // Try to load student photo
-      if (student.photoUrl) {
-        try {
-          imgData = await loadImageAsBase64(student.photoUrl);
-        } catch (error) {
-          console.warn(`Failed to load image for ${student.name}`);
-        }
-      }
-      
-      const statusText = student.status === 'present' ? 'Present' : 
-                        student.status === 'absent' ? 'Absent' : 'Not Marked';
-      const timeText = student.timeMarked 
-        ? new Date(student.timeMarked).toLocaleTimeString('en-US', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-          })
-        : '-';
-      
-      return {
-        photo: imgData,
-        name: student.name,
-        classStream: `${student.class} - ${student.stream}`,
-        status: statusText,
-        time: timeText
-      };
-    })
-  );
+  // Prepare table data with color-coded status
+  const tableData = students.map(student => {
+    return [
+      student.name,
+      student.email,
+      student.stream,
+      student.status === 'present' ? 'Present' : 
+      student.status === 'absent' ? 'Absent' : 'Not Marked'
+    ];
+  });
   
-  // Generate table
+  // Generate table with all borders
   autoTable(doc, {
-    startY: 45,
-    head: [['Photo', 'Student Name', 'Class - Stream', 'Status', 'Time Marked']],
-    body: tableData.map(row => [
-      row.photo ? { content: '', styles: { minCellHeight: 15 } } : '-',
-      row.name,
-      row.classStream,
-      row.status,
-      row.time
-    ]),
+    startY: 68,
+    head: [['Student Name', 'Email', 'Stream', 'Status']],
+    body: tableData,
+    theme: 'grid', // This adds all borders
     headStyles: {
-      fillColor: [30, 41, 59],
+      fillColor: [0, 0, 0],
       textColor: [255, 255, 255],
       fontSize: 10,
       fontStyle: 'bold',
-      halign: 'center'
+      halign: 'center',
+      lineWidth: 0.5,
+      lineColor: [0, 0, 0]
     },
     bodyStyles: {
       fontSize: 9,
-      textColor: [30, 41, 59]
+      textColor: [0, 0, 0],
+      lineWidth: 0.5,
+      lineColor: [0, 0, 0]
     },
     alternateRowStyles: {
-      fillColor: [248, 250, 252]
+      fillColor: [245, 245, 245]
     },
     columnStyles: {
-      0: { cellWidth: 20, halign: 'center' },
-      1: { cellWidth: 70 },
-      2: { cellWidth: 60, halign: 'center' },
-      3: { cellWidth: 30, halign: 'center' },
-      4: { cellWidth: 30, halign: 'center' }
+      0: { cellWidth: 50, halign: 'left' },
+      1: { cellWidth: 65, halign: 'left' },
+      2: { cellWidth: 30, halign: 'center' },
+      3: { cellWidth: 30, halign: 'center' }
     },
-    didDrawCell: (data) => {
-      // Draw student photos in the first column
-      if (data.column.index === 0 && data.row.index >= 0) {
-        const studentData = tableData[data.row.index];
-        if (studentData && studentData.photo) {
-          try {
-            const imgHeight = 12;
-            const imgWidth = 12;
-            const x = data.cell.x + (data.cell.width - imgWidth) / 2;
-            const y = data.cell.y + (data.cell.height - imgHeight) / 2;
-            doc.addImage(studentData.photo, 'JPEG', x, y, imgWidth, imgHeight);
-          } catch (error) {
-            console.warn('Failed to add image to PDF');
-          }
-        }
-      }
-      
-      // Color code status column
-      if (data.column.index === 3 && data.row.index >= 0) {
-        const studentData = tableData[data.row.index];
-        if (studentData) {
-          if (studentData.status === 'Present') {
-            doc.setFillColor(16, 185, 129);
-            doc.setTextColor(255, 255, 255);
-          } else if (studentData.status === 'Absent') {
-            doc.setFillColor(239, 68, 68);
-            doc.setTextColor(255, 255, 255);
-          } else {
-            doc.setFillColor(203, 213, 225);
-            doc.setTextColor(71, 85, 105);
-          }
-          const text = studentData.status;
-          const textWidth = doc.getTextWidth(text);
-          const rectWidth = textWidth + 6;
-          const rectHeight = 6;
-          const x = data.cell.x + (data.cell.width - rectWidth) / 2;
-          const y = data.cell.y + (data.cell.height - rectHeight) / 2;
-          doc.roundedRect(x, y, rectWidth, rectHeight, 2, 2, 'F');
-          doc.setFontSize(8);
-          doc.text(text, data.cell.x + data.cell.width / 2, y + 4.5, { align: 'center' });
+    didParseCell: function(data) {
+      // Color code the status column
+      if (data.column.index === 3 && data.section === 'body') {
+        const status = data.cell.text[0];
+        if (status === 'Absent') {
+          data.cell.styles.textColor = [255, 0, 0]; // Red for absent
+        } else if (status === 'Present') {
+          data.cell.styles.textColor = [0, 128, 0]; // Green for present
+        } else {
+          data.cell.styles.textColor = [128, 128, 128]; // Gray for not marked
         }
       }
     },
-    margin: { left: 10, right: 10 }
+    margin: { left: 15, right: 15 }
   });
   
   // Add footer
@@ -164,7 +114,7 @@ export const generateAttendancePDF = async (
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     doc.setFontSize(8);
-    doc.setTextColor(148, 163, 184);
+    doc.setTextColor(150, 150, 150);
     doc.text(
       `Page ${i} of ${pageCount}`,
       doc.internal.pageSize.getWidth() / 2,
@@ -176,26 +126,3 @@ export const generateAttendancePDF = async (
   return doc;
 };
 
-// Helper function to load image as base64
-const loadImageAsBase64 = (url: string): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = 'Anonymous';
-    
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) {
-        reject(new Error('Failed to get canvas context'));
-        return;
-      }
-      ctx.drawImage(img, 0, 0);
-      resolve(canvas.toDataURL('image/jpeg'));
-    };
-    
-    img.onerror = () => reject(new Error('Failed to load image'));
-    img.src = url;
-  });
-};

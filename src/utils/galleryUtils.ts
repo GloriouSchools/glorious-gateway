@@ -1,4 +1,4 @@
-// Utility for managing photo gallery with nested folder structure from GitHub
+// Utility for managing photo gallery from local JSON file
 
 export interface PhotoItem {
   id: string;
@@ -16,96 +16,71 @@ export interface FolderStructure {
   subfolders?: FolderStructure[];
 }
 
-// GitHub repository configuration
-const GITHUB_REPO = 'Fresh-Teacher/glorious-gateway-65056-78561-35497';
-const GITHUB_FOLDER = 'src/assets/Gallery';
-const GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_FOLDER}`;
-const CACHE_KEY = 'github-gallery-images';
-const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
-
-interface GitHubFile {
-  name: string;
+interface GalleryFolder {
   path: string;
-  download_url: string | null;
-  type: 'file' | 'dir';
-  url: string;
+  images: string[];
+  subfolders?: string[];
 }
 
+interface GalleryData {
+  [key: string]: GalleryFolder;
+}
+
+const CACHE_KEY = 'gallery-data';
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+
 interface CachedGalleryData {
-  images: Record<string, string>;
+  data: GalleryData;
   timestamp: number;
 }
 
-// Recursively fetch all images from GitHub API
-const fetchGitHubFolder = async (path: string): Promise<Record<string, string>> => {
-  const images: Record<string, string> = {};
-  
+// Fetch gallery data from local JSON file
+const fetchGalleryData = async (): Promise<GalleryData> => {
   try {
-    const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${path}`;
-    const response = await fetch(url);
-    
+    const response = await fetch('/gallery.json');
     if (!response.ok) {
-      console.error(`GitHub API error for ${path}: ${response.status}`);
-      return images;
+      console.error(`Error fetching gallery.json: ${response.status}`);
+      return {};
     }
-    
-    const files: GitHubFile[] = await response.json();
-    
-    // Process all items in parallel
-    const promises = files.map(async (file) => {
-      if (file.type === 'dir') {
-        // Recursively fetch subdirectory
-        const subImages = await fetchGitHubFolder(file.path);
-        Object.assign(images, subImages);
-      } else if (file.type === 'file' && /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name)) {
-        // Add image file
-        if (file.download_url) {
-          const relativePath = file.path.replace(`${GITHUB_FOLDER}/`, '');
-          images[relativePath] = file.download_url;
-        }
-      }
-    });
-    
-    await Promise.all(promises);
+    const data: GalleryData = await response.json();
+    return data;
   } catch (error) {
-    console.error(`Error fetching GitHub folder ${path}:`, error);
+    console.error('Error loading gallery data:', error);
+    return {};
   }
-  
-  return images;
 };
 
-// Get all images from all folders recursively
-const getAllImagesRecursive = async (): Promise<Record<string, string>> => {
+// Get all gallery data with caching
+const getAllGalleryData = async (): Promise<GalleryData> => {
   // Check cache first
   const cached = localStorage.getItem(CACHE_KEY);
   if (cached) {
     try {
-      const { images, timestamp }: CachedGalleryData = JSON.parse(cached);
+      const { data, timestamp }: CachedGalleryData = JSON.parse(cached);
       if (Date.now() - timestamp < CACHE_DURATION) {
-        return images;
+        return data;
       }
     } catch (error) {
       console.error('Error parsing cached gallery data:', error);
     }
   }
 
-  // Fetch from GitHub API
-  const images = await fetchGitHubFolder(GITHUB_FOLDER);
+  // Fetch from local JSON file
+  const data = await fetchGalleryData();
   
   // Cache the results
   const cacheData: CachedGalleryData = {
-    images,
+    data,
     timestamp: Date.now()
   };
   localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
 
-  return images;
+  return data;
 };
 
-// Extract folder structure from image paths
+// Extract folder structure from gallery data
 export const buildFolderStructure = async (): Promise<FolderStructure> => {
-  const images = await getAllImagesRecursive();
-  const paths = Object.keys(images);
+  const galleryData = await getAllGalleryData();
   
   // Build a tree structure
   const root: FolderStructure = {
@@ -118,17 +93,21 @@ export const buildFolderStructure = async (): Promise<FolderStructure> => {
   const folderMap = new Map<string, FolderStructure>();
   folderMap.set('', root);
 
-  paths.forEach(path => {
-    const parts = path.split('/');
-    parts.pop(); // Remove filename
-    
+  // Process each folder in the gallery data
+  Object.entries(galleryData).forEach(([folderKey, folderData]) => {
+    if (folderKey === '') {
+      // Root folder - count all images recursively
+      root.count = Object.values(galleryData).reduce((total, folder) => total + folder.images.length, 0);
+      return;
+    }
+
+    const parts = folderData.path.split('/').filter(p => p);
     if (parts.length === 0) return;
-    
+
     let currentPath = '';
     let parentFolder = root;
 
     parts.forEach((part, index) => {
-      const previousPath = currentPath;
       currentPath = currentPath ? `${currentPath}/${part}` : part;
       
       if (!folderMap.has(currentPath)) {
@@ -148,17 +127,23 @@ export const buildFolderStructure = async (): Promise<FolderStructure> => {
       
       parentFolder = folderMap.get(currentPath)!;
     });
-    
-    // Increment count for all parent folders
-    let pathToIncrement = '';
-    parts.forEach((part, index) => {
-      pathToIncrement = pathToIncrement ? `${pathToIncrement}/${part}` : part;
-      const folder = folderMap.get(pathToIncrement);
-      if (folder) {
-        folder.count++;
+
+    // Set count for this folder
+    const folder = folderMap.get(folderData.path);
+    if (folder) {
+      folder.count = folderData.images.length;
+      
+      // Add counts from subfolders if any
+      if (folderData.subfolders) {
+        folderData.subfolders.forEach(subfolderName => {
+          const subfolderPath = `${folderData.path}/${subfolderName}`;
+          const subfolderData = galleryData[subfolderPath];
+          if (subfolderData) {
+            folder.count += subfolderData.images.length;
+          }
+        });
       }
-    });
-    root.count++;
+    }
   });
 
   return root;
@@ -196,28 +181,35 @@ export const getFlatFolderList = (structure: FolderStructure, level = 0): Array<
 
 // Get all photos, optionally filtered by folder
 export const getPhotos = async (folderFilter: string = 'all'): Promise<PhotoItem[]> => {
-  const images = await getAllImagesRecursive();
+  const galleryData = await getAllGalleryData();
+  const photos: PhotoItem[] = [];
   
-  return Object.entries(images)
-    .filter(([path]) => {
-      if (!folderFilter || folderFilter === 'all') return true;
-      return path.startsWith(folderFilter + '/');
-    })
-    .map(([path, url], index) => {
-      const parts = path.split('/');
-      const filename = parts.pop() || '';
-      const folderPath = parts.join('/');
+  Object.entries(galleryData).forEach(([folderKey, folderData]) => {
+    if (folderKey === '') return; // Skip root
+    
+    // Check if this folder matches the filter
+    if (folderFilter !== 'all' && !folderData.path.startsWith(folderFilter)) {
+      return;
+    }
+    
+    folderData.images.forEach((imageUrl, index) => {
+      const urlParts = imageUrl.split('/');
+      const filename = urlParts[urlParts.length - 1];
+      const parts = folderData.path.split('/');
       const folder = parts[parts.length - 1] || 'Root';
       
-      return {
-        id: `photo-${index}-${filename}`,
-        src: url,
-        alt: filename.replace(/\.(jpg|jpeg|png|webp)$/, '').replace(/-|_/g, ' '),
+      photos.push({
+        id: `photo-${folderData.path}-${index}-${filename}`,
+        src: imageUrl,
+        alt: filename.replace(/\.(jpg|jpeg|png|gif|webp)$/i, '').replace(/-|_/g, ' '),
         folder,
-        folderPath,
+        folderPath: folderData.path,
         category: parts[0] || 'General'
-      };
+      });
     });
+  });
+  
+  return photos;
 };
 
 // Shuffle array for random display

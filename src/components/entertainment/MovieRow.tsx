@@ -102,67 +102,92 @@ export const MovieRow = memo(function MovieRow({ title, movies, onMovieClick }: 
   };
 
   return (
-    <div ref={rowRef} className="space-y-3 sm:space-y-4 lg:space-y-5 py-2">
-      <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground px-2 sm:px-4 lg:px-8 tracking-tight">
-        {title}
-      </h2>
+    <div ref={rowRef} className="w-full min-w-0 space-y-3 sm:space-y-4 py-2 px-2 sm:px-4">
+      {title && (
+        <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground tracking-tight">
+          {title}
+        </h2>
+      )}
       
       {!isVisible ? (
-        <div className="h-48 sm:h-56 md:h-64 lg:h-72 bg-muted/20 animate-pulse rounded-lg mx-2 sm:mx-4 lg:mx-8" />
+        <div className="w-full h-48 sm:h-56 md:h-64 bg-muted/20 animate-pulse rounded-lg" />
       ) : (
-      <div className="relative group/row">
-        {/* Left Arrow */}
-        {canScrollLeft && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute left-2 sm:left-4 lg:left-6 top-1/2 -translate-y-1/2 z-10 h-12 w-12 sm:h-14 sm:w-14 lg:h-16 lg:w-16 rounded-full bg-background/95 backdrop-blur-md opacity-0 group-hover/row:opacity-100 transition-all duration-300 shadow-2xl hover:scale-110 hover:bg-primary/20 border-2 border-primary/40"
-            onClick={() => scroll('left')}
-          >
-            <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-primary" />
-          </Button>
-        )}
-
-        {/* Movies Container */}
-        <div 
-          ref={scrollRef}
-          onScroll={handleScroll}
-          className="flex gap-2 sm:gap-3 lg:gap-4 overflow-x-auto scrollbar-hide px-2 sm:px-4 lg:px-8 pb-4 sm:pb-5 snap-x snap-mandatory scroll-smooth"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-        >
-          {movies.map((movie, index) => (
-            <div
-              key={`${movie.title}-${index}`}
-              className="flex-shrink-0 w-32 sm:w-40 md:w-48 lg:w-56 snap-start cursor-pointer group/card transition-all duration-300 hover:scale-110 hover:z-10"
-              onClick={() => onMovieClick(movie)}
-            >
-              <div className="relative aspect-[2/3] rounded-lg overflow-hidden shadow-xl group-hover/card:shadow-2xl transition-all duration-300 group-hover/card:ring-4 group-hover/card:ring-primary/60">
-                <MovieThumbnail movie={movie} />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-0 group-hover/card:opacity-100 transition-all duration-300 flex items-center justify-center">
-                  <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-full bg-white/95 flex items-center justify-center shadow-2xl scale-0 group-hover/card:scale-100 transition-all duration-300 animate-pulse">
-                    <Play className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-black fill-black ml-1" />
+        <>
+          {/* Mobile Grid Layout */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:hidden">
+            {movies.slice(0, 12).map((movie, index) => (
+              <div
+                key={`${movie.title}-${index}`}
+                className="cursor-pointer group/card transition-all duration-300 hover:scale-105"
+                onClick={() => onMovieClick(movie)}
+              >
+                <div className="relative aspect-[2/3] rounded-lg overflow-hidden shadow-lg group-hover/card:shadow-xl transition-all duration-300 group-hover/card:ring-2 group-hover/card:ring-primary/50">
+                  <MovieThumbnail movie={movie} />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover/card:opacity-100 transition-all duration-300 flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-full bg-white/95 flex items-center justify-center shadow-xl scale-0 group-hover/card:scale-100 transition-all duration-300">
+                      <Play className="w-6 h-6 text-black fill-black ml-0.5" />
+                    </div>
                   </div>
                 </div>
+                <h3 className="text-xs sm:text-sm font-semibold text-foreground mt-2 line-clamp-2 leading-tight group-hover/card:text-primary transition-colors">
+                  {movie.title}
+                </h3>
               </div>
-              <h3 className="text-xs sm:text-sm lg:text-base font-semibold text-foreground mt-2 sm:mt-3 line-clamp-2 px-1 leading-snug group-hover/card:text-primary transition-colors">
-                {movie.title}
-              </h3>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
-        {/* Right Arrow */}
-        {canScrollRight && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute right-2 sm:right-4 lg:right-6 top-1/2 -translate-y-1/2 z-10 h-12 w-12 sm:h-14 sm:w-14 lg:h-16 lg:w-16 rounded-full bg-background/95 backdrop-blur-md opacity-0 group-hover/row:opacity-100 transition-all duration-300 shadow-2xl hover:scale-110 hover:bg-primary/20 border-2 border-primary/40"
-            onClick={() => scroll('right')}
-          >
-            <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-primary" />
-          </Button>
-        )}
-      </div>
+          {/* Desktop Horizontal Scroll */}
+          <div className="relative group/row hidden lg:block">
+            {canScrollLeft && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 h-12 w-12 xl:h-14 xl:w-14 rounded-full bg-background/95 backdrop-blur-md opacity-0 group-hover/row:opacity-100 transition-all duration-300 shadow-2xl hover:scale-110 hover:bg-primary/20 border-2 border-primary/40"
+                onClick={() => scroll('left')}
+              >
+                <ArrowLeft className="w-5 h-5 xl:w-6 xl:h-6 text-primary" />
+              </Button>
+            )}
+
+            <div 
+              ref={scrollRef}
+              onScroll={handleScroll}
+              className="flex gap-4 overflow-x-auto scrollbar-hide pb-4 snap-x snap-mandatory scroll-smooth"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {movies.map((movie, index) => (
+                <div
+                  key={`${movie.title}-${index}`}
+                  className="flex-shrink-0 w-44 xl:w-52 snap-start cursor-pointer group/card transition-all duration-300 hover:scale-105 hover:z-10"
+                  onClick={() => onMovieClick(movie)}
+                >
+                  <div className="relative aspect-[2/3] rounded-lg overflow-hidden shadow-xl group-hover/card:shadow-2xl transition-all duration-300 group-hover/card:ring-4 group-hover/card:ring-primary/60">
+                    <MovieThumbnail movie={movie} />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-0 group-hover/card:opacity-100 transition-all duration-300 flex items-center justify-center">
+                      <div className="w-14 h-14 xl:w-16 xl:h-16 rounded-full bg-white/95 flex items-center justify-center shadow-2xl scale-0 group-hover/card:scale-100 transition-all duration-300 animate-pulse">
+                        <Play className="w-7 h-7 xl:w-8 xl:h-8 text-black fill-black ml-1" />
+                      </div>
+                    </div>
+                  </div>
+                  <h3 className="text-sm xl:text-base font-semibold text-foreground mt-3 line-clamp-2 leading-snug group-hover/card:text-primary transition-colors">
+                    {movie.title}
+                  </h3>
+                </div>
+              ))}
+            </div>
+
+            {canScrollRight && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 h-12 w-12 xl:h-14 xl:w-14 rounded-full bg-background/95 backdrop-blur-md opacity-0 group-hover/row:opacity-100 transition-all duration-300 shadow-2xl hover:scale-110 hover:bg-primary/20 border-2 border-primary/40"
+                onClick={() => scroll('right')}
+              >
+                <ArrowRight className="w-5 h-5 xl:w-6 xl:h-6 text-primary" />
+              </Button>
+            )}
+          </div>
+        </>
       )}
     </div>
   );

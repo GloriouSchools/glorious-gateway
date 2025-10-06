@@ -4,10 +4,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Download, Filter, BarChart3, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { AttendanceStats } from "@/components/attendance/AttendanceStats";
 import { ClassAttendanceTable } from "@/components/attendance/ClassAttendanceTable";
-import { StudentAttendanceList } from "@/components/attendance/StudentAttendanceList";
 import { format, addDays } from "date-fns";
 import { parseStudentCSV } from '@/utils/csvParser';
 import studentsCSV from '@/data/students.csv?raw';
@@ -95,33 +94,8 @@ const AttendanceOverview = () => {
     };
   });
 
-  // Student attendance list
-  const studentAttendanceList = allStudents.map(student => ({
-    ...student,
-    status: attendanceData[student.id]?.status || 'not-marked',
-    timeMarked: attendanceData[student.id]?.timeMarked
-  }));
-
   const handleClassClick = (classId: string) => {
     navigate(`/admin/attendance/details?class=${classId}`);
-  };
-
-  const handleExportReport = () => {
-    // Export all attendance data
-    const csvContent = [
-      ['Name', 'Email', 'Class', 'Stream', 'Status', 'Time Marked'].join(','),
-      ...studentAttendanceList.map(s => 
-        [s.name, s.email, s.class, s.stream, s.status, s.timeMarked || 'N/A'].join(',')
-      )
-    ].join('\n');
-    
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `attendance-report-${format(selectedDate, 'yyyy-MM-dd')}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
   };
 
   if (!userRole) return null;
@@ -133,41 +107,35 @@ const AttendanceOverview = () => {
       photoUrl={photoUrl}
       onLogout={handleLogout}
     >
-      <div className="space-y-6 animate-fade-in">
+      <div className="w-full min-w-0 space-y-4 sm:space-y-6 animate-fade-in px-2 sm:px-4 lg:px-6">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-elegant bg-clip-text text-transparent">
+        <div className="flex flex-col gap-2 sm:gap-4">
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-elegant bg-clip-text text-transparent truncate">
               Attendance Overview
             </h1>
-            <p className="text-muted-foreground mt-1">
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">
               Monitor and analyze attendance across the entire school
             </p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleExportReport}>
-              <Download className="h-4 w-4 mr-2" />
-              Export Report
-            </Button>
           </div>
         </div>
 
         {/* Date Selection */}
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-muted-foreground" />
-                <span className="text-sm font-medium text-muted-foreground">Viewing Date:</span>
+          <CardContent className="p-3 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+              <div className="flex items-center gap-2 shrink-0">
+                <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
+                <span className="text-xs sm:text-sm font-medium text-muted-foreground whitespace-nowrap">Viewing Date:</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={() => navigateDate('prev')}>
+              <div className="flex items-center gap-2 min-w-0">
+                <Button variant="outline" size="sm" onClick={() => navigateDate('prev')} className="shrink-0">
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <span className="font-semibold min-w-[200px] text-center">
-                  {format(selectedDate, 'EEEE, MMMM d, yyyy')}
+                <span className="font-semibold text-xs sm:text-sm text-center min-w-0 truncate sm:whitespace-nowrap px-2">
+                  {format(selectedDate, 'EEE, MMM d, yyyy')}
                 </span>
-                <Button variant="outline" size="sm" onClick={() => navigateDate('next')}>
+                <Button variant="outline" size="sm" onClick={() => navigateDate('next')} className="shrink-0">
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
@@ -186,9 +154,6 @@ const AttendanceOverview = () => {
 
         {/* Class-wise Table */}
         <ClassAttendanceTable classData={classData} onClassClick={handleClassClick} />
-
-        {/* Student List */}
-        <StudentAttendanceList students={studentAttendanceList} />
       </div>
     </DashboardLayout>
   );

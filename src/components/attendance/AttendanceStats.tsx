@@ -14,84 +14,84 @@ export const AttendanceStats = ({ totalStudents, present, absent, pending, atten
   const navigate = useNavigate();
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 w-full min-w-0">
       <Card 
-        className="hover-scale border-l-4 border-l-primary cursor-pointer transition-all hover:shadow-lg" 
+        className="hover-scale border-l-4 border-l-primary cursor-pointer transition-all hover:shadow-lg w-full min-w-0" 
         onClick={() => navigate('/admin/attendance/details?filter=all')}
       >
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Total Students</p>
-              <h3 className="text-3xl font-bold mt-2">{totalStudents}</h3>
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium text-muted-foreground">Total Students</p>
+              <h3 className="text-2xl sm:text-3xl font-bold mt-1 sm:mt-2">{totalStudents}</h3>
             </div>
-            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-              <Users className="h-6 w-6 text-primary" />
+            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+              <Users className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
             </div>
           </div>
         </CardContent>
       </Card>
 
       <Card 
-        className="hover-scale border-l-4 border-l-emerald-500 cursor-pointer transition-all hover:shadow-lg"
+        className="hover-scale border-l-4 border-l-emerald-500 cursor-pointer transition-all hover:shadow-lg w-full min-w-0"
         onClick={() => navigate('/admin/attendance/details?filter=present')}
       >
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Present</p>
-              <h3 className="text-3xl font-bold mt-2 text-emerald-600">{present}</h3>
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium text-muted-foreground">Present</p>
+              <h3 className="text-2xl sm:text-3xl font-bold mt-1 sm:mt-2 text-emerald-600">{present}</h3>
             </div>
-            <div className="h-12 w-12 rounded-full bg-emerald-500/10 flex items-center justify-center">
-              <UserCheck className="h-6 w-6 text-emerald-600" />
+            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
+              <UserCheck className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-600" />
             </div>
           </div>
         </CardContent>
       </Card>
 
       <Card 
-        className="hover-scale border-l-4 border-l-red-500 cursor-pointer transition-all hover:shadow-lg"
+        className="hover-scale border-l-4 border-l-red-500 cursor-pointer transition-all hover:shadow-lg w-full min-w-0"
         onClick={() => navigate('/admin/attendance/details?filter=absent')}
       >
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Absent</p>
-              <h3 className="text-3xl font-bold mt-2 text-red-600">{absent}</h3>
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium text-muted-foreground">Absent</p>
+              <h3 className="text-2xl sm:text-3xl font-bold mt-1 sm:mt-2 text-red-600">{absent}</h3>
             </div>
-            <div className="h-12 w-12 rounded-full bg-red-500/10 flex items-center justify-center">
-              <UserX className="h-6 w-6 text-red-600" />
+            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-red-500/10 flex items-center justify-center shrink-0">
+              <UserX className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
             </div>
           </div>
         </CardContent>
       </Card>
 
       <Card 
-        className="hover-scale border-l-4 border-l-yellow-500 cursor-pointer transition-all hover:shadow-lg"
+        className="hover-scale border-l-4 border-l-yellow-500 cursor-pointer transition-all hover:shadow-lg w-full min-w-0"
         onClick={() => navigate('/admin/attendance/details?filter=pending')}
       >
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Pending</p>
-              <h3 className="text-3xl font-bold mt-2 text-yellow-600">{pending}</h3>
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium text-muted-foreground">Pending</p>
+              <h3 className="text-2xl sm:text-3xl font-bold mt-1 sm:mt-2 text-yellow-600">{pending}</h3>
             </div>
-            <div className="h-12 w-12 rounded-full bg-yellow-500/10 flex items-center justify-center">
-              <Clock className="h-6 w-6 text-yellow-600" />
+            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-yellow-500/10 flex items-center justify-center shrink-0">
+              <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="hover-scale border-l-4 border-l-blue-500">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Attendance Rate</p>
-              <h3 className="text-3xl font-bold mt-2 text-blue-600">{attendanceRate}%</h3>
+      <Card className="hover-scale border-l-4 border-l-blue-500 w-full min-w-0">
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium text-muted-foreground">Attendance Rate</p>
+              <h3 className="text-2xl sm:text-3xl font-bold mt-1 sm:mt-2 text-blue-600">{attendanceRate}%</h3>
             </div>
-            <div className="h-12 w-12 rounded-full bg-blue-500/10 flex items-center justify-center">
-              <TrendingUp className="h-6 w-6 text-blue-600" />
+            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-blue-500/10 flex items-center justify-center shrink-0">
+              <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
             </div>
           </div>
         </CardContent>

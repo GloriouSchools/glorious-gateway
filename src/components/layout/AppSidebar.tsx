@@ -40,8 +40,9 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import defaultAvatar from "@/assets/default-avatar.png";
 import { UserRole } from "@/types/user";
+
+const defaultAvatar = "https://raw.githubusercontent.com/Fresh-Teacher/glorious-gateway-65056-78561-35497/main/src/assets/default-avatar.png";
 
 interface AppSidebarProps {
   userRole: UserRole;

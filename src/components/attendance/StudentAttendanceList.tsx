@@ -106,7 +106,7 @@ export const StudentAttendanceList = ({ students }: StudentAttendanceListProps) 
       // Use all filtered students (not just displayed ones) for the PDF
       const studentsForPDF = filteredStudents.map(student => ({
         name: student.name,
-        class: student.class,
+        email: student.email,
         stream: student.stream,
         status: student.status,
         timeMarked: student.timeMarked,

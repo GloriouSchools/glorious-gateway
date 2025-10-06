@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Home, ArrowLeft, Cat } from "lucide-react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useAuth } from "@/hooks/useAuth";
-import cat404Image from "@/assets/cat-404.jpg";
-import curiosityCatGif from "@/assets/curiosity-cat.gif";
+
+const cat404Image = "https://raw.githubusercontent.com/Fresh-Teacher/glorious-gateway-65056-78561-35497/main/src/assets/cat-404.jpg";
+const curiosityCatGif = "https://raw.githubusercontent.com/Fresh-Teacher/glorious-gateway-65056-78561-35497/main/src/assets/curiosity-cat.gif";
 
 const NotFound = () => {
   const location = useLocation();

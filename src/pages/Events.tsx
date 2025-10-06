@@ -77,35 +77,35 @@ const Events = () => {
       photoUrl={photoUrl} 
       onLogout={handleLogout}
     >
-      <div className="space-y-8 animate-fade-in">
-        <div className="text-center space-y-3">
-          <h1 className="text-5xl md:text-6xl font-bold gradient-text">🎬 School Events 🎉</h1>
-          <p className="text-lg md:text-xl text-muted-foreground font-medium">Watch memorable moments from our school!</p>
+      <div className="w-full min-w-0 space-y-6 sm:space-y-8 animate-fade-in px-2 sm:px-4">
+        <div className="text-center space-y-2 sm:space-y-3">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold gradient-text px-2">🎬 School Events 🎉</h1>
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground font-medium px-2">Watch memorable moments from our school!</p>
         </div>
 
-        <div className="max-w-3xl mx-auto">
+        <div className="w-full min-w-0 max-w-3xl mx-auto">
           <div className="relative">
-            <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-6 w-6 text-muted-foreground" />
+            <Search className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground flex-shrink-0" />
             <Input
               type="text"
-              placeholder="🔍 Search for events..."
+              placeholder="🔍 Search events..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-14 pr-4 h-16 text-lg rounded-2xl border-2 focus:border-primary shadow-lg"
+              className="w-full min-w-0 pl-11 sm:pl-14 pr-4 h-12 sm:h-14 lg:h-16 text-base sm:text-lg rounded-2xl border-2 focus:border-primary shadow-lg"
             />
           </div>
         </div>
 
-        <div className="max-w-5xl mx-auto space-y-4">
-          <p className="text-center text-lg font-semibold text-foreground mb-4">Filter by Category:</p>
-          <div className="max-w-md mx-auto">
+        <div className="w-full min-w-0 max-w-5xl mx-auto space-y-3 sm:space-y-4">
+          <p className="text-center text-base sm:text-lg font-semibold text-foreground">Filter by Category:</p>
+          <div className="w-full min-w-0 max-w-md mx-auto">
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="h-14 text-lg rounded-xl border-2 shadow-md">
-                <SelectValue placeholder="🎨 Pick a Category" />
+              <SelectTrigger className="w-full min-w-0 h-12 sm:h-14 text-base sm:text-lg rounded-xl border-2 shadow-md">
+                <SelectValue placeholder="🎨 Pick Category" />
               </SelectTrigger>
-              <SelectContent className="text-base">
+              <SelectContent className="text-sm sm:text-base">
                 {categories.map(cat => (
-                  <SelectItem key={cat} value={cat} className="text-base py-3">
+                  <SelectItem key={cat} value={cat} className="text-sm sm:text-base py-2 sm:py-3">
                     {cat === "all" ? "🎨 All Categories" : cat}
                   </SelectItem>
                 ))}
@@ -123,7 +123,7 @@ const Events = () => {
                 }}
                 variant="outline"
                 size="lg"
-                className="rounded-xl px-8 h-12 text-base font-semibold"
+                className="w-full sm:w-auto rounded-xl px-6 sm:px-8 h-11 sm:h-12 text-sm sm:text-base font-semibold"
               >
                 🔄 Clear All Filters
               </Button>
@@ -132,9 +132,9 @@ const Events = () => {
         </div>
 
         {(searchQuery || selectedCategory !== "all") && (
-          <div className="text-center">
-            <div className="inline-block bg-primary/10 px-6 py-3 rounded-full border-2 border-primary/20">
-              <p className="text-lg font-bold text-primary">
+          <div className="text-center px-2">
+            <div className="inline-block bg-primary/10 px-4 sm:px-6 py-2 sm:py-3 rounded-full border-2 border-primary/20">
+              <p className="text-sm sm:text-base lg:text-lg font-bold text-primary">
                 🎉 Found {filteredEvents.length} event{filteredEvents.length !== 1 ? 's' : ''} for you!
               </p>
             </div>
@@ -142,7 +142,7 @@ const Events = () => {
         )}
 
         {paginatedEvents.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 pb-8">
+          <div className="w-full min-w-0 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6 pb-6 sm:pb-8">
             {paginatedEvents.map((event, index) => (
               <EventCard 
                 key={`${event.src}-${index}`}
@@ -152,17 +152,17 @@ const Events = () => {
             ))}
           </div>
         ) : (
-          <div className="text-center py-16 bg-gradient-to-br from-card to-card/50 rounded-3xl border-2 border-dashed border-border shadow-lg">
-            <div className="text-6xl mb-4">😕</div>
-            <p className="text-2xl font-bold text-card-foreground mb-2">Oops! No events found</p>
-            <p className="text-lg text-muted-foreground mb-6">Try searching for something else or change your filters</p>
+          <div className="text-center py-12 sm:py-16 bg-gradient-to-br from-card to-card/50 rounded-2xl sm:rounded-3xl border-2 border-dashed border-border shadow-lg mx-2">
+            <div className="text-4xl sm:text-5xl lg:text-6xl mb-3 sm:mb-4">😕</div>
+            <p className="text-lg sm:text-xl lg:text-2xl font-bold text-card-foreground mb-2 px-2">Oops! No events found</p>
+            <p className="text-sm sm:text-base lg:text-lg text-muted-foreground mb-4 sm:mb-6 px-2">Try searching for something else or change your filters</p>
             <Button 
               onClick={() => {
                 setSelectedCategory("all");
                 setSearchQuery("");
               }}
               size="lg"
-              className="rounded-xl px-8 h-12 text-base font-semibold"
+              className="w-auto rounded-xl px-6 sm:px-8 h-11 sm:h-12 text-sm sm:text-base font-semibold"
             >
               🔄 Show All Events
             </Button>
@@ -170,21 +170,21 @@ const Events = () => {
         )}
 
         {filteredEvents.length > 0 && totalPages > 1 && (
-          <div className="flex flex-col items-center gap-6 pt-8 pb-4">
-            <div className="flex items-center gap-4">
+          <div className="flex flex-col items-center gap-4 sm:gap-6 pt-6 sm:pt-8 pb-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               <Button
                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
                 size="lg"
-                className="rounded-xl px-6 h-14 text-base font-bold gap-2"
+                className="rounded-xl px-3 sm:px-6 h-11 sm:h-14 text-sm sm:text-base font-bold gap-1 sm:gap-2"
                 variant="outline"
               >
-                <ChevronLeft className="w-5 h-5" />
-                Previous
+                <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">Previous</span>
               </Button>
               
-              <div className="bg-primary text-primary-foreground px-8 py-3 rounded-xl shadow-lg">
-                <span className="text-lg font-bold">
+              <div className="bg-primary text-primary-foreground px-4 sm:px-8 py-2 sm:py-3 rounded-xl shadow-lg">
+                <span className="text-sm sm:text-base lg:text-lg font-bold whitespace-nowrap">
                   Page {currentPage} of {totalPages}
                 </span>
               </div>
@@ -193,11 +193,11 @@ const Events = () => {
                 onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                 disabled={currentPage === totalPages}
                 size="lg"
-                className="rounded-xl px-6 h-14 text-base font-bold gap-2"
+                className="rounded-xl px-3 sm:px-6 h-11 sm:h-14 text-sm sm:text-base font-bold gap-1 sm:gap-2"
                 variant="outline"
               >
-                Next
-                <ChevronRight className="w-5 h-5" />
+                <span className="hidden sm:inline">Next</span>
+                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
               </Button>
             </div>
 
@@ -205,13 +205,13 @@ const Events = () => {
               value={itemsPerPage.toString()} 
               onValueChange={(value) => setItemsPerPage(parseInt(value))}
             >
-              <SelectTrigger className="w-48 h-12 text-base rounded-xl border-2">
+              <SelectTrigger className="w-full sm:w-48 max-w-[200px] h-11 sm:h-12 text-sm sm:text-base rounded-xl border-2">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="12" className="text-base py-3">🎬 Show 12 events</SelectItem>
-                <SelectItem value="24" className="text-base py-3">🎬 Show 24 events</SelectItem>
-                <SelectItem value="48" className="text-base py-3">🎬 Show 48 events</SelectItem>
+                <SelectItem value="12" className="text-sm sm:text-base py-2 sm:py-3">🎬 Show 12</SelectItem>
+                <SelectItem value="24" className="text-sm sm:text-base py-2 sm:py-3">🎬 Show 24</SelectItem>
+                <SelectItem value="48" className="text-sm sm:text-base py-2 sm:py-3">🎬 Show 48</SelectItem>
               </SelectContent>
             </Select>
           </div>

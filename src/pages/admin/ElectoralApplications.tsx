@@ -38,8 +38,9 @@ import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useAuth } from "@/hooks/useAuth";
-import headerImage from "@/assets/header.png";
 import { DownloadProgressModal } from "@/components/ui/download-progress-modal";
+
+const headerImage = "https://raw.githubusercontent.com/Fresh-Teacher/glorious-gateway-65056-78561-35497/main/src/assets/header.png";
 import { formatInTimeZone } from 'date-fns-tz';
 
 interface ElectoralApplication {

@@ -9,7 +9,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
-import schoolLogo from "@/assets/school-logo.png";
+
+const schoolLogo = "https://raw.githubusercontent.com/Fresh-Teacher/glorious-gateway-65056-78561-35497/main/src/assets/school-logo.png";
 
 interface UserAvatarDropdownProps {
   userName: string;

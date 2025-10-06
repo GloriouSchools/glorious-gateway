@@ -1,15 +1,13 @@
-// Utility for fetching movie thumbnails from GitHub with 24-hour caching
+// Utility for fetching movie thumbnails from local JSON file with 24-hour caching
 
-const GITHUB_REPO = 'Fresh-Teacher/glorious-gateway-65056-78561-35497';
-const GITHUB_FOLDER = 'src/assets/thumbnails';
-const GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_FOLDER}`;
-const CACHE_KEY = 'github-movie-thumbnails';
+const CACHE_KEY = 'movie-thumbnails';
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
-interface GitHubFile {
-  name: string;
-  download_url: string | null;
-  type: string;
+interface ThumbnailsData {
+  "": {
+    path: string;
+    images: string[];
+  };
 }
 
 interface CachedThumbnails {
@@ -17,29 +15,28 @@ interface CachedThumbnails {
   timestamp: number;
 }
 
-// Fetch all thumbnails from GitHub API
-const fetchThumbnailsFromGitHub = async (): Promise<Record<string, string>> => {
+// Fetch all thumbnails from local JSON file
+const fetchThumbnailsFromJSON = async (): Promise<Record<string, string>> => {
   const thumbnails: Record<string, string> = {};
   
   try {
-    const response = await fetch(GITHUB_API_URL);
+    const response = await fetch('/thumbnails.json');
     
     if (!response.ok) {
-      console.error(`GitHub API error: ${response.status}`);
+      console.error(`Error loading thumbnails: ${response.status}`);
       return thumbnails;
     }
     
-    const files: GitHubFile[] = await response.json();
+    const data: ThumbnailsData = await response.json();
+    const imageUrls = data[""]?.images || [];
     
-    files.forEach(file => {
-      if (file.type === 'file' && /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name)) {
-        if (file.download_url) {
-          thumbnails[file.name] = file.download_url;
-        }
-      }
+    imageUrls.forEach(url => {
+      const parts = url.split('/');
+      const filename = parts[parts.length - 1];
+      thumbnails[filename] = url;
     });
   } catch (error) {
-    console.error('Error fetching thumbnails from GitHub:', error);
+    console.error('Error fetching thumbnails:', error);
   }
   
   return thumbnails;
@@ -60,8 +57,8 @@ export const getMovieThumbnails = async (): Promise<Record<string, string>> => {
     }
   }
 
-  // Fetch from GitHub API
-  const thumbnails = await fetchThumbnailsFromGitHub();
+  // Fetch from local JSON file
+  const thumbnails = await fetchThumbnailsFromJSON();
   
   // Cache the results
   const cacheData: CachedThumbnails = {
