@@ -292,7 +292,7 @@ export function StudentDashboard() {
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-transparent" />
             <div className="relative z-10 text-center space-y-4 pt-8 md:pt-12">
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-300 via-yellow-200 to-orange-300 px-4 font-poppins animate-pulse-slow [text-shadow:_0_0_20px_rgb(249_115_22),_0_0_40px_rgb(249_115_22),_0_0_60px_rgb(251_146_60),_2px_2px_8px_rgb(0_0_0),_-2px_-2px_8px_rgb(0_0_0),_4px_4px_12px_rgb(0_0_0)] drop-shadow-[0_0_30px_rgba(249,115,22,0.8)]">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-orange-500 px-4 font-poppins drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] [text-shadow:_2px_2px_4px_rgb(0_0_0_/_80%)]">
                 {greeting}, {formatGreetingName(userName || '', 'student') || 'Superstar'}! 
               </h1>
               
@@ -430,24 +430,8 @@ export function StudentDashboard() {
         </div>
       </ScrollReveal>
 
-      {/* Motivational Footer */}
-      <ScrollReveal animation="fadeInUp" delay={400}>
-        <Card className="bg-gradient-to-r from-green-400 to-blue-500 text-white border-0">
-          <CardContent className="p-6 text-center">
-            <div className="flex justify-center items-center space-x-2 mb-4">
-              <Target className="h-6 w-6 animate-pulse" />
-              <span className="text-2xl font-bold">You're doing AMAZING! 🌟</span>
-              <Target className="h-6 w-6 animate-pulse" />
-            </div>
-            <p className="text-lg opacity-90">
-              Every day is a new adventure. Keep exploring, keep learning, and keep being awesome! 🚀
-            </p>
-          </CardContent>
-        </Card>
-      </ScrollReveal>
-
       {/* Quote of the Day */}
-      <ScrollReveal animation="fadeInUp" delay={450}>
+      <ScrollReveal animation="fadeInUp" delay={400}>
         <Card 
           className="group cursor-pointer hover:shadow-2xl transition-all duration-300 border-2 hover:border-primary/50 overflow-hidden relative"
           onClick={() => setIsQuoteModalOpen(true)}
@@ -465,14 +449,14 @@ export function StudentDashboard() {
             </div>
           </CardHeader>
           <CardContent className="relative z-10">
-            <div className="relative rounded-lg overflow-hidden shadow-lg group-hover:shadow-xl transition-shadow duration-300">
+            <div className="relative rounded-lg overflow-hidden shadow-lg group-hover:shadow-xl transition-shadow duration-300 bg-muted">
               <img
                 src={currentQuote.src}
                 alt={currentQuote.alt}
-                className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-500"
+                className="w-full h-96 object-contain group-hover:scale-105 transition-transform duration-500"
                 loading="lazy"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
               <div className="absolute bottom-4 left-4 right-4 text-white">
                 <p className="text-sm font-medium opacity-90">
                   Click to view, download, or get a new quote

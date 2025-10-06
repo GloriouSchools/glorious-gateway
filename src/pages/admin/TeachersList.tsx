@@ -22,13 +22,13 @@ import {
 import { 
   Search, 
   Filter, 
-  Download, 
-  Mail,
-  Phone,
-  MapPin,
   ArrowLeft,
   Loader2,
-  FileText
+  UserPlus,
+  FileText,
+  Phone,
+  MapPin,
+  Mail
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,6 +38,12 @@ import "jspdf-autotable";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { StudentsPagination } from "@/components/admin/StudentsPagination";
+import { AddTeacherModal } from "@/components/admin/AddTeacherModal";
+import { TeacherActionsDropdown } from "@/components/admin/TeacherActionsDropdown";
+import { SuspendTeacherModal } from "@/components/admin/SuspendTeacherModal";
+import { TeacherLeaveModal } from "@/components/admin/TeacherLeaveModal";
+import { ChangeTeacherClassModal } from "@/components/admin/ChangeTeacherClassModal";
+import { ConfirmActionModal } from "@/components/admin/ConfirmActionModal";
 
 interface Teacher {
   id: string;
@@ -68,9 +74,17 @@ export default function TeachersList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
-  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  
+  // Modals
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [suspendModalOpen, setSuspendModalOpen] = useState(false);
+  const [leaveModalOpen, setLeaveModalOpen] = useState(false);
+  const [changeClassModalOpen, setChangeClassModalOpen] = useState(false);
+  const [terminateModalOpen, setTerminateModalOpen] = useState(false);
+  const [archiveModalOpen, setArchiveModalOpen] = useState(false);
+  const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
 
   // Debounce search term
   useEffect(() => {
@@ -240,17 +254,26 @@ export default function TeachersList() {
     >
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Teachers List</h1>
-            <p className="text-muted-foreground">
-              Total: {filteredTeachers.length} of {teachers.length} teachers
-            </p>
-          </div>
-          <Button onClick={downloadPDF} className="gap-2">
-            <FileText className="h-4 w-4" />
-            Download PDF
+        <div className="flex items-center justify-between gap-4">
+          <Button variant="outline" size="sm" onClick={() => navigate('/')}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
           </Button>
+          <div className="flex gap-2">
+            <Button onClick={downloadPDF} variant="outline" size="sm">
+              <FileText className="h-4 w-4 mr-2" />
+              PDF
+            </Button>
+            <Button onClick={() => setAddModalOpen(true)} size="sm">
+              <UserPlus className="h-4 w-4 mr-2" />
+              Enroll Teacher
+            </Button>
+          </div>
+        </div>
+        
+        <div>
+          <h1 className="text-2xl font-bold">Teachers ({filteredTeachers.length})</h1>
+          <p className="text-sm text-muted-foreground">Total: {teachers.length} teachers</p>
         </div>
 
         {/* Filters */}
@@ -366,15 +389,30 @@ export default function TeachersList() {
                           </div>
                         </TableCell>
                         <TableCell className="p-4">
-                          <div className="flex flex-col gap-1">
-                            <Button size="sm" variant="outline" className="h-8 w-full">
-                              <Mail className="h-4 w-4 mr-1" />
-                              Email
-                            </Button>
-                            <Button size="sm" variant="outline" className="h-8 w-full">
-                              Edit
-                            </Button>
-                          </div>
+                          <TeacherActionsDropdown
+                            teacherId={teacher.id}
+                            teacherName={teacher.name}
+                            onSuspend={() => {
+                              setSelectedTeacher(teacher);
+                              setSuspendModalOpen(true);
+                            }}
+                            onTerminate={() => {
+                              setSelectedTeacher(teacher);
+                              setTerminateModalOpen(true);
+                            }}
+                            onArchive={() => {
+                              setSelectedTeacher(teacher);
+                              setArchiveModalOpen(true);
+                            }}
+                            onChangeClass={() => {
+                              setSelectedTeacher(teacher);
+                              setChangeClassModalOpen(true);
+                            }}
+                            onLeave={() => {
+                              setSelectedTeacher(teacher);
+                              setLeaveModalOpen(true);
+                            }}
+                          />
                         </TableCell>
                       </TableRow>
                     ))
@@ -523,6 +561,72 @@ export default function TeachersList() {
           )}
         </div>
       </div>
+      
+      {/* Modals */}
+      <AddTeacherModal
+        open={addModalOpen}
+        onOpenChange={setAddModalOpen}
+        onSuccess={fetchTeachers}
+      />
+      
+      {selectedTeacher && (
+        <>
+          <SuspendTeacherModal
+            open={suspendModalOpen}
+            onOpenChange={setSuspendModalOpen}
+            teacherId={selectedTeacher.id}
+            teacherName={selectedTeacher.name}
+            onSuccess={fetchTeachers}
+          />
+          
+          <TeacherLeaveModal
+            open={leaveModalOpen}
+            onOpenChange={setLeaveModalOpen}
+            teacherId={selectedTeacher.id}
+            teacherName={selectedTeacher.name}
+            onSuccess={fetchTeachers}
+          />
+          
+          <ChangeTeacherClassModal
+            open={changeClassModalOpen}
+            onOpenChange={setChangeClassModalOpen}
+            teacherId={selectedTeacher.id}
+            teacherName={selectedTeacher.name}
+            currentClasses={selectedTeacher.classesTaught}
+            currentSubjects={selectedTeacher.subjectsTaught}
+            onSuccess={fetchTeachers}
+          />
+          
+          <ConfirmActionModal
+            open={terminateModalOpen}
+            onOpenChange={setTerminateModalOpen}
+            onConfirm={async () => {
+              const { error } = await supabase.from("teachers").delete().eq("id", selectedTeacher.id);
+              if (error) toast.error("Failed to terminate teacher");
+              else { toast.success("Teacher terminated"); fetchTeachers(); }
+              setTerminateModalOpen(false);
+            }}
+            title="Terminate Teacher"
+            description={`Are you sure you want to permanently terminate ${selectedTeacher.name}? This action cannot be undone.`}
+            confirmText="Terminate"
+            variant="destructive"
+          />
+          
+          <ConfirmActionModal
+            open={archiveModalOpen}
+            onOpenChange={setArchiveModalOpen}
+            onConfirm={async () => {
+              const { error } = await supabase.from("teachers").update({ is_verified: false }).eq("id", selectedTeacher.id);
+              if (error) toast.error("Failed to archive teacher");
+              else { toast.success("Teacher archived"); fetchTeachers(); }
+              setArchiveModalOpen(false);
+            }}
+            title="Archive Teacher"
+            description={`Archive ${selectedTeacher.name}? They will be marked as inactive.`}
+            confirmText="Archive"
+          />
+        </>
+      )}
       </div>
     </DashboardLayout>
   );

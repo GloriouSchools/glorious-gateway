@@ -139,16 +139,6 @@ export function QuoteModal({ isOpen, onClose, quote, onNewQuote }: QuoteModalPro
                   Share
                 </AnimatedButton>
                 
-                <AnimatedButton
-                  variant="outline"
-                  size="sm"
-                  animation="zoom"
-                  onClick={() => handleShare('copy')}
-                  className="bg-gray-50 hover:bg-gray-100 border-gray-200 text-gray-700"
-                >
-                  <Copy className="h-4 w-4" />
-                </AnimatedButton>
-                
               </div>
               
               {/* Download Button */}

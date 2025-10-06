@@ -517,7 +517,7 @@ export function AdminDashboard() {
               <img
                 src={currentQuote.src}
                 alt={currentQuote.alt}
-                className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-500"
+                className="w-full h-96 object-contain group-hover:scale-105 transition-transform duration-500"
                 loading="lazy"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />

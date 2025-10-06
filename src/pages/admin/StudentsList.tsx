@@ -28,6 +28,12 @@ import { StudentsPagination } from "@/components/admin/StudentsPagination";
 import { StudentCard } from "@/components/admin/StudentCard";
 import { ResponsiveTable, MobileCardView } from "@/components/admin/ResponsiveTable";
 import { Badge } from "@/components/ui/badge";
+import { AddStudentModal } from "@/components/admin/AddStudentModal";
+import { StudentActionsDropdown } from "@/components/admin/StudentActionsDropdown";
+import { SuspendStudentModal } from "@/components/admin/SuspendStudentModal";
+import { ChangeClassModal } from "@/components/admin/ChangeClassModal";
+import { ConfirmActionModal } from "@/components/admin/ConfirmActionModal";
+import { UserPlus } from "lucide-react";
 
 interface Student {
   id: string;
@@ -64,6 +70,14 @@ export default function StudentsList() {
   const [sortBy, setSortBy] = useState<string>("created_at");
   const [sortOrder, setSortOrder] = useState<string>("desc");
   const [paramStream, setParamStream] = useState<string | null>(null);
+  
+  // Modals state
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [suspendModalOpen, setSuspendModalOpen] = useState(false);
+  const [changeClassModalOpen, setChangeClassModalOpen] = useState(false);
+  const [expelModalOpen, setExpelModalOpen] = useState(false);
+  const [archiveModalOpen, setArchiveModalOpen] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
   // Reference data maps
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
@@ -263,8 +277,8 @@ export default function StudentsList() {
   return (
     <DashboardLayout userRole={userRole || "admin"} userName={userName} photoUrl={photoUrl} onLogout={handleLogout}>
       <div className="w-full min-w-0 space-y-6 px-4 sm:px-6 lg:px-8">
-        {/* Back Button - Mobile Friendly */}
-        <div className="flex items-center gap-4">
+        {/* Back Button & Add Student */}
+        <div className="flex items-center justify-between gap-4">
           <Button 
             variant="outline" 
             size="sm"
@@ -274,6 +288,10 @@ export default function StudentsList() {
             <ArrowLeft className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">Back to Dashboard</span>
             <span className="sm:hidden">Back</span>
+          </Button>
+          <Button onClick={() => setAddModalOpen(true)} size="sm">
+            <UserPlus className="h-4 w-4 mr-2" />
+            Admit Student
           </Button>
         </div>
 
@@ -335,6 +353,7 @@ export default function StudentsList() {
               <TableHead className="min-w-[100px]">Class</TableHead>
               <TableHead className="min-w-[100px]">Stream</TableHead>
               <TableHead className="min-w-[100px]">Status</TableHead>
+              <TableHead className="w-[50px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -393,6 +412,28 @@ export default function StudentsList() {
                       {student.is_verified ? "Verified" : "Unverified"}
                     </Badge>
                   </TableCell>
+                  <TableCell>
+                    <StudentActionsDropdown
+                      studentId={student.id}
+                      studentName={student.name}
+                      onSuspend={() => {
+                        setSelectedStudent(student);
+                        setSuspendModalOpen(true);
+                      }}
+                      onExpel={() => {
+                        setSelectedStudent(student);
+                        setExpelModalOpen(true);
+                      }}
+                      onArchive={() => {
+                        setSelectedStudent(student);
+                        setArchiveModalOpen(true);
+                      }}
+                      onChangeClass={() => {
+                        setSelectedStudent(student);
+                        setChangeClassModalOpen(true);
+                      }}
+                    />
+                  </TableCell>
                 </TableRow>
               ))
             )}
@@ -436,6 +477,82 @@ export default function StudentsList() {
           onPageChange={handlePageChange}
           visiblePages={visiblePages}
         />
+
+        {/* Modals */}
+        <AddStudentModal
+          open={addModalOpen}
+          onOpenChange={setAddModalOpen}
+          onSuccess={fetchStudents}
+          classes={classes}
+          streams={streams}
+        />
+
+        {selectedStudent && (
+          <>
+            <SuspendStudentModal
+              open={suspendModalOpen}
+              onOpenChange={setSuspendModalOpen}
+              studentId={selectedStudent.id}
+              studentName={selectedStudent.name}
+              onSuccess={fetchStudents}
+            />
+            <ChangeClassModal
+              open={changeClassModalOpen}
+              onOpenChange={setChangeClassModalOpen}
+              studentId={selectedStudent.id}
+              studentName={selectedStudent.name}
+              currentClassId={selectedStudent.class_id}
+              currentStreamId={selectedStudent.stream_id}
+              onSuccess={fetchStudents}
+              classes={classes}
+              streams={streams}
+            />
+            <ConfirmActionModal
+              open={expelModalOpen}
+              onOpenChange={setExpelModalOpen}
+              title="Expel Student"
+              description={`Are you sure you want to permanently expel ${selectedStudent.name}? This action cannot be undone.`}
+              confirmText="Expel Student"
+              variant="destructive"
+              onConfirm={async () => {
+                try {
+                  const { error } = await supabase
+                    .from("students")
+                    .delete()
+                    .eq("id", selectedStudent.id);
+                  if (error) throw error;
+                  toast.success(`${selectedStudent.name} has been expelled`);
+                  fetchStudents();
+                  setExpelModalOpen(false);
+                } catch (error: any) {
+                  toast.error(error.message || "Failed to expel student");
+                }
+              }}
+            />
+            <ConfirmActionModal
+              open={archiveModalOpen}
+              onOpenChange={setArchiveModalOpen}
+              title="Archive Student"
+              description={`Archive ${selectedStudent.name}? They will be removed from active lists but their record will be preserved.`}
+              confirmText="Archive"
+              variant="default"
+              onConfirm={async () => {
+                try {
+                  const { error } = await supabase
+                    .from("students")
+                    .update({ is_verified: false })
+                    .eq("id", selectedStudent.id);
+                  if (error) throw error;
+                  toast.success(`${selectedStudent.name} has been archived`);
+                  fetchStudents();
+                  setArchiveModalOpen(false);
+                } catch (error: any) {
+                  toast.error(error.message || "Failed to archive student");
+                }
+              }}
+            />
+          </>
+        )}
       </div>
     </DashboardLayout>
   );
