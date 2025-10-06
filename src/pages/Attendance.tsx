@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,7 @@ import { toast } from "sonner";
 import { format, addDays, parseISO } from "date-fns";
 import { parseStudentCSV, StudentCSVRow } from '@/utils/csvParser';
 import studentsCSV from '@/data/students.csv?raw';
+import AttendanceOverview from "./admin/AttendanceOverview";
 
 interface Student {
   id: string;
@@ -51,7 +52,6 @@ interface ClassInfo {
   totalStudents: number;
 }
 
-// Parse CSV and convert to student array
 const convertCSVToStudents = (): Student[] => {
   const csvData = parseStudentCSV(studentsCSV);
   
@@ -67,7 +67,6 @@ const convertCSVToStudents = (): Student[] => {
 
 const allStudents = convertCSVToStudents();
 
-// Build class list from actual data
 const buildClassList = (): ClassInfo[] => {
   const classStreamMap = new Map<string, Set<string>>();
 
@@ -81,7 +80,7 @@ const buildClassList = (): ClassInfo[] => {
   
   classStreamMap.forEach((_, streamId) => {
     const studentsInStream = allStudents.filter(s => s.stream === streamId);
-    const className = streamId.split('-')[0]; // e.g., "P1" from "P1-PEARLS"
+    const className = streamId.split('-')[0];
     
     classList.push({
       id: streamId,
@@ -91,13 +90,12 @@ const buildClassList = (): ClassInfo[] => {
     });
   });
 
-  // Sort by class and stream
   return classList.sort((a, b) => a.id.localeCompare(b.id));
 };
 
 const realClasses: ClassInfo[] = buildClassList();
 
-const Attendance = () => {
+const AttendanceMarking = () => {
   const { userRole, userName, photoUrl, signOut } = useAuth();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedClass, setSelectedClass] = useState(realClasses[0].id);
@@ -585,6 +583,29 @@ const Attendance = () => {
       </div>
     </DashboardLayout>
   );
+};
+
+// Main Attendance component that routes based on role
+const Attendance = () => {
+  const { userRole } = useAuth();
+
+  if (!userRole) return null;
+
+  // Admin sees overview, teachers see marking interface, students see their attendance
+  if (userRole === 'admin') {
+    return <AttendanceOverview />;
+  }
+  
+  if (userRole === 'student') {
+    const StudentAttendanceView = lazy(() => import('./student/StudentAttendanceView'));
+    return (
+      <Suspense fallback={<div>Loading...</div>}>
+        <StudentAttendanceView />
+      </Suspense>
+    );
+  }
+
+  return <AttendanceMarking />;
 };
 
 export default Attendance;

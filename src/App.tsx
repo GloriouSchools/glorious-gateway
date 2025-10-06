@@ -56,6 +56,8 @@ import ELearning from "./pages/ELearning";
 import Events from "./pages/Events";
 import Entertainment from "./pages/Entertainment";
 import MovieDetail from "./pages/MovieDetail";
+import StudentAttendanceView from "./pages/student/StudentAttendanceView";
+import AttendanceDetails from "./pages/admin/AttendanceDetails";
 
 const queryClient = new QueryClient();
 
@@ -127,6 +129,11 @@ const App = () => (
               <Route path="/student/timetable" element={
                 <ProtectedRoute>
                   <Timetable />
+                </ProtectedRoute>
+              } />
+              <Route path="/student/attendance" element={
+                <ProtectedRoute>
+                  <StudentAttendanceView />
                 </ProtectedRoute>
               } />
               <Route path="/student/duty-rota" element={
@@ -405,6 +412,13 @@ const App = () => (
                 <ProtectedRoute>
                   <RoleBasedRoute allowedRoles={["admin"]}>
                     <Attendance />
+                  </RoleBasedRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/attendance/details" element={
+                <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={["admin"]}>
+                    <AttendanceDetails />
                   </RoleBasedRoute>
                 </ProtectedRoute>
               } />

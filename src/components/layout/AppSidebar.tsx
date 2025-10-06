@@ -68,6 +68,7 @@ export function AppSidebar({ userRole, userName, photoUrl, onLogout }: AppSideba
           { title: "Assignments", icon: ClipboardList, url: "/student/assignments" },
           { title: "My Grades", icon: Award, url: "/student/grades" },
           { title: "Timetable", icon: Clock, url: "/student/timetable" },
+          { title: "My Attendance", icon: UserCheck, url: "/student/attendance" },
           { title: "Elections", icon: Vote, url: "/student/electoral" },
           { title: "Hall of Fame", icon: Trophy, url: "/student/hall-of-fame" },
           { title: "Games", icon: Gamepad2, url: "/student/games" },
