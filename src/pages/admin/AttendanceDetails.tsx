@@ -60,6 +60,7 @@ const AttendanceDetails = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [attendanceData] = useState(generateMockAttendance());
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -141,8 +142,10 @@ const AttendanceDetails = () => {
     absent: baseStudents.filter(s => attendanceData[s.id]?.status === 'absent').length,
   };
 
-  const handleDownloadPDF = () => {
-    const toastId = toast.loading("Generating PDF...");
+  const handleDownloadPDF = async () => {
+    setIsDownloading(true);
+    const toastId = toast.loading("Processing...");
+    
     try {
       const pdfData = filteredStudents.map(student => ({
         name: student.name,
@@ -153,16 +156,19 @@ const AttendanceDetails = () => {
         photoUrl: student.photoUrl
       }));
       
-      const pdf = generateAttendancePDF(
+      const pdf = await generateAttendancePDF(
         pdfData,
-        `${className} - Attendance Report`
+        `${className} - Attendance Report`,
+        (message) => toast.loading(message, { id: toastId })
       );
       
       pdf.save(`attendance-${className.replace(/\s+/g, '-')}-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
-      toast.success("PDF downloaded successfully!", { id: toastId });
+      toast.success("Download completed!", { id: toastId });
     } catch (error) {
       console.error("PDF generation error:", error);
       toast.error("Failed to generate PDF", { id: toastId });
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -176,71 +182,71 @@ const AttendanceDetails = () => {
 
   return (
     <DashboardLayout userRole={userRole} userName={userName || "Admin"} photoUrl={photoUrl} onLogout={handleLogout}>
-      <div className="w-full min-w-0 space-y-4 sm:space-y-6 animate-fade-in px-2 sm:px-4 lg:px-6">
+      <div className="w-full max-w-full overflow-x-hidden space-y-4 sm:space-y-6 animate-fade-in px-3 sm:px-4 lg:px-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-          <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-2 min-w-0">
             <Button variant="outline" size="icon" onClick={() => navigate('/admin/attendance')} className="shrink-0">
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div className="min-w-0 flex-1">
-              <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-elegant bg-clip-text text-transparent truncate">{className}</h1>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-elegant bg-clip-text text-transparent truncate">{className}</h1>
               <p className="text-xs sm:text-sm text-muted-foreground mt-1 truncate">
                 Showing {filteredStudents.length} of {stats.total} students
               </p>
             </div>
           </div>
-          <Button onClick={handleDownloadPDF} size="sm" className="w-full sm:w-auto shrink-0">
+          <Button onClick={handleDownloadPDF} size="sm" className="w-full sm:w-auto" disabled={isDownloading}>
             <Download className="h-4 w-4 mr-2" />
-            Download PDF
+            <span className="truncate">{isDownloading ? 'Processing...' : 'Download PDF'}</span>
           </Button>
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-          <Card>
-            <CardContent className="p-4 sm:p-6">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
+          <Card className="min-w-0">
+            <CardContent className="p-3 sm:p-4 lg:p-6">
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold">{stats.total}</div>
-                <div className="text-xs sm:text-sm text-muted-foreground mt-1">Total Students</div>
+                <div className="text-xl sm:text-2xl lg:text-3xl font-bold truncate">{stats.total}</div>
+                <div className="text-[10px] sm:text-xs lg:text-sm text-muted-foreground mt-1">Total</div>
               </div>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="p-4 sm:p-6">
+          <Card className="min-w-0">
+            <CardContent className="p-3 sm:p-4 lg:p-6">
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-emerald-600">{stats.present}</div>
-                <div className="text-xs sm:text-sm text-muted-foreground mt-1">Present</div>
+                <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-emerald-600 truncate">{stats.present}</div>
+                <div className="text-[10px] sm:text-xs lg:text-sm text-muted-foreground mt-1">Present</div>
               </div>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="p-4 sm:p-6">
+          <Card className="min-w-0">
+            <CardContent className="p-3 sm:p-4 lg:p-6">
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-red-600">{stats.absent}</div>
-                <div className="text-xs sm:text-sm text-muted-foreground mt-1">Absent</div>
+                <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-red-600 truncate">{stats.absent}</div>
+                <div className="text-[10px] sm:text-xs lg:text-sm text-muted-foreground mt-1">Absent</div>
               </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Search and Filters */}
-        <Card>
-          <CardContent className="p-3 sm:p-6">
-            <div className="flex flex-col gap-3 sm:gap-4">
-              <div className="relative flex-1 min-w-0">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Card className="min-w-0">
+          <CardContent className="p-3 sm:p-4 lg:p-6">
+            <div className="flex flex-col gap-2 sm:gap-3">
+              <div className="relative w-full min-w-0">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                 <Input
-                  placeholder="Search by name, email, or ID..."
+                  placeholder="Search students..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 w-full"
                 />
               </div>
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 w-full">
                 {!classId && (
                   <Select value={streamFilter} onValueChange={setStreamFilter}>
-                    <SelectTrigger className="w-full sm:w-[200px] bg-background border">
+                    <SelectTrigger className="w-full bg-background border">
                       <SelectValue placeholder="All Streams" />
                     </SelectTrigger>
                     <SelectContent className="bg-background border z-50">
@@ -254,7 +260,7 @@ const AttendanceDetails = () => {
                   </Select>
                 )}
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-full sm:w-[200px] bg-background border">
+                  <SelectTrigger className={`w-full bg-background border ${!classId ? '' : 'sm:col-span-2'}`}>
                     <SelectValue placeholder="All Status" />
                   </SelectTrigger>
                   <SelectContent className="bg-background border z-50">
@@ -269,31 +275,31 @@ const AttendanceDetails = () => {
           </CardContent>
         </Card>
 
-        {/* Student List */}
-        <Card>
-          <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="text-lg sm:text-xl">Attendance List</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">{format(new Date(), 'EEEE, MMMM d, yyyy')}</CardDescription>
+        {/* Student List - Desktop */}
+        <Card className="hidden lg:block min-w-0">
+          <CardHeader className="p-4 lg:p-6">
+            <CardTitle className="text-lg">Attendance List</CardTitle>
+            <CardDescription className="text-sm">{format(new Date(), 'EEEE, MMMM d, yyyy')}</CardDescription>
           </CardHeader>
-          <CardContent className="p-3 sm:p-6">
+          <CardContent className="p-4 lg:p-6">
             {paginatedStudents.length === 0 ? (
-              <div className="text-center py-8 sm:py-12 text-muted-foreground text-sm">
+              <div className="text-center py-12 text-muted-foreground text-sm">
                 No students found matching your filters
               </div>
             ) : (
-              <div className="space-y-2 sm:space-y-3">
+              <div className="space-y-3">
                 {paginatedStudents.map((student) => (
-                  <div key={student.id} className="flex items-center gap-2 sm:gap-4 p-3 sm:p-4 rounded-lg border hover:bg-muted/50 transition-colors">
-                    <Avatar className="h-10 w-10 sm:h-12 sm:w-12 shrink-0">
+                  <div key={student.id} className="flex items-center gap-3 p-4 rounded-lg border hover:bg-muted/50 transition-colors min-w-0">
+                    <Avatar className="h-12 w-12 shrink-0">
                       <AvatarImage src={student.photoUrl} />
                       <AvatarFallback>
                         {student.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-sm sm:text-base font-semibold truncate">{student.name}</h4>
-                      <p className="text-xs sm:text-sm text-muted-foreground truncate">{student.email}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5 sm:mt-1 truncate">{student.stream.replace('-', ' - ')}</p>
+                      <h4 className="text-base font-semibold truncate">{student.name}</h4>
+                      <p className="text-sm text-muted-foreground truncate">{student.email}</p>
+                      <p className="text-xs text-muted-foreground mt-1 truncate">{student.stream.replace('-', ' - ')}</p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       {getStatusBadge(student.status)}
@@ -305,54 +311,100 @@ const AttendanceDetails = () => {
           </CardContent>
         </Card>
 
+        {/* Student Grid - Mobile/Tablet */}
+        <div className="lg:hidden w-full min-w-0">
+          <Card className="min-w-0">
+            <CardHeader className="p-3 sm:p-4">
+              <CardTitle className="text-sm sm:text-base">Attendance List</CardTitle>
+              <CardDescription className="text-[10px] sm:text-xs">{format(new Date(), 'EEEE, MMM d, yyyy')}</CardDescription>
+            </CardHeader>
+            <CardContent className="p-3">
+              {paginatedStudents.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground text-sm">
+                  No students found
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-3 w-full">
+                  {paginatedStudents.map((student) => (
+                    <div key={student.id} className="p-3 rounded-lg border hover:bg-muted/50 transition-colors min-w-0">
+                      <div className="flex items-start gap-2 mb-2 min-w-0">
+                        <Avatar className="h-10 w-10 shrink-0">
+                          <AvatarImage src={student.photoUrl} />
+                          <AvatarFallback className="text-xs">
+                            {student.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-sm font-semibold truncate">{student.name}</h4>
+                          <p className="text-xs text-muted-foreground truncate">{student.email}</p>
+                          <p className="text-xs text-muted-foreground mt-1 truncate">{student.stream.replace('-', ' - ')}</p>
+                        </div>
+                        <div className="shrink-0">
+                          {getStatusBadge(student.status)}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Pagination */}
         {totalPages > 1 && (
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious 
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                />
-              </PaginationItem>
-              
-              {[...Array(totalPages)].map((_, i) => {
-                const page = i + 1;
-                // Show first page, last page, current page, and pages around current
-                if (
-                  page === 1 || 
-                  page === totalPages || 
-                  (page >= currentPage - 1 && page <= currentPage + 1)
-                ) {
-                  return (
-                    <PaginationItem key={page}>
-                      <PaginationLink
-                        onClick={() => setCurrentPage(page)}
-                        isActive={currentPage === page}
-                        className="cursor-pointer"
-                      >
-                        {page}
-                      </PaginationLink>
-                    </PaginationItem>
-                  );
-                } else if (page === currentPage - 2 || page === currentPage + 2) {
-                  return (
-                    <PaginationItem key={page}>
-                      <PaginationEllipsis />
-                    </PaginationItem>
-                  );
-                }
-                return null;
-              })}
-              
-              <PaginationItem>
-                <PaginationNext 
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
+          <div className="w-full overflow-x-auto">
+            <Pagination>
+              <PaginationContent className="flex-wrap justify-center gap-1">
+                <PaginationItem>
+                  <PaginationPrevious 
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+                
+                {[...Array(totalPages)].map((_, i) => {
+                  const page = i + 1;
+                  // On mobile, show fewer pages
+                  const isMobile = window.innerWidth < 640;
+                  const showPage = isMobile 
+                    ? (page === 1 || page === totalPages || page === currentPage)
+                    : (page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1));
+                  
+                  if (showPage) {
+                    return (
+                      <PaginationItem key={page}>
+                        <PaginationLink
+                          onClick={() => setCurrentPage(page)}
+                          isActive={currentPage === page}
+                          className="cursor-pointer"
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    );
+                  } else if (
+                    (!isMobile && (page === currentPage - 2 || page === currentPage + 2)) ||
+                    (isMobile && ((page === currentPage - 1 && currentPage > 2) || (page === currentPage + 1 && currentPage < totalPages - 1)))
+                  ) {
+                    return (
+                      <PaginationItem key={page}>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    );
+                  }
+                  return null;
+                })}
+                
+                <PaginationItem>
+                  <PaginationNext 
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
         )}
 
       </div>

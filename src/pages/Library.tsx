@@ -144,16 +144,16 @@ const Library = () => {
       photoUrl={photoUrl}
       onLogout={handleLogout}
     >
-      <div className="space-y-6 animate-fade-in">
+      <div className="w-full min-w-0 space-y-4 sm:space-y-6 animate-fade-in px-2 sm:px-4 lg:px-6">
         {/* Header */}
-        <div className="text-center space-y-4">
+        <div className="text-center space-y-3 sm:space-y-4">
           <div className="flex justify-center items-center gap-3">
-            <BookOpen className="h-16 w-16 text-primary animate-pulse" />
+            <BookOpen className="h-12 w-12 sm:h-16 sm:w-16 text-primary animate-pulse" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-orange-400 via-red-500 to-pink-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-orange-400 via-red-500 to-pink-600 bg-clip-text text-transparent px-2">
             📚 Glorious Schools' Library
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
             Welcome to #1 Academic Giant's Resource Centre - Access educational materials, past papers, and learning resources
           </p>
         </div>
@@ -161,12 +161,12 @@ const Library = () => {
         {/* Class Selection View */}
         {currentView === 'classes' && (
           <Card>
-            <CardHeader className="text-center bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-950/20 dark:to-red-950/20">
-              <CardTitle className="text-2xl">Select Your Class</CardTitle>
-              <CardDescription>Choose your class level to access learning resources</CardDescription>
+            <CardHeader className="text-center bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-950/20 dark:to-red-950/20 p-4 sm:p-6">
+              <CardTitle className="text-xl sm:text-2xl">Select Your Class</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">Choose your class level to access learning resources</CardDescription>
             </CardHeader>
-            <CardContent className="p-6">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <CardContent className="p-3 sm:p-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
                 {classLevels.map((classLevel, index) => (
                   <AnimatedCard
                     key={classLevel.id}
@@ -175,11 +175,11 @@ const Library = () => {
                     className="cursor-pointer group overflow-hidden"
                     onClick={() => handleClassSelect(classLevel)}
                   >
-                    <CardContent className="p-6 text-center space-y-3">
-                      <div className={`w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br ${classLevel.gradient} flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
-                        <classLevel.icon className="h-10 w-10 text-white" />
+                    <CardContent className="p-3 sm:p-6 text-center space-y-2 sm:space-y-3">
+                      <div className={`w-14 h-14 sm:w-20 sm:h-20 mx-auto rounded-2xl bg-gradient-to-br ${classLevel.gradient} flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
+                        <classLevel.icon className="h-7 w-7 sm:h-10 sm:w-10 text-white" />
                       </div>
-                      <h3 className="font-bold text-foreground group-hover:text-primary transition-colors">
+                      <h3 className="font-bold text-xs sm:text-sm text-foreground group-hover:text-primary transition-colors break-words">
                         {classLevel.name}
                       </h3>
                     </CardContent>
@@ -193,20 +193,21 @@ const Library = () => {
         {/* Resource Type Selection View */}
         {currentView === 'resources' && selectedClass && (
           <Card>
-            <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-2xl">Resources for {selectedClass.name}</CardTitle>
-                  <CardDescription>Select the type of resource you need</CardDescription>
+            <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+                <div className="min-w-0 flex-1">
+                  <CardTitle className="text-lg sm:text-2xl truncate">Resources for {selectedClass.name}</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Select the type of resource you need</CardDescription>
                 </div>
-                <Button variant="outline" onClick={handleBackToClasses}>
+                <Button variant="outline" size="sm" onClick={handleBackToClasses} className="w-full sm:w-auto shrink-0">
                   <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Classes
+                  <span className="hidden sm:inline">Back to Classes</span>
+                  <span className="sm:hidden">Back</span>
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <CardContent className="p-3 sm:p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
                 {resourceTypes.map((resource, index) => (
                   <AnimatedCard
                     key={resource.id}
@@ -215,15 +216,15 @@ const Library = () => {
                     className="cursor-pointer group"
                     onClick={() => handleResourceSelect(resource)}
                   >
-                    <CardContent className="p-8 text-center space-y-4">
-                      <div className={`w-24 h-24 mx-auto rounded-3xl bg-gradient-to-br ${resource.gradient} flex items-center justify-center transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-xl`}>
-                        <resource.icon className="h-12 w-12 text-white" />
+                    <CardContent className="p-4 sm:p-8 text-center space-y-3 sm:space-y-4">
+                      <div className={`w-16 h-16 sm:w-24 sm:h-24 mx-auto rounded-3xl bg-gradient-to-br ${resource.gradient} flex items-center justify-center transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-xl`}>
+                        <resource.icon className="h-8 w-8 sm:h-12 sm:w-12 text-white" />
                       </div>
-                      <div className="space-y-2">
-                        <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
+                      <div className="space-y-1 sm:space-y-2">
+                        <h3 className="text-base sm:text-xl font-bold text-foreground group-hover:text-primary transition-colors break-words">
                           {resource.name}
                         </h3>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs sm:text-sm text-muted-foreground break-words">
                           {resource.description}
                         </p>
                       </div>
@@ -238,22 +239,23 @@ const Library = () => {
         {/* Subject Selection View */}
         {currentView === 'subjects' && selectedClass && selectedResource && (
           <Card>
-            <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-2xl">
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+                <div className="min-w-0 flex-1">
+                  <CardTitle className="text-lg sm:text-2xl truncate">
                     {selectedClass.name} - {selectedResource.name}
                   </CardTitle>
-                  <CardDescription>Select a subject to access materials</CardDescription>
+                  <CardDescription className="text-xs sm:text-sm">Select a subject to access materials</CardDescription>
                 </div>
-                <Button variant="outline" onClick={handleBackToResources}>
+                <Button variant="outline" size="sm" onClick={handleBackToResources} className="w-full sm:w-auto shrink-0">
                   <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Resources
+                  <span className="hidden sm:inline">Back to Resources</span>
+                  <span className="sm:hidden">Back</span>
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="p-6">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <CardContent className="p-3 sm:p-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
                 {subjects.map((subject, index) => (
                   <AnimatedCard
                     key={subject.id}
@@ -262,11 +264,11 @@ const Library = () => {
                     className="cursor-pointer group"
                     onClick={() => handleSubjectSelect(subject)}
                   >
-                    <CardContent className="p-6 text-center space-y-3">
-                      <div className={`w-16 h-16 mx-auto rounded-xl bg-gradient-to-br ${subject.color} flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
-                        <subject.icon className="h-8 w-8 text-white" />
+                    <CardContent className="p-3 sm:p-6 text-center space-y-2 sm:space-y-3">
+                      <div className={`w-12 h-12 sm:w-16 sm:h-16 mx-auto rounded-xl bg-gradient-to-br ${subject.color} flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
+                        <subject.icon className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                       </div>
-                      <h3 className="font-bold text-sm text-foreground group-hover:text-primary transition-colors">
+                      <h3 className="font-bold text-xs sm:text-sm text-foreground group-hover:text-primary transition-colors break-words leading-tight">
                         {selectedClass.name}<br />{subject.name}
                       </h3>
                     </CardContent>

@@ -252,51 +252,53 @@ export default function TeachersList() {
       photoUrl={photoUrl} 
       onLogout={handleLogout}
     >
-      <div className="space-y-6">
+      <div className="w-full min-w-0 max-w-7xl mx-auto space-y-4 sm:space-y-6 pb-8 px-2 sm:px-4 lg:px-6">
         {/* Header */}
-        <div className="flex items-center justify-between gap-4">
-          <Button variant="outline" size="sm" onClick={() => navigate('/')}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-          <div className="flex gap-2">
-            <Button onClick={downloadPDF} variant="outline" size="sm">
-              <FileText className="h-4 w-4 mr-2" />
-              PDF
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <Button variant="outline" size="sm" onClick={() => navigate('/')} className="shrink-0">
+              <ArrowLeft className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Back</span>
             </Button>
-            <Button onClick={() => setAddModalOpen(true)} size="sm">
-              <UserPlus className="h-4 w-4 mr-2" />
-              Enroll Teacher
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl font-bold truncate">Teachers ({filteredTeachers.length})</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground truncate">Total: {teachers.length} teachers</p>
+            </div>
+          </div>
+          <div className="flex gap-2 w-full sm:w-auto shrink-0">
+            <Button onClick={downloadPDF} variant="outline" size="sm" className="flex-1 sm:flex-none">
+              <FileText className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">PDF</span>
+            </Button>
+            <Button onClick={() => setAddModalOpen(true)} size="sm" className="flex-1 sm:flex-none">
+              <UserPlus className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Enroll Teacher</span>
+              <span className="sm:hidden">Add</span>
             </Button>
           </div>
         </div>
-        
-        <div>
-          <h1 className="text-2xl font-bold">Teachers ({filteredTeachers.length})</h1>
-          <p className="text-sm text-muted-foreground">Total: {teachers.length} teachers</p>
-        </div>
 
         {/* Filters */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5" />
+        <Card className="shadow-md">
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <Filter className="h-4 w-4 sm:h-5 sm:w-5" />
               Search & Filters
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="flex flex-col gap-4">
-              <div className="relative">
+          <CardContent className="p-4 sm:p-6 pt-0">
+            <div className="flex flex-col gap-3 sm:gap-4">
+              <div className="relative min-w-0">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search by name, email, ID, or subject..."
+                  placeholder="Search by name, email, ID..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 h-10 sm:h-11"
                 />
               </div>
               <Select value={filterType} onValueChange={setFilterType}>
-                <SelectTrigger className="w-full sm:w-48">
+                <SelectTrigger className="w-full sm:w-48 h-10 sm:h-11">
                   <SelectValue placeholder="All Filters" />
                 </SelectTrigger>
                 <SelectContent className="max-h-48 overflow-y-auto">
@@ -431,40 +433,40 @@ export default function TeachersList() {
           </CardContent>
         </Card>
 
-        {/* Mobile Card View */}
+        {/* Mobile Card Grid */}
         <div className="lg:hidden">
-          <div className="flex items-center justify-between mb-4 px-1">
-            <h3 className="text-base font-semibold">Teachers ({filteredTeachers.length})</h3>
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h3 className="text-base sm:text-lg font-semibold">Teachers ({filteredTeachers.length})</h3>
           </div>
           
           {filteredTeachers.length === 0 ? (
-            <Card className="mx-1">
-              <CardContent className="text-center py-8 text-sm">
+            <Card>
+              <CardContent className="text-center py-8 sm:py-12 text-sm">
                 No teachers found matching your criteria.
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-3 px-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               {paginatedTeachers.map((teacher) => (
-                <Card key={teacher.id} className="w-full max-w-full overflow-hidden">
-                  <CardContent className="p-3">
+                <Card key={teacher.id} className="w-full overflow-hidden hover:shadow-lg transition-shadow">
+                  <CardContent className="p-3 sm:p-4">
                     {/* Header with Avatar and Name */}
-                    <div className="flex items-start gap-3 mb-3">
-                      <Avatar className="h-10 w-10 flex-shrink-0">
+                    <div className="flex items-start gap-2 sm:gap-3 mb-3">
+                      <Avatar className="h-9 w-9 sm:h-10 sm:w-10 shrink-0">
                         <AvatarImage src={teacher.photo_url} />
                         <AvatarFallback className="text-xs">
                           {teacher.name?.split(' ').map(n => n[0]).join('') || 'T'}
                         </AvatarFallback>
                       </Avatar>
                       <div className="min-w-0 flex-1">
-                        <h4 className="font-medium text-sm leading-tight mb-1 break-words">
+                        <h4 className="font-medium text-xs sm:text-sm leading-tight mb-1 break-words">
                           {teacher.name || 'No Name'}
                         </h4>
-                        <p className="text-xs text-muted-foreground break-all">
+                        <p className="text-xs text-muted-foreground truncate">
                           {teacher.email}
                         </p>
                         {teacher.teacher_id && (
-                          <p className="text-xs text-muted-foreground mt-0.5">
+                          <p className="text-xs text-muted-foreground mt-0.5 truncate">
                             ID: {teacher.teacher_id}
                           </p>
                         )}
@@ -472,7 +474,7 @@ export default function TeachersList() {
                     </div>
 
                     {/* Status Badge */}
-                    <div className="flex justify-center mb-3">
+                    <div className="flex justify-center mb-2 sm:mb-3">
                       <Badge 
                         variant={teacher.is_verified ? "default" : "secondary"} 
                         className="text-xs px-2 py-1"
@@ -481,25 +483,25 @@ export default function TeachersList() {
                       </Badge>
                     </div>
                     
-                    {/* Subjects and Classes */}
+                    {/* Subjects and Classes - Compact */}
                     {(teacher.subjectsTaught || teacher.classesTaught) && (
-                      <div className="space-y-2 mb-3 p-2 bg-muted/30 rounded">
+                      <div className="space-y-1.5 mb-2 sm:mb-3 p-2 bg-muted/30 rounded text-xs">
                         {teacher.subjectsTaught && (
                           <div>
-                            <span className="text-xs font-medium text-muted-foreground block mb-1">
+                            <span className="font-medium text-muted-foreground block mb-0.5">
                               Subjects:
                             </span>
-                            <p className="text-sm font-medium break-words">
+                            <p className="font-medium break-words line-clamp-2">
                               {teacher.subjectsTaught}
                             </p>
                           </div>
                         )}
                         {teacher.classesTaught && (
                           <div>
-                            <span className="text-xs font-medium text-muted-foreground block mb-1">
+                            <span className="font-medium text-muted-foreground block mb-0.5">
                               Classes:
                             </span>
-                            <p className="text-sm break-words">
+                            <p className="break-words line-clamp-1">
                               {teacher.classesTaught}
                             </p>
                           </div>
@@ -507,41 +509,41 @@ export default function TeachersList() {
                       </div>
                     )}
                     
-                    {/* Additional Info */}
-                    <div className="space-y-2 mb-3">
+                    {/* Additional Info - Compact */}
+                    <div className="space-y-1.5 mb-2 sm:mb-3 text-xs">
                       {teacher.contactNumber && (
-                        <div className="flex items-center gap-2 text-xs">
-                          <Phone className="h-3 w-3 flex-shrink-0 text-muted-foreground" />
-                          <span className="break-all">{teacher.contactNumber}</span>
+                        <div className="flex items-center gap-1.5">
+                          <Phone className="h-3 w-3 shrink-0 text-muted-foreground" />
+                          <span className="truncate">{teacher.contactNumber}</span>
                         </div>
                       )}
                       
                       <div className="flex flex-wrap gap-1">
                         {teacher.sex && (
-                          <Badge variant="outline" className="text-xs px-2 py-0.5">
+                          <Badge variant="outline" className="text-xs px-1.5 py-0.5">
                             {teacher.sex}
                           </Badge>
                         )}
                         {teacher.nationality && (
-                          <Badge variant="secondary" className="text-xs px-2 py-0.5 flex items-center gap-1 max-w-full">
-                            <MapPin className="h-3 w-3 flex-shrink-0" />
+                          <Badge variant="secondary" className="text-xs px-1.5 py-0.5 flex items-center gap-1 max-w-full">
+                            <MapPin className="h-3 w-3 shrink-0" />
                             <span className="truncate">{teacher.nationality}</span>
                           </Badge>
                         )}
                       </div>
                       
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-muted-foreground truncate">
                         Joined: {new Date(teacher.created_at).toLocaleDateString()}
                       </div>
                     </div>
                     
                     {/* Action Buttons */}
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button size="sm" variant="outline" className="h-8 text-xs">
-                        <Mail className="h-3 w-3 mr-1" />
-                        Email
+                    <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
+                      <Button size="sm" variant="outline" className="h-7 sm:h-8 text-xs">
+                        <Mail className="h-3 w-3 sm:mr-1" />
+                        <span className="hidden sm:inline">Email</span>
                       </Button>
-                      <Button size="sm" variant="outline" className="h-8 text-xs">
+                      <Button size="sm" variant="outline" className="h-7 sm:h-8 text-xs">
                         Edit
                       </Button>
                     </div>

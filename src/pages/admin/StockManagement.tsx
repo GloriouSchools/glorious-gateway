@@ -48,25 +48,24 @@ export default function StockManagement() {
 
   return (
     <DashboardLayout userRole={userRole || "admin"} userName={userName} photoUrl={photoUrl} onLogout={handleLogout}>
-      <div className="max-w-7xl mx-auto space-y-6 pb-8">
+      <div className="w-full min-w-0 max-w-7xl mx-auto space-y-4 sm:space-y-6 pb-8 px-2 sm:px-4 lg:px-6">
         {/* Header */}
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="space-y-1">
-              <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                Stock Management
-              </h1>
-              <p className="text-muted-foreground">Track and manage school materials across all departments</p>
-            </div>
-            <Button size="lg" className="shadow-md hover:shadow-lg transition-shadow">
-              <Plus className="mr-2 h-5 w-5" />
-              Add New Item
-            </Button>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="space-y-1 min-w-0 flex-1">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent truncate">
+              Stock Management
+            </h1>
+            <p className="text-xs sm:text-sm text-muted-foreground truncate">Track and manage school materials</p>
           </div>
+          <Button size="sm" className="shadow-md hover:shadow-lg transition-shadow w-full sm:w-auto shrink-0">
+            <Plus className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Add New Item</span>
+            <span className="sm:hidden">Add Item</span>
+          </Button>
         </div>
 
         {/* Stats Overview */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
           <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-primary">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Items</CardTitle>
@@ -150,8 +149,8 @@ export default function StockManagement() {
           </CardContent>
         </Card>
 
-        {/* Stock Items Table */}
-        <Card className="shadow-md">
+        {/* Stock Items - Desktop Table */}
+        <Card className="shadow-md hidden lg:block">
           <CardHeader className="border-b bg-muted/30">
             <div className="flex items-center justify-between">
               <CardTitle className="text-xl">Stock Inventory</CardTitle>
@@ -234,6 +233,80 @@ export default function StockManagement() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Stock Items - Mobile Grid */}
+        <div className="lg:hidden space-y-4">
+          <div className="flex items-center justify-between px-1">
+            <h3 className="text-base sm:text-lg font-semibold">Stock Inventory ({filteredItems.length})</h3>
+          </div>
+          {filteredItems.length === 0 ? (
+            <Card className="mx-1">
+              <CardContent className="text-center py-12">
+                <div className="flex flex-col items-center gap-2">
+                  <Package className="h-12 w-12 text-muted-foreground/50" />
+                  <p className="text-muted-foreground font-medium">No items found</p>
+                  <p className="text-sm text-muted-foreground">Try adjusting your search or filter</p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 px-1">
+              {filteredItems.map((item) => (
+                <Card key={item.id} className="w-full overflow-hidden">
+                  <CardContent className="p-4">
+                    <div className="space-y-3">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 bg-primary/10 rounded-lg shrink-0">
+                          <Package className="h-5 w-5 text-primary" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-semibold text-sm leading-tight mb-1 break-words">
+                            {item.name}
+                          </h4>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {item.department}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <span className="text-muted-foreground">Quantity</span>
+                          <p className="font-semibold text-base">{item.quantity}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Min. Stock</span>
+                          <p className="font-semibold text-base">{item.minStock}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-2 pt-2 border-t">
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
+                          item.status === 'In Stock' 
+                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
+                            : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
+                        }`}>
+                          <span className={`h-1.5 w-1.5 rounded-full ${
+                            item.status === 'In Stock' ? 'bg-green-600' : 'bg-orange-600'
+                          }`}></span>
+                          {item.status}
+                        </span>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="sm" className="h-8 px-2 text-xs">
+                            Edit
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-8 px-2 text-xs">
+                            View
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </DashboardLayout>
   );

@@ -11,10 +11,40 @@ interface StudentAttendanceData {
   photoUrl?: string;
 }
 
-export const generateAttendancePDF = (
+// Function to load image as base64
+const loadImageAsBase64 = (url: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    if (!url) {
+      resolve('');
+      return;
+    }
+    
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL('image/jpeg', 0.7));
+      } else {
+        resolve('');
+      }
+    };
+    img.onerror = () => resolve('');
+    img.src = url;
+  });
+};
+
+export const generateAttendancePDF = async (
   students: StudentAttendanceData[],
-  title: string = 'Student Attendance Report'
+  title: string = 'Student Attendance Report',
+  onProgress?: (message: string) => void
 ) => {
+  onProgress?.('Generating PDF...');
+  
   const doc = new jsPDF('portrait', 'mm', 'a4');
   
   // Add school header image
@@ -52,9 +82,10 @@ export const generateAttendancePDF = (
   doc.text(`Total: ${totalCount} | Present: ${presentCount} | Absent: ${absentCount} | Not Marked: ${notMarkedCount} | Rate: ${attendanceRate}%`, 
     doc.internal.pageSize.getWidth() / 2, 61, { align: 'center' });
   
-  // Prepare table data with color-coded status
-  const tableData = students.map(student => {
+  // Prepare table data with numbering
+  const tableData = students.map((student, index) => {
     return [
+      (index + 1).toString(),
       student.name,
       student.email,
       student.stream,
@@ -66,9 +97,9 @@ export const generateAttendancePDF = (
   // Generate table with all borders
   autoTable(doc, {
     startY: 68,
-    head: [['Student Name', 'Email', 'Stream', 'Status']],
+    head: [['No.', 'Name', 'Email', 'Class', 'Status']],
     body: tableData,
-    theme: 'grid', // This adds all borders
+    theme: 'grid',
     headStyles: {
       fillColor: [0, 0, 0],
       textColor: [255, 255, 255],
@@ -76,33 +107,36 @@ export const generateAttendancePDF = (
       fontStyle: 'bold',
       halign: 'center',
       lineWidth: 0.5,
-      lineColor: [0, 0, 0]
+      lineColor: [0, 0, 0],
+      minCellHeight: 12
     },
     bodyStyles: {
       fontSize: 9,
       textColor: [0, 0, 0],
       lineWidth: 0.5,
-      lineColor: [0, 0, 0]
+      lineColor: [0, 0, 0],
+      minCellHeight: 10
     },
     alternateRowStyles: {
       fillColor: [245, 245, 245]
     },
     columnStyles: {
-      0: { cellWidth: 50, halign: 'left' },
-      1: { cellWidth: 65, halign: 'left' },
-      2: { cellWidth: 30, halign: 'center' },
-      3: { cellWidth: 30, halign: 'center' }
+      0: { cellWidth: 15, halign: 'center' },
+      1: { cellWidth: 50, halign: 'left' },
+      2: { cellWidth: 55, halign: 'left' },
+      3: { cellWidth: 30, halign: 'center' },
+      4: { cellWidth: 30, halign: 'center' }
     },
-    didParseCell: function(data) {
+    didDrawCell: function(data) {
       // Color code the status column
-      if (data.column.index === 3 && data.section === 'body') {
+      if (data.column.index === 4 && data.section === 'body') {
         const status = data.cell.text[0];
         if (status === 'Absent') {
-          data.cell.styles.textColor = [255, 0, 0]; // Red for absent
+          data.cell.styles.textColor = [255, 0, 0];
         } else if (status === 'Present') {
-          data.cell.styles.textColor = [0, 128, 0]; // Green for present
+          data.cell.styles.textColor = [0, 128, 0];
         } else {
-          data.cell.styles.textColor = [128, 128, 128]; // Gray for not marked
+          data.cell.styles.textColor = [128, 128, 128];
         }
       }
     },
