@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Check, Search } from "lucide-react";
+import { saveManualApplication } from "@/utils/electoralStorageUtils";
 
 interface AddPrefectModalProps {
   open: boolean;
@@ -149,10 +150,9 @@ export default function AddPrefectModal({ open, onOpenChange, onSuccess }: AddPr
     setLoading(true);
 
     try {
-      // Get current session to check user role
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      const { data, error } = await supabase.from('electoral_applications').insert({
+      // Create application data object
+      const applicationData = {
+        id: `manual_${crypto.randomUUID()}`,
         student_id: formData.student_id,
         student_name: formData.student_name,
         student_email: formData.student_email,
@@ -169,18 +169,20 @@ export default function AddPrefectModal({ open, onOpenChange, onSuccess }: AddPr
         experience: formData.experience || null,
         qualifications: formData.qualifications || null,
         why_apply: formData.why_apply || null,
-        status: formData.status,
-        submitted_at: new Date().toISOString()
-      }).select();
+        status: formData.status as 'pending' | 'confirmed' | 'rejected',
+        created_at: new Date().toISOString()
+      };
 
-      if (error) {
-        console.error('Insert error details:', error);
-        throw error;
+      // Store in localStorage using utility function
+      const saved = saveManualApplication(applicationData);
+      
+      if (!saved) {
+        throw new Error('Failed to save application to local storage');
       }
 
       toast({
         title: "Success",
-        description: "Prefect application added successfully."
+        description: "Prefect application added successfully (stored locally and will persist)."
       });
 
       // Reset form

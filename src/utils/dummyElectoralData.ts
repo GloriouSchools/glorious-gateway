@@ -170,11 +170,13 @@ export const populateDummyElectoralData = () => {
 };
 
 export const clearDummyElectoralData = () => {
-  // Remove all dummy electoral applications
+  // Remove ONLY dummy electoral applications (those with dummy_ prefix in ID)
   const keysToRemove: string[] = [];
   
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
+    // Only remove keys that start with 'electoral_application_dummy_'
+    // This preserves manual_ prefixed applications
     if (key && key.startsWith('electoral_application_dummy_')) {
       keysToRemove.push(key);
     }
@@ -183,6 +185,7 @@ export const clearDummyElectoralData = () => {
   keysToRemove.forEach(key => localStorage.removeItem(key));
   
   console.log(`Removed ${keysToRemove.length} dummy electoral applications from localStorage`);
+  console.log('Manual applications are preserved.');
   
   return keysToRemove.length;
 };

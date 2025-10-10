@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { updateManualApplication } from "@/utils/electoralStorageUtils";
 
 interface ElectoralApplication {
   id: string;
@@ -80,17 +81,28 @@ export default function EditPrefectModal({ open, onOpenChange, application, onSu
     setLoading(true);
 
     try {
-      const { error } = await supabase
-        .from('electoral_applications')
-        .update({
+      // Check if it's a local application
+      if (application.id.startsWith('manual_')) {
+        updateManualApplication(application.id, {
           position: formData.position,
           class_teacher_tel: formData.class_teacher_tel || null,
           parent_tel: formData.parent_tel ? parseInt(formData.parent_tel) : null,
-          status: formData.status
-        })
-        .eq('id', application.id);
+          status: formData.status as 'pending' | 'confirmed' | 'rejected'
+        });
+      } else {
+        // Database application
+        const { error } = await supabase
+          .from('electoral_applications')
+          .update({
+            position: formData.position,
+            class_teacher_tel: formData.class_teacher_tel || null,
+            parent_tel: formData.parent_tel ? parseInt(formData.parent_tel) : null,
+            status: formData.status
+          })
+          .eq('id', application.id);
 
-      if (error) throw error;
+        if (error) throw error;
+      }
 
       toast({
         title: "Success",

@@ -54,6 +54,11 @@ import "jspdf-autotable";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { DownloadProgressModal } from "@/components/ui/download-progress-modal";
+import { 
+  getManualApplications, 
+  updateManualApplication, 
+  deleteManualApplication 
+} from "@/utils/electoralStorageUtils";
 
 const headerImage = "https://raw.githubusercontent.com/Fresh-Teacher/glorious-gateway-65056-78561-35497/main/src/assets/header.png";
 import { formatInTimeZone } from 'date-fns-tz';
@@ -142,16 +147,31 @@ export default function ElectoralApplications() {
   const fetchApplications = async () => {
     try {
       setLoading(true);
+      
+      // Fetch from database
       const { data, error } = await supabase
         .from('electoral_applications')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setApplications((data || []).map(app => ({
+      
+      const dbApplications = (data || []).map(app => ({
         ...app,
         status: (app.status || 'pending') as 'pending' | 'confirmed' | 'rejected'
-      })));
+      }));
+
+      // Fetch from localStorage using utility function
+      const localApplications = getManualApplications();
+
+      // Combine both sources
+      const allApplications = [...dbApplications, ...localApplications];
+      // Sort by created_at descending
+      allApplications.sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+      
+      setApplications(allApplications);
     } catch (error) {
       console.error('Error fetching applications:', error);
       toast({
@@ -167,12 +187,19 @@ export default function ElectoralApplications() {
   const updateApplicationStatus = async (applicationId: string, newStatus: 'confirmed' | 'rejected') => {
     try {
       setUpdating(applicationId);
-      const { error } = await supabase
-        .from('electoral_applications')
-        .update({ status: newStatus })
-        .eq('id', applicationId);
+      
+      // Check if it's a local application
+      if (applicationId.startsWith('manual_')) {
+        updateManualApplication(applicationId, { status: newStatus });
+      } else {
+        // Database application
+        const { error } = await supabase
+          .from('electoral_applications')
+          .update({ status: newStatus })
+          .eq('id', applicationId);
 
-      if (error) throw error;
+        if (error) throw error;
+      }
 
       // Update local state
       setApplications(apps => 
@@ -201,12 +228,18 @@ export default function ElectoralApplications() {
     if (!deletingApplication) return;
 
     try {
-      const { error } = await supabase
-        .from('electoral_applications')
-        .delete()
-        .eq('id', deletingApplication.id);
+      // Check if it's a local application
+      if (deletingApplication.id.startsWith('manual_')) {
+        deleteManualApplication(deletingApplication.id);
+      } else {
+        // Database application
+        const { error } = await supabase
+          .from('electoral_applications')
+          .delete()
+          .eq('id', deletingApplication.id);
 
-      if (error) throw error;
+        if (error) throw error;
+      }
 
       toast({
         title: "Success",
