@@ -444,6 +444,7 @@ export default function ElectoralApplications() {
         email: app.student_email,
         class: app.class_name,
         stream: app.stream_name,
+        position: app.position,
         parentContact: app.parent_tel ? `+256${app.parent_tel}` : '',
         status: app.status.charAt(0).toUpperCase() + app.status.slice(1)
       }));

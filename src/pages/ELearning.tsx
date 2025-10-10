@@ -230,7 +230,7 @@ const ELearning = () => {
 
         {/* Video Grid - More Spacious */}
         {paginatedVideos.length > 0 ? (
-          <div className="w-full min-w-0 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6 pb-6 sm:pb-8">
+          <div className="w-full min-w-0 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 pb-6 sm:pb-8">
             {paginatedVideos.map((video, index) => (
               <VideoCard 
                 key={`${video.src}-${index}`}

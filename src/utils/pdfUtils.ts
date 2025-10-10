@@ -165,6 +165,7 @@ interface CandidateData {
   email: string;
   class: string;
   stream: string;
+  position: string;
   parentContact: string;
   status: string;
 }
@@ -209,22 +210,28 @@ export const generateCandidatesListPDF = async (
   doc.text(`Total: ${totalCount} | Approved: ${approvedCount} | Pending: ${pendingCount} | Rejected: ${rejectedCount}`, 
     doc.internal.pageSize.getWidth() / 2, 61, { align: 'center' });
   
+  // Helper function to format position
+  const formatPosition = (position: string) => {
+    return position.split('_').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+  };
+
   // Prepare table data with numbering
   const tableData = candidates.map((candidate, index) => {
     return [
       (index + 1).toString(),
       candidate.name,
-      candidate.email,
       `${candidate.class} ${candidate.stream}`,
-      candidate.parentContact,
-      candidate.status
+      formatPosition(candidate.position),
+      candidate.parentContact
     ];
   });
   
   // Generate table with all borders
   autoTable(doc, {
     startY: 68,
-    head: [['No.', 'Name', 'Email', 'Class', 'Parent Contact', 'Status']],
+    head: [['No.', 'Name', 'Class', 'Position', 'Parent Contact']],
     body: tableData,
     theme: 'grid',
     headStyles: {
@@ -249,24 +256,10 @@ export const generateCandidatesListPDF = async (
     },
     columnStyles: {
       0: { cellWidth: 15, halign: 'center' },
-      1: { cellWidth: 40, halign: 'left' },
-      2: { cellWidth: 50, halign: 'left' },
-      3: { cellWidth: 25, halign: 'center' },
-      4: { cellWidth: 30, halign: 'center' },
-      5: { cellWidth: 25, halign: 'center' }
-    },
-    didDrawCell: function(data) {
-      // Color code the status column
-      if (data.column.index === 5 && data.section === 'body') {
-        const status = data.cell.text[0];
-        if (status === 'Rejected') {
-          data.cell.styles.textColor = [255, 0, 0];
-        } else if (status === 'Approved') {
-          data.cell.styles.textColor = [0, 128, 0];
-        } else {
-          data.cell.styles.textColor = [255, 165, 0];
-        }
-      }
+      1: { cellWidth: 50, halign: 'left' },
+      2: { cellWidth: 30, halign: 'center' },
+      3: { cellWidth: 55, halign: 'left' },
+      4: { cellWidth: 35, halign: 'center' }
     },
     margin: { left: 10, right: 10 }
   });
