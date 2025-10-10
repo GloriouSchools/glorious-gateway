@@ -1,10 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Database } from "@/integrations/supabase/types";
-
-type DbStudent = Database['public']['Tables']['students']['Row'];
-type DbStream = Database['public']['Tables']['streams']['Row'];
 
 export interface Student {
   id: string;
@@ -51,7 +47,7 @@ export const useStudents = (streamId?: string) => {
       if (error) throw error;
       
       // Map database students to our Student interface
-      const students: Student[] = (data as DbStudent[]).map(student => ({
+      const students: Student[] = (data as any[]).map(student => ({
         id: student.id || '',
         name: student.name || '',
         student_id: student.id || '',
@@ -79,7 +75,7 @@ export const useStreams = () => {
       if (error) throw error;
       
       // Map database streams to our Stream interface
-      const streams: Stream[] = (data as DbStream[]).map(stream => ({
+      const streams: Stream[] = (data as any[]).map(stream => ({
         id: stream.id || '',
         name: stream.name || stream.Name || '',
         class_id: stream.class_id || stream.Class || ''

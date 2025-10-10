@@ -14,357 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
-      admins: {
-        Row: {
-          created_at: string | null
-          email: string | null
-          id: string | null
-          is_verified: boolean | null
-          name: string | null
-          password_hash: string | null
-          personal_email: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          email?: string | null
-          id?: string | null
-          is_verified?: boolean | null
-          name?: string | null
-          password_hash?: string | null
-          personal_email?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          email?: string | null
-          id?: string | null
-          is_verified?: boolean | null
-          name?: string | null
-          password_hash?: string | null
-          personal_email?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      attendance_records: {
-        Row: {
-          created_at: string | null
-          date: string
-          id: string
-          marked_at: string | null
-          marked_by: string | null
-          status: string
-          stream_id: string
-          student_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          date: string
-          id?: string
-          marked_at?: string | null
-          marked_by?: string | null
-          status: string
-          stream_id: string
-          student_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          date?: string
-          id?: string
-          marked_at?: string | null
-          marked_by?: string | null
-          status?: string
-          stream_id?: string
-          student_id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "attendance_records_stream_id_fkey"
-            columns: ["stream_id"]
-            isOneToOne: false
-            referencedRelation: "streams"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "attendance_records_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      classes: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          id: string | null
-          name: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          description?: string | null
-          id?: string | null
-          name?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          description?: string | null
-          id?: string | null
-          name?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       electoral_applications: {
         Row: {
-          age: number | null
-          class_name: string | null
-          class_teacher_name: string | null
-          class_teacher_tel: string | null
+          age: string | null
+          class_name: string
+          class_teacher: string | null
           created_at: string | null
           experience: string | null
-          id: string | null
+          id: string
+          parent_contact: string | null
           parent_name: string | null
-          parent_tel: number | null
-          position: string | null
+          position: string
           qualifications: string | null
           sex: string | null
           status: string | null
-          stream_name: string | null
-          student_email: string | null
-          student_id: string | null
-          student_name: string | null
+          stream_name: string
+          student_email: string
+          student_id: string
+          student_name: string
           student_photo: string | null
           submitted_at: string | null
-          updated_at: string | null
           why_apply: string | null
         }
         Insert: {
-          age?: number | null
-          class_name?: string | null
-          class_teacher_name?: string | null
-          class_teacher_tel?: string | null
+          age?: string | null
+          class_name: string
+          class_teacher?: string | null
           created_at?: string | null
           experience?: string | null
-          id?: string | null
+          id?: string
+          parent_contact?: string | null
           parent_name?: string | null
-          parent_tel?: number | null
-          position?: string | null
+          position: string
           qualifications?: string | null
           sex?: string | null
           status?: string | null
-          stream_name?: string | null
-          student_email?: string | null
-          student_id?: string | null
-          student_name?: string | null
+          stream_name: string
+          student_email: string
+          student_id: string
+          student_name: string
           student_photo?: string | null
           submitted_at?: string | null
-          updated_at?: string | null
           why_apply?: string | null
         }
         Update: {
-          age?: number | null
-          class_name?: string | null
-          class_teacher_name?: string | null
-          class_teacher_tel?: string | null
+          age?: string | null
+          class_name?: string
+          class_teacher?: string | null
           created_at?: string | null
           experience?: string | null
-          id?: string | null
+          id?: string
+          parent_contact?: string | null
           parent_name?: string | null
-          parent_tel?: number | null
-          position?: string | null
+          position?: string
           qualifications?: string | null
           sex?: string | null
           status?: string | null
-          stream_name?: string | null
-          student_email?: string | null
-          student_id?: string | null
-          student_name?: string | null
+          stream_name?: string
+          student_email?: string
+          student_id?: string
+          student_name?: string
           student_photo?: string | null
           submitted_at?: string | null
-          updated_at?: string | null
           why_apply?: string | null
-        }
-        Relationships: []
-      }
-      electoral_positions: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          eligible_classes: Json | null
-          id: string | null
-          is_active: boolean | null
-          title: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          description?: string | null
-          eligible_classes?: Json | null
-          id?: string | null
-          is_active?: boolean | null
-          title?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          description?: string | null
-          eligible_classes?: Json | null
-          id?: string | null
-          is_active?: boolean | null
-          title?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      streams: {
-        Row: {
-          Class: string | null
-          class_id: string | null
-          "Created At": string | null
-          created_at: string | null
-          Description: string | null
-          id: string
-          ID: string | null
-          name: string | null
-          Name: string | null
-          Students: string | null
-          "Updated At": string | null
-          updated_at: string | null
-        }
-        Insert: {
-          Class?: string | null
-          class_id?: string | null
-          "Created At"?: string | null
-          created_at?: string | null
-          Description?: string | null
-          id: string
-          ID?: string | null
-          name?: string | null
-          Name?: string | null
-          Students?: string | null
-          "Updated At"?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          Class?: string | null
-          class_id?: string | null
-          "Created At"?: string | null
-          created_at?: string | null
-          Description?: string | null
-          id?: string
-          ID?: string | null
-          name?: string | null
-          Name?: string | null
-          Students?: string | null
-          "Updated At"?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      students: {
-        Row: {
-          class_id: string | null
-          created_at: string | null
-          default_password: string | null
-          email: string | null
-          id: string
-          is_verified: boolean | null
-          name: string | null
-          password_hash: string | null
-          personal_email: string | null
-          photo_url: string | null
-          stream_id: string | null
-        }
-        Insert: {
-          class_id?: string | null
-          created_at?: string | null
-          default_password?: string | null
-          email?: string | null
-          id: string
-          is_verified?: boolean | null
-          name?: string | null
-          password_hash?: string | null
-          personal_email?: string | null
-          photo_url?: string | null
-          stream_id?: string | null
-        }
-        Update: {
-          class_id?: string | null
-          created_at?: string | null
-          default_password?: string | null
-          email?: string | null
-          id?: string
-          is_verified?: boolean | null
-          name?: string | null
-          password_hash?: string | null
-          personal_email?: string | null
-          photo_url?: string | null
-          stream_id?: string | null
-        }
-        Relationships: []
-      }
-      teachers: {
-        Row: {
-          classesTaught: string | null
-          contactNumber: number | null
-          created_at: string | null
-          default_password: string | null
-          email: string | null
-          id: string | null
-          is_verified: boolean | null
-          name: string | null
-          nationality: string | null
-          password_hash: string | null
-          personal_email: string | null
-          photo: string | null
-          photo_url: string | null
-          sex: string | null
-          subjectsTaught: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          classesTaught?: string | null
-          contactNumber?: number | null
-          created_at?: string | null
-          default_password?: string | null
-          email?: string | null
-          id?: string | null
-          is_verified?: boolean | null
-          name?: string | null
-          nationality?: string | null
-          password_hash?: string | null
-          personal_email?: string | null
-          photo?: string | null
-          photo_url?: string | null
-          sex?: string | null
-          subjectsTaught?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          classesTaught?: string | null
-          contactNumber?: number | null
-          created_at?: string | null
-          default_password?: string | null
-          email?: string | null
-          id?: string | null
-          is_verified?: boolean | null
-          name?: string | null
-          nationality?: string | null
-          password_hash?: string | null
-          personal_email?: string | null
-          photo?: string | null
-          photo_url?: string | null
-          sex?: string | null
-          subjectsTaught?: string | null
-          updated_at?: string | null
         }
         Relationships: []
       }
