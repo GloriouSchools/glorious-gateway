@@ -347,29 +347,8 @@ export function AdminDashboard() {
             <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-transparent" />
             <div className="relative z-10 text-center space-y-4 pt-8 md:pt-12">
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-orange-500 px-4 font-poppins drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] [text-shadow:_2px_2px_4px_rgb(0_0_0_/_80%)]">
-                {greeting}, {formatGreetingName(userName || '', 'admin') || 'Administrator'}! 
+              {greeting}, {formatGreetingName(userName || '', 'admin') || 'Administrator'}! 
               </h1>
-              
-              {/* Shuffle Button */}
-              <div className="flex justify-center pointer-events-auto">
-                <AnimatedButton
-                  variant="default"
-                  size="sm"
-                  animation="bounce"
-                  onClick={async () => {
-                    if (isShuffling) return;
-                    setIsShuffling(true);
-                    await photoJumbotronRef.current?.refreshPhotos();
-                    setIsShuffling(false);
-                  }}
-                  disabled={isShuffling}
-                  className="bg-white/10 backdrop-blur-md hover:bg-white/20 border-2 border-white/30 shadow-lg hover:shadow-xl transition-all text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                  aria-label="Shuffle photos"
-                >
-                  <Shuffle className={`h-4 w-4 mr-2 ${isShuffling ? 'animate-spin' : ''}`} />
-                  {isShuffling ? 'Shuffling...' : 'Shuffle Photos'}
-                </AnimatedButton>
-              </div>
             </div>
           </div>
         </div>

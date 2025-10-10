@@ -72,11 +72,13 @@ export function AddStudentModal({
   const onSubmit = async (data: StudentFormData) => {
     setLoading(true);
     try {
-      // Generate a random default password
+      // Generate a random default password and student ID
       const defaultPassword = Math.random().toString(36).slice(-8);
+      const studentId = `STU${Date.now()}${Math.random().toString(36).slice(-4)}`;
 
       const { error } = await supabase.from("students").insert([
         {
+          id: studentId,
           name: data.name,
           email: data.email,
           class_id: data.class_id,
@@ -84,7 +86,6 @@ export function AddStudentModal({
           photo_url: data.photo_url || null,
           default_password: defaultPassword,
           is_verified: false,
-          status: "active",
         },
       ]);
 

@@ -69,14 +69,17 @@ serve(async (req) => {
       .maybeSingle();
 
     if (teacher && !teacherError) {
-      if (teacher.password_hash === p_password) {
+      // Use password_hash if it exists, otherwise use default_password
+      const correctPassword = teacher.password_hash || teacher.default_password;
+      
+      if (correctPassword === p_password) {
         return new Response(
           JSON.stringify({
             success: true,
             role: 'teacher',
             token: `teacher_${teacher.id}`,
             name: teacher.name,
-            teacher_id: teacher.teacher_id,
+            teacher_id: teacher.id,
             email: teacher.email,
             is_verified: teacher.is_verified || false,
             personal_email: teacher.personal_email

@@ -10,6 +10,7 @@ interface AuthContextType {
   session: Session | null;
   userRole: UserRole | null;
   userName: string;
+  userId: string | null;
   photoUrl: string | null;
   isLoading: boolean;
   isVerified: boolean;
@@ -272,6 +273,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       session,
       userRole,
       userName,
+      userId: user?.id || null,
       photoUrl,
       isLoading,
       isVerified,

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import { format, addDays } from "date-fns";
 import { parseStudentCSV } from '@/utils/csvParser';
 import studentsCSV from '@/data/students.csv?raw';
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 // Parse student data
 const allStudents = parseStudentCSV(studentsCSV).map(row => ({
@@ -40,24 +41,58 @@ const buildClassList = () => {
 
 const classList = buildClassList();
 
-// Mock attendance data - In real app, this would come from backend
-const generateMockAttendance = () => {
-  const attendance: any = {};
-  allStudents.forEach(student => {
-    const rand = Math.random();
-    attendance[student.id] = {
-      status: rand > 0.85 ? 'not-marked' : (rand > 0.15 ? 'present' : 'absent'),
-      timeMarked: rand > 0.85 ? null : new Date().toISOString()
-    };
-  });
-  return attendance;
-};
-
 const AttendanceOverview = () => {
   const { userRole, userName, photoUrl, signOut } = useAuth();
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [attendanceData] = useState(generateMockAttendance());
+  const [attendanceData, setAttendanceData] = useState<any>({});
+  
+  // Load attendance from database
+  useEffect(() => {
+    loadAttendance();
+    
+    // Subscribe to realtime changes
+    const channel = supabase
+      .channel('attendance-overview-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'attendance_records'
+        },
+        () => {
+          loadAttendance();
+        }
+      )
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [selectedDate]);
+  
+  const loadAttendance = async () => {
+    try {
+      const { data, error } = await (supabase as any)
+        .from('attendance_records')
+        .select('*')
+        .eq('date', format(selectedDate, 'yyyy-MM-dd'));
+      
+      if (error) throw error;
+      
+      const attendance: any = {};
+      data?.forEach((record: any) => {
+        attendance[record.student_id] = {
+          status: record.status,
+          timeMarked: record.marked_at || record.created_at
+        };
+      });
+      setAttendanceData(attendance);
+    } catch (error) {
+      console.error('Error loading attendance:', error);
+    }
+  };
 
   const handleLogout = async () => {
     try {

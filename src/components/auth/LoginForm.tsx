@@ -140,10 +140,16 @@ export function LoginForm({ schoolLogo }: LoginFormProps) {
         
         console.log('Teacher query result:', { teacher, teacherError });
         
-        if (teacher && teacher.password_hash === signInData.password) {
-          console.log('Teacher login successful');
-          userData = teacher;
-          userRole = 'teacher';
+        if (teacher) {
+          const correctPassword = (teacher as any).password_hash || (teacher as any).default_password;
+          console.log('Expected password for teacher:', correctPassword);
+          console.log('Password match:', correctPassword === signInData.password);
+          
+          if (correctPassword === signInData.password) {
+            console.log('Teacher login successful');
+            userData = teacher;
+            userRole = 'teacher';
+          }
         }
       }
       

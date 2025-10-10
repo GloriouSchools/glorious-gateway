@@ -47,6 +47,57 @@ export type Database = {
         }
         Relationships: []
       }
+      attendance_records: {
+        Row: {
+          created_at: string | null
+          date: string
+          id: string
+          marked_at: string | null
+          marked_by: string | null
+          status: string
+          stream_id: string
+          student_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          date: string
+          id?: string
+          marked_at?: string | null
+          marked_by?: string | null
+          status: string
+          stream_id: string
+          student_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          id?: string
+          marked_at?: string | null
+          marked_by?: string | null
+          status?: string
+          stream_id?: string
+          student_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_records_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_records_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       classes: {
         Row: {
           created_at: string | null
@@ -180,7 +231,7 @@ export type Database = {
           "Created At": string | null
           created_at: string | null
           Description: string | null
-          id: string | null
+          id: string
           ID: string | null
           name: string | null
           Name: string | null
@@ -194,7 +245,7 @@ export type Database = {
           "Created At"?: string | null
           created_at?: string | null
           Description?: string | null
-          id?: string | null
+          id: string
           ID?: string | null
           name?: string | null
           Name?: string | null
@@ -208,7 +259,7 @@ export type Database = {
           "Created At"?: string | null
           created_at?: string | null
           Description?: string | null
-          id?: string | null
+          id?: string
           ID?: string | null
           name?: string | null
           Name?: string | null
@@ -224,7 +275,7 @@ export type Database = {
           created_at: string | null
           default_password: string | null
           email: string | null
-          id: string | null
+          id: string
           is_verified: boolean | null
           name: string | null
           password_hash: string | null
@@ -237,7 +288,7 @@ export type Database = {
           created_at?: string | null
           default_password?: string | null
           email?: string | null
-          id?: string | null
+          id: string
           is_verified?: boolean | null
           name?: string | null
           password_hash?: string | null
@@ -250,7 +301,7 @@ export type Database = {
           created_at?: string | null
           default_password?: string | null
           email?: string | null
-          id?: string | null
+          id?: string
           is_verified?: boolean | null
           name?: string | null
           password_hash?: string | null
@@ -265,6 +316,7 @@ export type Database = {
           classesTaught: string | null
           contactNumber: number | null
           created_at: string | null
+          default_password: string | null
           email: string | null
           id: string | null
           is_verified: boolean | null
@@ -282,6 +334,7 @@ export type Database = {
           classesTaught?: string | null
           contactNumber?: number | null
           created_at?: string | null
+          default_password?: string | null
           email?: string | null
           id?: string | null
           is_verified?: boolean | null
@@ -299,6 +352,7 @@ export type Database = {
           classesTaught?: string | null
           contactNumber?: number | null
           created_at?: string | null
+          default_password?: string | null
           email?: string | null
           id?: string | null
           is_verified?: boolean | null

@@ -96,6 +96,26 @@ export default function ElectoralApplications() {
 
   useEffect(() => {
     fetchApplications();
+    
+    // Subscribe to realtime changes
+    const channel = supabase
+      .channel('electoral-applications-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'electoral_applications'
+        },
+        () => {
+          fetchApplications();
+        }
+      )
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchApplications = async () => {

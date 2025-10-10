@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from "react";
+import { useState, lazy, Suspense, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ import { format, addDays, parseISO } from "date-fns";
 import { parseStudentCSV, StudentCSVRow } from '@/utils/csvParser';
 import studentsCSV from '@/data/students.csv?raw';
 import AttendanceOverview from "./admin/AttendanceOverview";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Student {
   id: string;
@@ -104,6 +105,37 @@ const AttendanceMarking = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // Load existing attendance from database when date or class changes
+  useEffect(() => {
+    loadAttendance();
+  }, [selectedDate, selectedClass]);
+  
+  const loadAttendance = async () => {
+    try {
+      const { data, error } = await (supabase as any)
+        .from('attendance_records')
+        .select('*')
+        .eq('date', format(selectedDate, 'yyyy-MM-dd'))
+        .eq('stream_id', selectedClass);
+      
+      if (error) throw error;
+      
+      if (data) {
+        const records: { [key: string]: AttendanceRecord } = {};
+        data.forEach((record: any) => {
+          records[record.student_id] = {
+            studentId: record.student_id,
+            status: record.status as 'present' | 'absent',
+            timeMarked: record.marked_at || record.created_at
+          };
+        });
+        setAttendanceRecords(records);
+      }
+    } catch (error) {
+      console.error('Error loading attendance:', error);
+    }
+  };
 
   const currentClass = realClasses.find(cls => cls.id === selectedClass);
   
@@ -140,12 +172,36 @@ const AttendanceMarking = () => {
   const saveAttendance = async () => {
     setIsSaving(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const stats = getAttendanceStats();
-    toast.success(`Attendance saved! ${stats.marked} of ${stats.total} students marked.`);
-    setIsSaving(false);
+    try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      // Prepare attendance records for database
+      const attendanceToSave = Object.values(attendanceRecords).map(record => ({
+        student_id: record.studentId,
+        stream_id: selectedClass,
+        date: format(selectedDate, 'yyyy-MM-dd'),
+        status: record.status,
+        marked_by: user?.id || null
+      }));
+      
+      // Upsert attendance records (insert or update if exists)
+      const { error } = await (supabase as any)
+        .from('attendance_records')
+        .upsert(attendanceToSave, {
+          onConflict: 'student_id,date'
+        });
+      
+      if (error) throw error;
+      
+      const stats = getAttendanceStats();
+      toast.success(`Attendance saved! ${stats.marked} of ${stats.total} students marked.`);
+    } catch (error) {
+      console.error('Error saving attendance:', error);
+      toast.error('Failed to save attendance. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const markAllPresent = () => {
@@ -242,7 +298,7 @@ const AttendanceMarking = () => {
               className="bg-primary hover:bg-primary/90 w-full sm:w-auto"
             >
               <Save className="h-4 w-4 mr-2" />
-              {isSaving ? "Saving..." : "Save Attendance"}
+              {isSaving ? "Saving..." : "Update Attendance"}
             </Button>
           </div>
         </div>

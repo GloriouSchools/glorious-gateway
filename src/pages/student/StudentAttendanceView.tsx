@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +20,7 @@ import {
 import { format, addDays, subDays, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns";
 import { parseStudentCSV } from '@/utils/csvParser';
 import studentsCSV from '@/data/students.csv?raw';
+import { supabase } from "@/integrations/supabase/client";
 
 // Parse student data
 const allStudents = parseStudentCSV(studentsCSV).map(row => ({
@@ -31,26 +32,71 @@ const allStudents = parseStudentCSV(studentsCSV).map(row => ({
   photoUrl: row.photo_url
 }));
 
-// Mock attendance data for the current student
-const generateStudentAttendance = (studentId: string) => {
-  const today = new Date();
-  const monthStart = startOfMonth(today);
-  const days = eachDayOfInterval({ start: monthStart, end: today });
-  
-  return days.map(day => ({
-    date: day,
-    status: Math.random() > 0.15 ? 'present' : 'absent', // 85% attendance
-    timeMarked: day.toISOString()
-  }));
-};
+interface AttendanceRecord {
+  date: Date;
+  status: string;
+  timeMarked: string;
+}
 
 const StudentAttendanceView = () => {
-  const { userRole, userName, photoUrl, signOut } = useAuth();
+  const { userRole, userName, photoUrl, signOut, userId } = useAuth();
   const [selectedMonth, setSelectedMonth] = useState(new Date());
+  const [attendanceHistory, setAttendanceHistory] = useState<AttendanceRecord[]>([]);
   
-  // Mock current student - In real app, get from auth context
-  const currentStudent = allStudents[0];
-  const attendanceHistory = generateStudentAttendance(currentStudent.id);
+  // Find current student from user ID
+  const currentStudent = allStudents.find(s => s.id === userId) || allStudents[0];
+  
+  // Load attendance from database
+  useEffect(() => {
+    loadAttendance();
+    
+    // Subscribe to realtime changes
+    const channel = supabase
+      .channel('student-attendance-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'attendance_records',
+          filter: `student_id=eq.${currentStudent.id}`
+        },
+        () => {
+          loadAttendance();
+        }
+      )
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentStudent.id, selectedMonth]);
+  
+  const loadAttendance = async () => {
+    try {
+      const monthStart = startOfMonth(selectedMonth);
+      const monthEnd = endOfMonth(selectedMonth);
+      
+      const { data, error } = await (supabase as any)
+        .from('attendance_records')
+        .select('*')
+        .eq('student_id', currentStudent.id)
+        .gte('date', format(monthStart, 'yyyy-MM-dd'))
+        .lte('date', format(monthEnd, 'yyyy-MM-dd'));
+      
+      if (error) throw error;
+      
+      const records: AttendanceRecord[] = data?.map((record: any) => ({
+        date: new Date(record.date),
+        status: record.status,
+        timeMarked: record.marked_at || record.created_at
+      })) || [];
+      
+      setAttendanceHistory(records);
+    } catch (error) {
+      console.error('Error loading attendance:', error);
+    }
+  };
   
   const handleLogout = async () => {
     try {
