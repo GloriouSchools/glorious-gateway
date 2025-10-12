@@ -58,6 +58,7 @@ import Entertainment from "./pages/Entertainment";
 import MovieDetail from "./pages/MovieDetail";
 import StudentAttendanceView from "./pages/student/StudentAttendanceView";
 import AttendanceDetails from "./pages/admin/AttendanceDetails";
+import StudentAttendanceSummary from "./pages/admin/StudentAttendanceSummary";
 
 const queryClient = new QueryClient();
 
@@ -419,6 +420,13 @@ const App = () => (
                 <ProtectedRoute>
                   <RoleBasedRoute allowedRoles={["admin"]}>
                     <AttendanceDetails />
+                  </RoleBasedRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/attendance/student/:studentId" element={
+                <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={["admin"]}>
+                    <StudentAttendanceSummary />
                   </RoleBasedRoute>
                 </ProtectedRoute>
               } />

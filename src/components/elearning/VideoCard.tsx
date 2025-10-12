@@ -48,6 +48,11 @@ export function VideoCard({ video, onClick }: VideoCardProps) {
             <Play className="w-10 h-10 text-primary fill-primary ml-1" />
           </div>
         </div>
+        {/* Category Badge with Icon */}
+        <div className={`absolute top-3 right-3 bg-gradient-to-r ${gradientColor} text-white px-4 py-2 rounded-full text-sm font-bold shadow-xl flex items-center gap-2`}>
+          <CategoryIcon className="w-4 h-4" />
+          {video.category}
+        </div>
       </div>
       
       {/* Content */}
@@ -55,19 +60,13 @@ export function VideoCard({ video, onClick }: VideoCardProps) {
         <h3 className="font-bold text-card-foreground text-base mb-3 line-clamp-2 leading-relaxed">
           {video.title}
         </h3>
-        <div className="space-y-2">
-          <div className={`w-full px-3 py-2 bg-gradient-to-r ${gradientColor} text-white rounded-lg text-sm font-bold shadow-md flex items-center gap-2 justify-center`}>
-            <CategoryIcon className="w-4 h-4" />
-            {video.category}
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="px-3 py-2 bg-gradient-to-r from-primary/20 to-primary/10 rounded-lg text-sm font-semibold text-primary border border-primary/20">
-              📚 {video.class}
-            </span>
-            <span className="px-3 py-2 bg-gradient-to-r from-secondary/20 to-secondary/10 rounded-lg text-sm font-semibold text-secondary-foreground border border-secondary/20 truncate flex-1 min-w-0">
-              ✨ {video.topic}
-            </span>
-          </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="px-3 py-2 bg-gradient-to-r from-primary/20 to-primary/10 rounded-lg text-sm font-semibold text-primary border border-primary/20">
+            📚 {video.class}
+          </span>
+          <span className="px-3 py-2 bg-gradient-to-r from-secondary/20 to-secondary/10 rounded-lg text-sm font-semibold text-secondary-foreground border border-secondary/20 truncate flex-1 min-w-0">
+            ✨ {video.topic}
+          </span>
         </div>
       </div>
     </div>

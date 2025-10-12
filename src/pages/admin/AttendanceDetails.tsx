@@ -15,6 +15,8 @@ import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, Pagi
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { generateAttendancePDF } from "@/utils/pdfGenerator";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from "react";
 
 const allStudents = parseStudentCSV(studentsCSV).map(row => ({
   id: row.id,
@@ -59,8 +61,36 @@ const AttendanceDetails = () => {
   const [streamFilter, setStreamFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const [attendanceData] = useState(generateMockAttendance());
+  const [attendanceData, setAttendanceData] = useState<any>({});
   const [isDownloading, setIsDownloading] = useState(false);
+
+  // Load attendance from database
+  useEffect(() => {
+    loadAttendance();
+  }, []);
+
+  const loadAttendance = async () => {
+    try {
+      const { data, error } = await (supabase as any)
+        .from('attendance_records')
+        .select('*')
+        .eq('date', format(new Date(), 'yyyy-MM-dd'));
+      
+      if (error) throw error;
+      
+      const attendance: any = {};
+      data?.forEach((record: any) => {
+        attendance[record.student_id] = {
+          status: record.status,
+          timeMarked: record.marked_at || record.created_at,
+          absentReason: record.absent_reason
+        };
+      });
+      setAttendanceData(attendance);
+    } catch (error) {
+      console.error('Error loading attendance:', error);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -131,10 +161,16 @@ const AttendanceDetails = () => {
     currentPage * ITEMS_PER_PAGE
   );
 
-  // Reset to page 1 when filters change
+  // Reset to page 1 when filters change and scroll to top
   useMemo(() => {
     setCurrentPage(1);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [searchTerm, streamFilter, statusFilter]);
+
+  // Scroll to top when page changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentPage]);
 
   const stats = {
     total: baseStudents.length,
@@ -184,23 +220,37 @@ const AttendanceDetails = () => {
     <DashboardLayout userRole={userRole} userName={userName || "Admin"} photoUrl={photoUrl} onLogout={handleLogout}>
       <div className="w-full max-w-full overflow-x-hidden space-y-4 sm:space-y-6 animate-fade-in px-3 sm:px-4 lg:px-6">
         {/* Header */}
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-2 min-w-0">
-            <Button variant="outline" size="icon" onClick={() => navigate('/admin/attendance')} className="shrink-0">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div className="min-w-0 flex-1">
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-elegant bg-clip-text text-transparent truncate">{className}</h1>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-1 truncate">
-                Showing {filteredStudents.length} of {stats.total} students
-              </p>
+        <Card>
+          <CardHeader className="p-4 sm:p-6">
+            <div className="flex items-start gap-3">
+              <Button variant="outline" size="icon" onClick={() => navigate('/admin/attendance')} className="shrink-0">
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <div className="flex-1 min-w-0">
+                <CardTitle className="text-xl sm:text-2xl lg:text-3xl mb-2">
+                  Class Attendance Details
+                </CardTitle>
+                <div className="space-y-1">
+                  <p className="text-sm sm:text-base font-semibold text-foreground">
+                    {className}
+                  </p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
+                    Date: {format(new Date(), 'EEEE, MMMM d, yyyy')}
+                  </p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
+                    Showing {filteredStudents.length} of {stats.total} students
+                  </p>
+                </div>
+              </div>
             </div>
-          </div>
-          <Button onClick={handleDownloadPDF} size="sm" className="w-full sm:w-auto" disabled={isDownloading}>
-            <Download className="h-4 w-4 mr-2" />
-            <span className="truncate">{isDownloading ? 'Processing...' : 'Download PDF'}</span>
-          </Button>
-        </div>
+          </CardHeader>
+          <CardContent className="p-4 sm:p-6 pt-0">
+            <Button onClick={handleDownloadPDF} size="sm" className="w-full sm:w-auto" disabled={isDownloading}>
+              <Download className="h-4 w-4 mr-2" />
+              <span className="truncate">{isDownloading ? 'Processing...' : 'Download Attendance Report'}</span>
+            </Button>
+          </CardContent>
+        </Card>
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
@@ -289,7 +339,11 @@ const AttendanceDetails = () => {
             ) : (
               <div className="space-y-3">
                 {paginatedStudents.map((student) => (
-                  <div key={student.id} className="flex items-center gap-3 p-4 rounded-lg border hover:bg-muted/50 transition-colors min-w-0">
+                  <div 
+                    key={student.id} 
+                    className="flex items-center gap-3 p-4 rounded-lg border hover:bg-muted/50 transition-colors min-w-0 cursor-pointer"
+                    onClick={() => navigate(`/admin/attendance/student/${student.id}`)}
+                  >
                     <Avatar className="h-12 w-12 shrink-0">
                       <AvatarImage src={student.photoUrl} />
                       <AvatarFallback>
@@ -297,7 +351,7 @@ const AttendanceDetails = () => {
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-base font-semibold truncate">{student.name}</h4>
+                      <h4 className="text-base font-semibold truncate hover:text-primary">{student.name}</h4>
                       <p className="text-sm text-muted-foreground truncate">{student.email}</p>
                       <p className="text-xs text-muted-foreground mt-1 truncate">{student.stream.replace('-', ' - ')}</p>
                     </div>
@@ -326,7 +380,11 @@ const AttendanceDetails = () => {
               ) : (
                 <div className="grid grid-cols-1 gap-3 w-full">
                   {paginatedStudents.map((student) => (
-                    <div key={student.id} className="p-3 rounded-lg border hover:bg-muted/50 transition-colors min-w-0">
+                    <div 
+                      key={student.id} 
+                      className="p-3 rounded-lg border hover:bg-muted/50 transition-colors min-w-0 cursor-pointer"
+                      onClick={() => navigate(`/admin/attendance/student/${student.id}`)}
+                    >
                       <div className="flex items-start gap-2 mb-2 min-w-0">
                         <Avatar className="h-10 w-10 shrink-0">
                           <AvatarImage src={student.photoUrl} />
@@ -335,7 +393,7 @@ const AttendanceDetails = () => {
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
-                          <h4 className="text-sm font-semibold truncate">{student.name}</h4>
+                          <h4 className="text-sm font-semibold truncate hover:text-primary">{student.name}</h4>
                           <p className="text-xs text-muted-foreground truncate">{student.email}</p>
                           <p className="text-xs text-muted-foreground mt-1 truncate">{student.stream.replace('-', ' - ')}</p>
                         </div>

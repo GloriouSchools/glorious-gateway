@@ -42,8 +42,9 @@ interface Student {
 
 interface AttendanceRecord {
   studentId: string;
-  status: 'present' | 'absent';
+  status: 'present' | 'absent' | 'unmarked';
   timeMarked: string;
+  absentReason?: string;
 }
 
 interface ClassInfo {
@@ -105,6 +106,9 @@ const AttendanceMarking = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [absentReason, setAbsentReason] = useState<string>("");
+  const [customReason, setCustomReason] = useState<string>("");
+  const [showReasonDialog, setShowReasonDialog] = useState(false);
   
   // Load existing attendance from database when date or class changes
   useEffect(() => {
@@ -127,7 +131,8 @@ const AttendanceMarking = () => {
           records[record.student_id] = {
             studentId: record.student_id,
             status: record.status as 'present' | 'absent',
-            timeMarked: record.marked_at || record.created_at
+            timeMarked: record.marked_at || record.created_at,
+            absentReason: record.absent_reason
           };
         });
         setAttendanceRecords(records);
@@ -147,16 +152,39 @@ const AttendanceMarking = () => {
     student.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const markAttendance = (studentId: string, status: 'present' | 'absent') => {
+  const markAttendance = (studentId: string, status: 'present' | 'absent', reason?: string) => {
     setAttendanceRecords(prev => ({
       ...prev,
       [studentId]: {
         studentId,
         status,
-        timeMarked: new Date().toISOString()
+        timeMarked: new Date().toISOString(),
+        absentReason: status === 'absent' ? reason : undefined
       }
     }));
     toast.success(`Marked as ${status}`);
+  };
+
+  const handleAbsentClick = (student: Student) => {
+    setSelectedStudent(student);
+    setShowReasonDialog(true);
+    setAbsentReason("");
+    setCustomReason("");
+  };
+
+  const handleAbsentReasonSubmit = () => {
+    if (!selectedStudent) return;
+    
+    const finalReason = absentReason === "Other" ? customReason : absentReason;
+    
+    if (!finalReason) {
+      toast.error("Please provide a reason for absence");
+      return;
+    }
+
+    markAttendance(selectedStudent.id, 'absent', finalReason);
+    setShowReasonDialog(false);
+    setIsModalOpen(false);
   };
 
   const getAttendanceStats = () => {
@@ -170,6 +198,23 @@ const AttendanceMarking = () => {
   };
 
   const saveAttendance = async () => {
+    // Validate all students are marked
+    if (stats.marked !== stats.total) {
+      toast.error(`Please mark all students. ${stats.total - stats.marked} students remaining.`);
+      return;
+    }
+
+    // Validate date is not in the future
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selected = new Date(selectedDate);
+    selected.setHours(0, 0, 0, 0);
+    
+    if (selected > today) {
+      toast.error("Cannot mark attendance for future dates.");
+      return;
+    }
+
     setIsSaving(true);
     
     try {
@@ -182,7 +227,8 @@ const AttendanceMarking = () => {
         stream_id: selectedClass,
         date: format(selectedDate, 'yyyy-MM-dd'),
         status: record.status,
-        marked_by: user?.id || null
+        marked_by: user?.id || null,
+        absent_reason: record.absentReason || null
       }));
       
       // Upsert attendance records (insert or update if exists)
@@ -218,16 +264,7 @@ const AttendanceMarking = () => {
   };
 
   const markAllAbsent = () => {
-    const newRecords: { [key: string]: AttendanceRecord } = {};
-    filteredStudents.forEach(student => {
-      newRecords[student.id] = {
-        studentId: student.id,
-        status: 'absent',
-        timeMarked: new Date().toISOString()
-      };
-    });
-    setAttendanceRecords(prev => ({ ...prev, ...newRecords }));
-    toast.success("All students marked as absent!");
+    toast.info("Please mark students individually to provide absence reasons.");
   };
 
   const getStatusColor = (status: string) => {
@@ -255,7 +292,20 @@ const AttendanceMarking = () => {
   };
 
   const navigateDate = (direction: 'prev' | 'next') => {
-    setSelectedDate(prev => addDays(prev, direction === 'next' ? 1 : -1));
+    const newDate = addDays(selectedDate, direction === 'next' ? 1 : -1);
+    
+    // Prevent navigation to future dates
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const checkDate = new Date(newDate);
+    checkDate.setHours(0, 0, 0, 0);
+    
+    if (checkDate > today) {
+      toast.error("Cannot mark attendance for future dates.");
+      return;
+    }
+    
+    setSelectedDate(newDate);
   };
 
   const handleStudentClick = (student: Student) => {
@@ -265,8 +315,13 @@ const AttendanceMarking = () => {
 
   const handleModalAttendance = (status: 'present' | 'absent') => {
     if (selectedStudent) {
-      markAttendance(selectedStudent.id, status);
-      setIsModalOpen(false);
+      if (status === 'absent') {
+        setIsModalOpen(false);
+        handleAbsentClick(selectedStudent);
+      } else {
+        markAttendance(selectedStudent.id, status);
+        setIsModalOpen(false);
+      }
     }
   };
 
@@ -515,7 +570,7 @@ const AttendanceMarking = () => {
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-2 w-full sm:w-auto">
+                      <div className="flex flex-col items-end gap-2 w-full sm:w-auto">
                         {/* Segmented Control for Attendance */}
                         <div className="flex rounded-lg border bg-muted p-1 w-full sm:w-auto">
                           <button
@@ -532,7 +587,7 @@ const AttendanceMarking = () => {
                             </div>
                           </button>
                           <button
-                            onClick={() => markAttendance(student.id, 'absent')}
+                            onClick={() => handleAbsentClick(student)}
                             className={`flex-1 sm:flex-none px-4 py-2 rounded-md text-sm font-medium transition-all ${
                               record?.status === 'absent'
                                 ? 'bg-red-600 text-white shadow-sm'
@@ -545,6 +600,13 @@ const AttendanceMarking = () => {
                             </div>
                           </button>
                         </div>
+                        
+                        {/* Show absence reason if student is marked absent */}
+                        {record?.status === 'absent' && record.absentReason && (
+                          <div className="text-xs text-muted-foreground bg-red-50 dark:bg-red-950/20 px-2 py-1 rounded border border-red-200 dark:border-red-900">
+                            <span className="font-medium">Reason:</span> {record.absentReason}
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
@@ -644,6 +706,64 @@ const AttendanceMarking = () => {
                 </div>
               </div>
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Absent Reason Dialog */}
+        <Dialog open={showReasonDialog} onOpenChange={setShowReasonDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Absence Reason</DialogTitle>
+              <DialogDescription>
+                Please provide a reason for {selectedStudent?.name}'s absence
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Select Reason</label>
+                <Select value={absentReason} onValueChange={setAbsentReason}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose a reason..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border z-50">
+                    <SelectItem value="Sick">Sick</SelectItem>
+                    <SelectItem value="Sent back for school fees">Sent back for school fees</SelectItem>
+                    <SelectItem value="Suspended">Suspended</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {absentReason === "Other" && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Specify Reason</label>
+                  <Input
+                    value={customReason}
+                    onChange={(e) => setCustomReason(e.target.value)}
+                    placeholder="Enter the reason..."
+                    className="w-full"
+                  />
+                </div>
+              )}
+
+              <div className="flex gap-2 pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowReasonDialog(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleAbsentReasonSubmit}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                  disabled={!absentReason || (absentReason === "Other" && !customReason.trim())}
+                >
+                  Mark as Absent
+                </Button>
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
