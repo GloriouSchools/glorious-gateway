@@ -28,12 +28,27 @@ import {
   GraduationCap,
   Award,
   TrendingUp,
-  MessageSquare
+  MessageSquare,
+  Plus,
+  Edit,
+  Trash2
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ApplicationPreview from "@/components/electoral/ApplicationPreview";
+import AddPrefectModal from "@/components/electoral/AddPrefectModal";
+import EditPrefectModal from "@/components/electoral/EditPrefectModal";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
@@ -42,6 +57,7 @@ import { DownloadProgressModal } from "@/components/ui/download-progress-modal";
 
 const headerImage = "https://raw.githubusercontent.com/Fresh-Teacher/glorious-gateway-65056-78561-35497/main/src/assets/header.png";
 import { formatInTimeZone } from 'date-fns-tz';
+import { getManualApplications, updateManualApplication, deleteManualApplication } from "@/utils/electoralStorageUtils";
 
 interface ElectoralApplication {
   id: string;
@@ -77,10 +93,16 @@ export default function ElectoralApplications() {
   const [updating, setUpdating] = useState<string | null>(null);
   const [showFormalPreview, setShowFormalPreview] = useState(false);
   const [bulkDownloading, setBulkDownloading] = useState(false);
+  const [downloadingCandidates, setDownloadingCandidates] = useState(false);
   const [downloadingApplications, setDownloadingApplications] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [downloadProgress, setDownloadProgress] = useState({ current: 0, total: 0, isComplete: false });
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingApplication, setEditingApplication] = useState<ElectoralApplication | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deletingApplication, setDeletingApplication] = useState<ElectoralApplication | null>(null);
   
   const handleLogout = () => {
     navigate('/login');
@@ -121,16 +143,33 @@ export default function ElectoralApplications() {
   const fetchApplications = async () => {
     try {
       setLoading(true);
+      
+      // Fetch from database
       const { data, error } = await supabase
         .from('electoral_applications')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setApplications((data || []).map(app => ({
-        ...app,
-        status: (app.status || 'pending') as 'pending' | 'confirmed' | 'rejected'
-      })));
+      
+      // Fetch from localStorage (manually added applications)
+      const manualApps = getManualApplications();
+      
+      // Combine both sources
+      const allApplications = [
+        ...(data || []).map(app => ({
+          ...app,
+          status: (app.status || 'pending') as 'pending' | 'confirmed' | 'rejected'
+        })),
+        ...manualApps
+      ];
+      
+      // Sort by created_at descending
+      allApplications.sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+      
+      setApplications(allApplications);
     } catch (error) {
       console.error('Error fetching applications:', error);
       toast({
@@ -146,12 +185,23 @@ export default function ElectoralApplications() {
   const updateApplicationStatus = async (applicationId: string, newStatus: 'confirmed' | 'rejected') => {
     try {
       setUpdating(applicationId);
-      const { error } = await supabase
-        .from('electoral_applications')
-        .update({ status: newStatus })
-        .eq('id', applicationId);
+      
+      // Check if it's a manual application
+      if (applicationId.startsWith('manual_')) {
+        // Update in localStorage
+        const updated = updateManualApplication(applicationId, { status: newStatus });
+        if (!updated) {
+          throw new Error('Failed to update manual application');
+        }
+      } else {
+        // Update in database
+        const { error } = await supabase
+          .from('electoral_applications')
+          .update({ status: newStatus })
+          .eq('id', applicationId);
 
-      if (error) throw error;
+        if (error) throw error;
+      }
 
       // Update local state
       setApplications(apps => 
@@ -173,6 +223,80 @@ export default function ElectoralApplications() {
       });
     } finally {
       setUpdating(null);
+    }
+  };
+
+  const handleDeleteApplication = async () => {
+    if (!deletingApplication) return;
+
+    try {
+      // Check if it's a manual application
+      if (deletingApplication.id.startsWith('manual_')) {
+        // Delete from localStorage
+        const deleted = deleteManualApplication(deletingApplication.id);
+        if (!deleted) {
+          throw new Error('Failed to delete manual application');
+        }
+      } else {
+        // Delete from database
+        const { error } = await supabase
+          .from('electoral_applications')
+          .delete()
+          .eq('id', deletingApplication.id);
+
+        if (error) throw error;
+      }
+
+      toast({
+        title: "Success",
+        description: "Application deleted successfully.",
+      });
+
+      fetchApplications();
+    } catch (error) {
+      console.error('Error deleting application:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete application.",
+        variant: "destructive"
+      });
+    } finally {
+      setShowDeleteDialog(false);
+      setDeletingApplication(null);
+    }
+  };
+
+  const downloadCandidatesList = async () => {
+    try {
+      setDownloadingCandidates(true);
+      const { generateCandidatesListPDF } = await import('@/utils/pdfUtils');
+      
+      const candidatesData = filteredApplications.map((app) => ({
+        name: app.student_name,
+        email: app.student_email,
+        class: app.class_name,
+        stream: app.stream_name,
+        position: app.position.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+        parentContact: app.parent_tel ? `+256${app.parent_tel}` : '',
+        status: app.status.charAt(0).toUpperCase() + app.status.slice(1)
+      }));
+      
+      const doc = await generateCandidatesListPDF(candidatesData, 'Electoral Candidates List - 2025');
+      doc.save('Electoral-Candidates-List.pdf');
+      
+      toast({
+        title: "Download Complete",
+        description: `Downloaded candidates list with ${filteredApplications.length} entries.`
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: "Download Failed",
+        description: "Failed to generate PDF. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setDownloadingCandidates(false);
     }
   };
 
@@ -568,35 +692,56 @@ export default function ElectoralApplications() {
             {/* Modern Header */}
             <ProfessionalCard variant="elevated" className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
               <CardHeader className="pb-6">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="p-2 rounded-lg bg-primary/10">
-                        <FileText className="h-6 w-6 text-primary" />
-                      </div>
-                      <div>
-                        <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                          Electoral Applications
-                        </h1>
-                        <p className="text-muted-foreground text-sm mt-1">
-                          Manage student applications for leadership positions
-                        </p>
-                      </div>
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-primary/10">
+                      <FileText className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                        Electoral Applications
+                      </h1>
+                      <p className="text-muted-foreground text-sm mt-1">
+                        Manage student applications for leadership positions
+                      </p>
                     </div>
                   </div>
-                  <ProfessionalButton 
-                    onClick={downloadBulkApplications} 
-                    disabled={bulkDownloading} 
-                    size="sm"
-                    className="gap-2 w-full sm:w-auto sm:min-w-[160px] shrink-0 bg-primary hover:bg-primary/90"
-                  >
-                    {bulkDownloading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Download className="h-4 w-4" />
-                    )}
-                    <span className="truncate">{bulkDownloading ? 'Processing...' : 'Bulk Download'}</span>
-                  </ProfessionalButton>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                    <ProfessionalButton 
+                      onClick={() => setShowAddModal(true)}
+                      size="sm"
+                      className="gap-2 bg-green-600 hover:bg-green-700"
+                    >
+                      <Plus className="h-4 w-4" />
+                      <span className="truncate">Add Prefect</span>
+                    </ProfessionalButton>
+                    <ProfessionalButton 
+                      onClick={downloadCandidatesList}
+                      disabled={downloadingCandidates}
+                      size="sm"
+                      className="gap-2 bg-blue-600 hover:bg-blue-700"
+                    >
+                      {downloadingCandidates ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Download className="h-4 w-4" />
+                      )}
+                      <span className="truncate">{downloadingCandidates ? 'Processing...' : 'Download Candidates List'}</span>
+                    </ProfessionalButton>
+                    <ProfessionalButton 
+                      onClick={downloadBulkApplications} 
+                      disabled={bulkDownloading} 
+                      size="sm"
+                      className="gap-2 bg-primary hover:bg-primary/90"
+                    >
+                      {bulkDownloading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Download className="h-4 w-4" />
+                      )}
+                      <span className="truncate">{bulkDownloading ? 'Processing...' : 'Download Bulk Applications'}</span>
+                    </ProfessionalButton>
+                  </div>
                 </div>
               </CardHeader>
             </ProfessionalCard>
@@ -780,7 +925,7 @@ export default function ElectoralApplications() {
 
                               {/* Enhanced Action Buttons */}
                               <div className="flex flex-col gap-3 pt-2">
-                                {/* View and Download Buttons */}
+                                {/* View, Download, Edit and Delete Buttons */}
                                  <div className="flex flex-col sm:flex-row gap-3">
                                    <ProfessionalButton 
                                      size="sm" 
@@ -807,6 +952,30 @@ export default function ElectoralApplications() {
                                       <Download className="h-4 w-4 mr-2" />
                                     )}
                                     {downloadingApplications.has(application.id) ? 'Preparing...' : 'Download PDF'}
+                                  </ProfessionalButton>
+                                  <ProfessionalButton 
+                                    size="sm" 
+                                    variant="outline"
+                                    onClick={() => {
+                                      setEditingApplication(application);
+                                      setShowEditModal(true);
+                                    }}
+                                    className="flex-1 font-medium border-2 hover:border-blue-500/50"
+                                  >
+                                    <Edit className="h-4 w-4 mr-2" />
+                                    Edit
+                                  </ProfessionalButton>
+                                  <ProfessionalButton 
+                                    size="sm" 
+                                    variant="destructive"
+                                    onClick={() => {
+                                      setDeletingApplication(application);
+                                      setShowDeleteDialog(true);
+                                    }}
+                                    className="flex-1 sm:flex-none font-medium"
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete
                                   </ProfessionalButton>
                                 </div>
                               
@@ -1009,6 +1178,39 @@ export default function ElectoralApplications() {
           currentItem={downloadProgress.current}
           isComplete={downloadProgress.isComplete}
         />
+
+        {/* Add Prefect Modal */}
+        <AddPrefectModal
+          open={showAddModal}
+          onOpenChange={setShowAddModal}
+          onSuccess={fetchApplications}
+        />
+
+        {/* Edit Prefect Modal */}
+        <EditPrefectModal
+          open={showEditModal}
+          onOpenChange={setShowEditModal}
+          application={editingApplication}
+          onSuccess={fetchApplications}
+        />
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Application</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete {deletingApplication?.student_name}'s application for {deletingApplication?.position}? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteApplication} className="bg-destructive hover:bg-destructive/90">
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </DashboardLayout>
   );
