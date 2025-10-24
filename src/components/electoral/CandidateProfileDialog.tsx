@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { PhotoDialog } from "@/components/ui/photo-dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Trophy, 
   Award, 
@@ -17,8 +18,25 @@ import {
   GraduationCap, 
   Users as UsersIcon,
   TrendingUp,
-  Target
+  Target,
+  Clock,
+  School
 } from "lucide-react";
+import { format, parseISO } from "date-fns";
+
+interface Vote {
+  id: string;
+  voter_id: string;
+  voter_name: string;
+  voter_email: string;
+  voter_class: string;
+  voter_stream: string;
+  voter_photo?: string;
+  position_title: string;
+  candidate_name: string;
+  voted_at: string;
+  vote_status: string;
+}
 
 interface Candidate {
   id: string;
@@ -39,19 +57,48 @@ interface CandidateProfileDialogProps {
   onOpenChange: (open: boolean) => void;
   candidate: Candidate | null;
   positionCandidates: Array<{
+    id: string;
     name: string;
     votes: number;
     rank: number;
   }>;
+  userRole?: string;
+  onShowVoters?: (candidateId: string, candidateName: string) => void;
+  onVoterClick?: (voterId: string, voterName: string) => void;
+  candidateVotes?: Vote[];
 }
 
 export function CandidateProfileDialog({
   open,
   onOpenChange,
   candidate,
-  positionCandidates
+  positionCandidates,
+  userRole,
+  onShowVoters,
+  onVoterClick,
+  candidateVotes = []
 }: CandidateProfileDialogProps) {
   if (!candidate) return null;
+
+  const isAdmin = userRole === 'admin';
+
+  // Calculate vote statistics
+  const votesByHour = candidateVotes.reduce((acc, vote) => {
+    const hour = format(parseISO(vote.voted_at), 'HH:00');
+    acc[hour] = (acc[hour] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const peakHour = Object.entries(votesByHour).reduce((max, [hour, count]) => 
+    count > max.count ? { hour, count } : max
+  , { hour: 'N/A', count: 0 });
+
+  const classCounts = candidateVotes.reduce((acc, vote) => {
+    acc[vote.voter_class] = (acc[vote.voter_class] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const topClass = Object.entries(classCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
 
   const getRankBadge = (rank: number) => {
     if (rank === 1) {
@@ -113,16 +160,21 @@ export function CandidateProfileDialog({
           <Separator />
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Card className="border-l-4 border-l-primary">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <Card 
+              className={`border-l-4 border-l-primary ${isAdmin ? 'cursor-pointer hover:bg-accent transition-colors' : ''}`}
+              onClick={() => isAdmin && onShowVoters?.(candidate.id, candidate.student_name)}
+            >
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-primary/10 rounded-lg">
                     <Vote className="h-5 w-5 text-primary" />
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <p className="text-2xl font-bold text-primary">{candidate.votes}</p>
-                    <p className="text-xs text-muted-foreground">Total Votes</p>
+                    <p className="text-xs text-muted-foreground">
+                      Total Votes {isAdmin && '(click)'}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -155,7 +207,49 @@ export function CandidateProfileDialog({
                 </div>
               </CardContent>
             </Card>
+
+            <Card className="border-l-4 border-l-green-500">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                    <Clock className="h-5 w-5 text-green-600 dark:text-green-400" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">{peakHour.hour}</p>
+                    <p className="text-xs text-muted-foreground">Peak Hour</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-l-4 border-l-orange-500">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
+                    <School className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                  </div>
+                  <div>
+                    <p className="text-xl font-bold text-orange-600 dark:text-orange-400">{topClass}</p>
+                    <p className="text-xs text-muted-foreground">Top Class</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
+
+          {/* Class Distribution */}
+          {Object.keys(classCounts).length > 0 && (
+            <>
+              <div className="flex flex-wrap gap-2">
+                <span className="text-sm font-medium text-muted-foreground">Class Distribution:</span>
+                {Object.entries(classCounts).map(([className, count]) => (
+                  <Badge key={className} variant="outline">
+                    {className}: {count}
+                  </Badge>
+                ))}
+              </div>
+            </>
+          )}
 
           <Separator />
 
@@ -217,7 +311,8 @@ export function CandidateProfileDialog({
                     comp.name === candidate.student_name 
                       ? 'border-primary bg-primary/5' 
                       : ''
-                  }`}
+                  } ${isAdmin ? 'cursor-pointer hover:bg-accent transition-colors' : ''}`}
+                  onClick={() => isAdmin && onShowVoters?.(comp.id, comp.name)}
                 >
                   <CardContent className="p-3">
                     <div className="flex items-center justify-between">
@@ -246,6 +341,50 @@ export function CandidateProfileDialog({
               ))}
             </div>
           </div>
+
+          {/* Voter List - Admin Only */}
+          {isAdmin && candidateVotes.length > 0 && (
+            <>
+              <Separator />
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg flex items-center gap-2">
+                  <UsersIcon className="h-5 w-5" />
+                  Voters ({candidateVotes.length})
+                </h3>
+                <ScrollArea className="h-[300px] pr-4">
+                  <div className="space-y-2">
+                    {candidateVotes.map((vote) => (
+                      <Card 
+                        key={vote.id} 
+                        className="hover:bg-accent transition-colors cursor-pointer"
+                        onClick={() => onVoterClick?.(vote.voter_id, vote.voter_name)}
+                      >
+                        <CardContent className="p-3">
+                          <div className="flex items-center gap-4">
+                            <PhotoDialog 
+                              photoUrl={vote.voter_photo} 
+                              userName={vote.voter_name}
+                              size="h-10 w-10"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-semibold text-sm truncate">{vote.voter_name}</h4>
+                              <p className="text-xs text-muted-foreground truncate">{vote.voter_email}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {vote.voter_class} - {vote.voter_stream}
+                              </p>
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {format(parseISO(vote.voted_at), 'HH:mm')}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
+            </>
+          )}
         </div>
       </DialogContent>
     </Dialog>

@@ -107,8 +107,8 @@ export default function Electoral() {
   useEffect(() => {
     // Election phases
     const applicationsEnd = new Date('2024-09-30T16:00:00+03:00').getTime(); // Applications ended
-    const votingStart = new Date('2025-10-16T08:00:00+03:00').getTime(); // Voting starts Oct 16, 2025
-    const votingEnd = new Date('2025-10-17T16:00:00+03:00').getTime(); // Voting ends Oct 17, 2025
+    const votingStart = new Date('2025-01-01T08:00:00+03:00').getTime(); // Voting started Jan 1, 2025
+    const votingEnd = new Date('2026-12-31T16:00:00+03:00').getTime(); // Voting ends Dec 31, 2026
     
     const timer = setInterval(() => {
       const now = new Date().getTime();

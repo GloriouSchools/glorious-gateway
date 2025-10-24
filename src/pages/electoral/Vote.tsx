@@ -1,27 +1,9 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ProfessionalButton } from "@/components/ui/professional-button";
-import { ProfessionalCard } from "@/components/ui/professional-card";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Progress } from "@/components/ui/progress";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { 
-  ArrowLeft, 
-  Vote as VoteIcon, 
-  CheckCircle, 
-  Trophy,
-  Star,
-  Sparkles,
-  PartyPopper,
-  Heart
-} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { Confetti } from "@/components/ui/confetti";
 import { supabase } from "@/integrations/supabase/client";
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { BallotContainer } from "@/components/electoral/ballot";
 import { 
   getCanvasFingerprint, 
   getWebGLFingerprint, 
@@ -34,7 +16,7 @@ interface Candidate {
   id: string;
   name: string;
   email: string;
-  photo?: string;
+  photo?: string | null;
   class: string;
   stream: string;
   experience: string;
@@ -55,14 +37,9 @@ export default function Vote() {
   const { user, userRole, userName, photoUrl, signOut } = useAuth();
   
   const [positions, setPositions] = useState<Position[]>([]);
-  const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
-  const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
-  const [votedPositions, setVotedPositions] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [showConfetti, setShowConfetti] = useState(false);
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [studentData, setStudentData] = useState<any>(null);
+  const [hasAlreadyVoted, setHasAlreadyVoted] = useState(false);
   const [deviceInfo, setDeviceInfo] = useState({
     device: '',
     browser: '',
@@ -87,24 +64,20 @@ export default function Vote() {
 
   // Gather device and location information
   useEffect(() => {
-    // Get device information
     const ua = navigator.userAgent;
     let device = 'Unknown';
     let browser = 'Unknown';
     let os = 'Unknown';
     
-    // Detect device
     if (/mobile/i.test(ua)) device = 'Mobile';
     else if (/tablet/i.test(ua)) device = 'Tablet';
     else device = 'Desktop';
     
-    // Detect browser
     if (ua.includes('Firefox')) browser = 'Firefox';
     else if (ua.includes('Chrome')) browser = 'Chrome';
     else if (ua.includes('Safari')) browser = 'Safari';
     else if (ua.includes('Edge')) browser = 'Edge';
     
-    // Detect OS
     if (ua.includes('Windows')) os = 'Windows';
     else if (ua.includes('Mac')) os = 'macOS';
     else if (ua.includes('Linux')) os = 'Linux';
@@ -120,7 +93,6 @@ export default function Vote() {
       language: navigator.language
     });
     
-    // Get location information
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -136,7 +108,6 @@ export default function Vote() {
       );
     }
     
-    // Get advanced fingerprinting data
     const loadFingerprints = async () => {
       const canvas = getCanvasFingerprint();
       const webgl = getWebGLFingerprint();
@@ -154,102 +125,156 @@ export default function Vote() {
     
     loadFingerprints();
     
-    // Start behavior tracking
     behaviorTrackerRef.current = new BehaviorTracker();
     behaviorTrackerRef.current.startTracking();
     
     return () => {
-      // Cleanup behavior tracker on unmount
       if (behaviorTrackerRef.current) {
         behaviorTrackerRef.current.stopTracking();
       }
     };
   }, []);
 
-  // Load candidates and votes from database
+  // Load candidates and votes - Using dummy data for testing
   useEffect(() => {
-    const loadData = async () => {
+    const loadDummyData = async () => {
       try {
         setLoading(true);
         
-        if (!user?.id) {
-          toast({
-            title: "Authentication Required",
-            description: "Please log in to vote.",
-            variant: "destructive"
-          });
-          navigate('/login');
-          return;
-        }
-
-        // Get student data
-        const { data: student, error: studentError } = await supabase
-          .from('students')
-          .select('*, classes(name), streams(name)')
-          .eq('id', user.id)
-          .single();
-
-        if (studentError) throw studentError;
-        setStudentData(student);
-
-        // Load positions with approved candidates
-        const { data: positionsData, error: positionsError } = await supabase
-          .from('electoral_positions')
-          .select('*')
-          .eq('is_active', true)
-          .order('title');
-        
-        if (positionsError) throw positionsError;
-        
-        // Load approved candidates
-        const { data: applicationsData, error: applicationsError } = await supabase
-          .from('electoral_applications')
-          .select('*')
-          .eq('status', 'approved')
-          .order('student_name');
-        
-        if (applicationsError) throw applicationsError;
-        
-        // Group candidates by position
-        const candidatesByPosition: { [key: string]: Candidate[] } = {};
-        applicationsData?.forEach(app => {
-          const candidate: Candidate = {
-            id: app.id,
-            name: app.student_name,
-            email: app.student_email,
-            photo: app.student_photo,
-            class: app.class_name,
-            stream: app.stream_name,
-            experience: app.experience,
-            qualifications: app.qualifications,
-            whyApply: app.why_apply
-          };
-          
-          if (!candidatesByPosition[app.position]) {
-            candidatesByPosition[app.position] = [];
-          }
-          candidatesByPosition[app.position].push(candidate);
+        // Mock student data
+        setStudentData({
+          name: "Test Student",
+          email: "student@glorious.edu.ug",
+          classes: { name: "P6" },
+          streams: { name: "Gold" }
         });
+
+        // Use dummy data from dummyElectoralData
+        const dummyPositions: Position[] = [
+          {
+            id: "head_prefect",
+            title: "Head Prefect",
+            description: "Overall leader of the school",
+            candidates: [
+              {
+                id: "dummy_head_prefect_1",
+                name: "NAKAYIZA MILKAH",
+                email: "nakayiza.milkah@gloriousschools.com",
+                photo: null,
+                class: "P5",
+                stream: "SKYHIGH",
+                experience: "I have served as class monitor for 2 years and head of the debate club.",
+                qualifications: "Strong leadership skills, excellent communication",
+                whyApply: "I want to bridge the gap between students and administration"
+              },
+              {
+                id: "dummy_head_prefect_2",
+                name: "MUKASA BRYTON",
+                email: "mukasa.bryton@gloriousschools.com",
+                photo: null,
+                class: "P5",
+                stream: "SUNRISE",
+                experience: "Captain of the school football team, former entertainment prefect",
+                qualifications: "Natural leader, team player, excellent public speaking",
+                whyApply: "I believe every student should have equal opportunities"
+              },
+              {
+                id: "dummy_head_prefect_3",
+                name: "NAMATOVU IMMACULATE",
+                email: "namatovu.immaculate@gloriousschools.com",
+                photo: null,
+                class: "P5",
+                stream: "SUNSET",
+                experience: "Head of the school choir, academic prefect assistant",
+                qualifications: "Excellent academic performance, strong organizational skills",
+                whyApply: "I want to focus on academic excellence while ensuring balanced school life"
+              }
+            ]
+          },
+          {
+            id: "academic_prefect",
+            title: "Academic Prefect",
+            description: "Oversee academic activities",
+            candidates: [
+              {
+                id: "dummy_academic_prefect_1",
+                name: "KIGGUNDU FAVOUR MARCUS",
+                email: "kiggundu.favour@gloriousschools.com",
+                photo: null,
+                class: "P5",
+                stream: "SKYHIGH",
+                experience: "Top 3 in class for the past 2 years, leader of mathematics club",
+                qualifications: "Excellent academic record, strong analytical skills",
+                whyApply: "I want to improve our school's academic standards"
+              },
+              {
+                id: "dummy_academic_prefect_2",
+                name: "NINSIIMA MARY SHALOM",
+                email: "ninsiima.mary@gloriousschools.com",
+                photo: null,
+                class: "P5",
+                stream: "SUNRISE",
+                experience: "Head of the science club, winner of multiple academic competitions",
+                qualifications: "Strong in STEM subjects, excellent research skills",
+                whyApply: "I believe every student can excel academically with the right support"
+              }
+            ]
+          },
+          {
+            id: "entertainment_prefect",
+            title: "Entertainment Prefect",
+            description: "Organize school entertainment events",
+            candidates: [
+              {
+                id: "dummy_entertainment_prefect_1",
+                name: "KAYEMBA SHAN",
+                email: "kayemba.shan@gloriousschools.com",
+                photo: null,
+                class: "P5",
+                stream: "SUNSET",
+                experience: "Lead dancer in school cultural performances, organized talent shows",
+                qualifications: "Creative thinking, event planning experience",
+                whyApply: "I want to make our school events more exciting and inclusive"
+              },
+              {
+                id: "dummy_entertainment_prefect_2",
+                name: "SSEMATIMBA MARK",
+                email: "ssematimba.mark@gloriousschools.com",
+                photo: null,
+                class: "P5",
+                stream: "SUNRISE",
+                experience: "School DJ for events, organizer of movie nights",
+                qualifications: "Technical skills with audio equipment, creative event planning",
+                whyApply: "I want to modernize our entertainment activities"
+              }
+            ]
+          },
+          {
+            id: "games_sports_prefect",
+            title: "Games & Sports Prefect",
+            description: "Manage sports activities",
+            candidates: [
+              {
+                id: "dummy_games_sports_prefect_1",
+                name: "TUSUBIRA ARTHUR",
+                email: "tusubira.arthur@gloriousschools.com",
+                photo: null,
+                class: "P5",
+                stream: "SKYHIGH",
+                experience: "Captain of the school basketball team, organized inter-class tournaments",
+                qualifications: "Excellent athletic ability, leadership in team sports",
+                whyApply: "I want to improve our sports facilities and ensure everyone can participate"
+              }
+            ]
+          }
+        ];
         
-        const positionsWithCandidates = positionsData?.map(pos => ({
-          id: pos.id,
-          title: pos.title,
-          description: pos.description,
-          candidates: candidatesByPosition[pos.id] || []
-        })).filter(pos => pos.candidates.length > 0) || [];
+        setPositions(dummyPositions);
         
-        setPositions(positionsWithCandidates);
-        
-        // Load user's votes
-        const { data: votes, error: votesError } = await supabase
-          .from('votes')
-          .select('position_id')
-          .eq('voter_id', user.id);
-        
-        if (votesError) throw votesError;
-        
-        const voted = new Set(votes?.map(v => v.position_id) || []);
-        setVotedPositions(voted);
+        // Check if already voted
+        if (sessionStorage.getItem('voteSubmitted') === 'true') {
+          setHasAlreadyVoted(true);
+        }
         
       } catch (error) {
         console.error('Error loading voting data:', error);
@@ -263,120 +288,85 @@ export default function Vote() {
       }
     };
 
-    loadData();
-  }, [user, toast, navigate]);
+    loadDummyData();
+  }, [toast, navigate]);
 
-  // Get voting progress
-  const votingProgress = useMemo(() => {
-    const totalPositions = positions.length;
-    const voted = votedPositions.size;
-    return totalPositions > 0 ? (voted / totalPositions) * 100 : 0;
-  }, [positions, votedPositions]);
-
-  const handlePositionSelect = (position: Position) => {
-    if (votedPositions.has(position.id)) {
-      toast({
-        title: "Already Voted! 🎉",
-        description: "You have already cast your vote for this position",
-      });
-      return;
+  const handleVotePosition = async (positionId: string, candidateId: string) => {
+    if (!user?.id || !studentData) {
+      throw new Error('User not authenticated');
     }
-    setSelectedPosition(position);
-    setSelectedCandidate(null);
-  };
 
-  const handleCandidateSelect = (candidate: Candidate) => {
-    setSelectedCandidate(candidate);
-    setShowConfirmDialog(true);
-  };
+    const position = positions.find(p => p.id === positionId);
+    const candidate = position?.candidates.find(c => c.id === candidateId);
 
-  const handleVoteSubmit = async () => {
-    if (!selectedCandidate || !selectedPosition || !user?.id || !studentData) return;
+    if (!position || !candidate) {
+      throw new Error('Invalid position or candidate');
+    }
     
-    try {
-      setSubmitting(true);
-      
-      // Get behavior analytics before submitting
-      const behaviorAnalytics = behaviorTrackerRef.current?.getAnalytics() || {
-        mouse_movement_count: 0,
-        average_mouse_speed: 0,
-        key_press_count: 0,
-        average_typing_speed: 0,
-        click_count: 0,
-        click_frequency: 0,
-        behavior_signature: 'unavailable'
-      };
-      
-      // Insert vote into database with comprehensive tracking data
-      const { error } = await supabase
-        .from('votes')
-        .insert({
-          voter_id: user.id,
-          voter_name: studentData.name,
-          voter_email: studentData.email,
-          voter_class: studentData.classes?.name || '',
-          voter_stream: studentData.streams?.name || '',
-          position_id: selectedPosition.id,
-          position_title: selectedPosition.title,
-          candidate_id: selectedCandidate.id,
-          candidate_name: selectedCandidate.name,
-          vote_status: 'valid',
-          session_id: crypto.randomUUID(),
-          ip_address: 'internal',
-          user_agent: navigator.userAgent,
-          device_type: deviceInfo.device,
-          browser: deviceInfo.browser,
-          operating_system: deviceInfo.os,
-          screen_resolution: deviceInfo.screenResolution,
-          timezone: deviceInfo.timezone,
-          language: deviceInfo.language,
-          latitude: locationInfo.latitude,
-          longitude: locationInfo.longitude,
-          location_accuracy: locationInfo.accuracy,
-          canvas_fingerprint: fingerprintInfo.canvasFingerprint,
-          webgl_fingerprint: fingerprintInfo.webglFingerprint,
-          installed_fonts: fingerprintInfo.installedFonts.join(','),
-          battery_level: fingerprintInfo.batteryLevel,
-          battery_charging: fingerprintInfo.batteryCharging,
-          mouse_movement_count: behaviorAnalytics.mouse_movement_count,
-          average_mouse_speed: behaviorAnalytics.average_mouse_speed,
-          typing_speed: behaviorAnalytics.average_typing_speed,
-          click_count: behaviorAnalytics.click_count,
-          behavior_signature: behaviorAnalytics.behavior_signature
-        });
-      
-      if (error) throw error;
-      
-      setVotedPositions(prev => new Set([...prev, selectedPosition.id]));
-      setShowConfetti(true);
-      setShowConfirmDialog(false);
-      
-      toast({
-        title: "🎉 Vote Cast Successfully!",
-        description: `Your vote for ${selectedPosition.title} has been recorded.`,
+    const behaviorAnalytics = behaviorTrackerRef.current?.getAnalytics() || {
+      mouse_movement_count: 0,
+      average_mouse_speed: 0,
+      key_press_count: 0,
+      average_typing_speed: 0,
+      click_count: 0,
+      click_frequency: 0,
+      behavior_signature: 'unavailable'
+    };
+    
+    const { error } = await supabase
+      .from('votes')
+      .insert({
+        voter_id: user.id,
+        voter_name: studentData.name,
+        voter_email: studentData.email,
+        voter_class: studentData.classes?.name || '',
+        voter_stream: studentData.streams?.name || '',
+        position_id: positionId,
+        position_title: position.title,
+        candidate_id: candidateId,
+        candidate_name: candidate.name,
+        vote_status: 'valid',
+        session_id: crypto.randomUUID(),
+        ip_address: 'internal',
+        user_agent: navigator.userAgent,
+        device_type: deviceInfo.device,
+        browser: deviceInfo.browser,
+        operating_system: deviceInfo.os,
+        screen_resolution: deviceInfo.screenResolution,
+        timezone: deviceInfo.timezone,
+        language: deviceInfo.language,
+        latitude: locationInfo.latitude,
+        longitude: locationInfo.longitude,
+        location_accuracy: locationInfo.accuracy,
+        canvas_fingerprint: fingerprintInfo.canvasFingerprint,
+        webgl_fingerprint: fingerprintInfo.webglFingerprint,
+        installed_fonts: fingerprintInfo.installedFonts.join(','),
+        battery_level: fingerprintInfo.batteryLevel,
+        battery_charging: fingerprintInfo.batteryCharging,
+        mouse_movement_count: behaviorAnalytics.mouse_movement_count,
+        average_mouse_speed: behaviorAnalytics.average_mouse_speed,
+        typing_speed: behaviorAnalytics.average_typing_speed,
+        click_count: behaviorAnalytics.click_count,
+        behavior_signature: behaviorAnalytics.behavior_signature
       });
-      
-      setTimeout(() => {
-        setShowConfetti(false);
-        setSelectedPosition(null);
-        setSelectedCandidate(null);
-      }, 3000);
-      
-    } catch (error) {
-      console.error('Error submitting vote:', error);
-      toast({
-        title: "Error",
-        description: "Failed to submit your vote. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setSubmitting(false);
-    }
+    
+    if (error) throw error;
+    
+    toast({
+      title: "Vote Recorded",
+      description: `Your vote for ${position.title} has been recorded.`,
+    });
   };
 
-  const handleBackToPositions = () => {
-    setSelectedPosition(null);
-    setSelectedCandidate(null);
+  const handleVoteComplete = (votes: Record<string, string>) => {
+    toast({
+      title: "🎉 All Votes Submitted!",
+      description: "Thank you for voting in the Student Council Elections.",
+    });
+    
+    setTimeout(() => {
+      navigate('/student/electoral');
+    }, 3000);
   };
 
   const handleLogout = async () => {
@@ -398,251 +388,50 @@ export default function Vote() {
 
   if (loading) {
     return (
-      <DashboardLayout userRole={userRole || "student"} userName={userName} photoUrl={photoUrl} onLogout={handleLogout}>
-        <div className="flex items-center justify-center min-h-96">
-          <div className="text-center space-y-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-            <p className="text-lg font-semibold">Loading voting system...</p>
+      <div className="min-h-screen bg-gradient-to-br from-[#667eea] to-[#764ba2] flex items-center justify-center p-4">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
+          <p className="text-lg font-semibold text-white">Loading voting system...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (hasAlreadyVoted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#667eea] to-[#764ba2] flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white border-[3px] border-[#2c3e50] shadow-[0_20px_60px_rgba(0,0,0,0.3)] p-12">
+          <div className="text-center space-y-6">
+            <div className="text-6xl">✅</div>
+            <h2 className="text-3xl font-bold text-[#1a1a1a]">Already Voted</h2>
+            <p className="text-[#4a4a4a] text-lg mb-6">
+              You have already submitted your ballot for this election. Only one vote per person is allowed.
+            </p>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => navigate('/student/electoral/results')}
+                className="px-8 py-4 text-lg font-bold uppercase tracking-wider bg-[#667eea] hover:bg-[#5568d3] text-white rounded-lg transition-colors"
+              >
+                View Live Results
+              </button>
+              <button
+                onClick={() => navigate('/student/electoral')}
+                className="text-[#667eea] hover:underline font-bold"
+              >
+                Return to Electoral Dashboard
+              </button>
+            </div>
           </div>
         </div>
-      </DashboardLayout>
+      </div>
     );
   }
 
   return (
-    <DashboardLayout userRole={userRole || "student"} userName={userName} photoUrl={photoUrl} onLogout={handleLogout}>
-      <Confetti isActive={showConfetti} onComplete={() => setShowConfetti(false)} />
-      
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <div className="container mx-auto px-4 py-8 max-w-6xl">
-          
-          {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <ProfessionalButton
-              variant="ghost"
-              onClick={() => navigate('/student/electoral')}
-              className="gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </ProfessionalButton>
-            
-            <Badge variant="secondary" className="text-lg px-4 py-2">
-              <Trophy className="h-4 w-4 mr-2" />
-              {votedPositions.size} / {positions.length} Voted
-            </Badge>
-          </div>
-
-          {/* Hero Section */}
-          <div className="text-center mb-8 space-y-4">
-            <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full mb-4">
-              <VoteIcon className="h-8 w-8" />
-              <h1 className="text-3xl font-bold">Cast Your Vote</h1>
-              <Sparkles className="h-8 w-8" />
-            </div>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Make your voice heard! Choose your favorite candidates for each position.
-            </p>
-            
-            {/* Progress Bar */}
-            <div className="max-w-md mx-auto space-y-2">
-              <Progress value={votingProgress} className="h-3" />
-              <p className="text-sm text-muted-foreground">
-                {votingProgress === 100 ? "🎉 All votes cast!" : `${Math.round(votingProgress)}% complete`}
-              </p>
-            </div>
-          </div>
-
-          {/* View Switch */}
-          {!selectedPosition ? (
-            // Positions Grid
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {positions.length === 0 ? (
-                <div className="col-span-full text-center py-12">
-                  <Trophy className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">No Positions Available</h3>
-                  <p className="text-muted-foreground">
-                    There are currently no positions with candidates for voting.
-                  </p>
-                </div>
-              ) : (
-                positions.map((position) => {
-                  const hasVoted = votedPositions.has(position.id);
-                  return (
-                    <ProfessionalCard
-                      key={position.id}
-                      variant="elevated"
-                      className={`relative overflow-hidden ${
-                        hasVoted 
-                          ? 'bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-300' 
-                          : 'hover:border-primary/50'
-                      }`}
-                      onClick={() => !hasVoted && handlePositionSelect(position)}
-                    >
-                      <CardContent className="p-6 space-y-4">
-                        {/* Icon */}
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                          hasVoted ? 'bg-green-500' : 'bg-gradient-to-br from-blue-500 to-purple-600'
-                        }`}>
-                          {hasVoted ? (
-                            <CheckCircle className="h-6 w-6 text-white" />
-                          ) : (
-                            <Trophy className="h-6 w-6 text-white" />
-                          )}
-                        </div>
-                        
-                        {/* Title */}
-                        <div>
-                          <h3 className="font-bold text-lg mb-2">{position.title}</h3>
-                          <p className="text-sm text-muted-foreground line-clamp-2">
-                            {position.description}
-                          </p>
-                        </div>
-                        
-                        {/* Candidates Count & Status */}
-                        <div className="flex items-center justify-between pt-2 border-t">
-                          <Badge variant="outline" className="gap-1">
-                            <Star className="h-3 w-3" />
-                            {position.candidates.length} Candidates
-                          </Badge>
-                          
-                          {hasVoted ? (
-                            <Badge className="bg-green-500 hover:bg-green-600">
-                              <CheckCircle className="h-3 w-3 mr-1" />
-                              Voted
-                            </Badge>
-                          ) : (
-                            <Badge variant="secondary">Vote Now</Badge>
-                          )}
-                        </div>
-                      </CardContent>
-                    </ProfessionalCard>
-                  );
-                })
-              )}
-            </div>
-          ) : (
-            // Candidates View
-            <div className="space-y-6">
-              {/* Position Header */}
-              <Card className="bg-gradient-to-r from-blue-500 via-purple-600 to-pink-600 text-white">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-2">
-                      <h2 className="text-2xl font-bold">{selectedPosition.title}</h2>
-                      <p className="text-white/90">{selectedPosition.description}</p>
-                    </div>
-                    <ProfessionalButton
-                      variant="secondary"
-                      onClick={handleBackToPositions}
-                      className="gap-2"
-                    >
-                      <ArrowLeft className="h-4 w-4" />
-                      Change Position
-                    </ProfessionalButton>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Candidates Grid */}
-              <div className="grid gap-6 md:grid-cols-2">
-                {selectedPosition.candidates.map((candidate) => (
-                  <ProfessionalCard
-                    key={candidate.id}
-                    variant="elevated"
-                    className="hover:border-primary/50"
-                    onClick={() => handleCandidateSelect(candidate)}
-                  >
-                    <CardContent className="p-6 space-y-4">
-                      {/* Photo & Basic Info */}
-                      <div className="flex items-start gap-4">
-                        <Avatar className="h-20 w-20 ring-4 ring-primary/20">
-                          <AvatarImage src={candidate.photo} alt={candidate.name} />
-                          <AvatarFallback className="text-xl bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                            {candidate.name.split(' ').map(n => n[0]).join('')}
-                          </AvatarFallback>
-                        </Avatar>
-                        
-                        <div className="flex-1">
-                          <h3 className="text-xl font-bold mb-1">{candidate.name}</h3>
-                          <div className="flex flex-wrap gap-2 mb-2">
-                            <Badge variant="outline">{candidate.class}</Badge>
-                            <Badge variant="outline">{candidate.stream}</Badge>
-                          </div>
-                        </div>
-                        
-                        <Heart className="h-6 w-6 text-pink-500" />
-                      </div>
-                      
-                      {/* Why Apply */}
-                      <div className="space-y-2">
-                        <h4 className="font-semibold text-sm text-muted-foreground">Why I'm Running:</h4>
-                        <p className="text-sm line-clamp-3">{candidate.whyApply}</p>
-                      </div>
-                      
-                      {/* Vote Button */}
-                      <ProfessionalButton
-                        className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
-                        size="lg"
-                      >
-                        <VoteIcon className="h-4 w-4 mr-2" />
-                        Vote for {candidate.name.split(' ')[0]}
-                      </ProfessionalButton>
-                    </CardContent>
-                  </ProfessionalCard>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Confirm Vote Dialog */}
-          <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-            <AlertDialogContent className="max-w-md">
-              <AlertDialogHeader>
-                <AlertDialogTitle className="flex items-center gap-2 text-xl">
-                  <PartyPopper className="h-6 w-6 text-primary" />
-                  Confirm Your Vote
-                </AlertDialogTitle>
-                <AlertDialogDescription className="space-y-4">
-                  {selectedCandidate && selectedPosition && (
-                    <>
-                      <div className="flex items-center gap-4 p-4 bg-muted rounded-lg">
-                        <Avatar className="h-16 w-16">
-                          <AvatarImage src={selectedCandidate.photo} alt={selectedCandidate.name} />
-                          <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                            {selectedCandidate.name.split(' ').map(n => n[0]).join('')}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-bold text-lg text-foreground">{selectedCandidate.name}</p>
-                          <p className="text-sm text-muted-foreground">for {selectedPosition.title}</p>
-                        </div>
-                      </div>
-                      
-                      <p className="text-center">
-                        Are you sure you want to vote for <strong>{selectedCandidate.name}</strong>?
-                        <br />
-                        <span className="text-sm text-muted-foreground">You cannot change your vote once submitted.</span>
-                      </p>
-                    </>
-                  )}
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel disabled={submitting}>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleVoteSubmit}
-                  disabled={submitting}
-                  className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
-                >
-                  {submitting ? "Casting Vote..." : "Confirm Vote"}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-
-        </div>
-      </div>
-    </DashboardLayout>
+    <BallotContainer 
+      positions={positions}
+      onVotePosition={handleVotePosition}
+      onVoteComplete={handleVoteComplete}
+    />
   );
 }

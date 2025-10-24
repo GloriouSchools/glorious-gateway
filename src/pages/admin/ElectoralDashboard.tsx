@@ -30,6 +30,8 @@ import { EnhancedMetricsCard } from "@/components/electoral/dashboard/EnhancedMe
 import { VoteDistributionChart } from "@/components/electoral/dashboard/VoteDistributionChart";
 import { VoterDetailsDialog } from "@/components/electoral/VoterDetailsDialog";
 import { StudentVoteDetailDialog } from "@/components/electoral/StudentVoteDetailDialog";
+import { TimeSlotVotersDialog } from "@/components/electoral/TimeSlotVotersDialog";
+import { CandidateVotersDialog } from "@/components/electoral/CandidateVotersDialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -74,6 +76,10 @@ export default function ElectoralDashboard() {
   const [studentDetailOpen, setStudentDetailOpen] = useState(false);
   const [selectedStudentVotes, setSelectedStudentVotes] = useState<Vote[]>([]);
   const [errorModalOpen, setErrorModalOpen] = useState(false);
+  const [timeSlotDialogOpen, setTimeSlotDialogOpen] = useState(false);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState("");
+  const [candidateDialogOpen, setCandidateDialogOpen] = useState(false);
+  const [selectedCandidate, setSelectedCandidate] = useState({ name: "", position: "" });
 
   useEffect(() => {
     setTimeout(() => setIsLoading(false), 600);
@@ -355,7 +361,54 @@ export default function ElectoralDashboard() {
     const studentVotes = filteredVotes.filter(v => v.voter_id === vote.voter_id);
     setSelectedStudentVotes(transformVotes(studentVotes));
     setVoterDialogOpen(false);
+    setTimeSlotDialogOpen(false);
     setStudentDetailOpen(true);
+  };
+
+  const handleTimeSlotClick = (timeSlot: string, votes: number) => {
+    // Check if user is admin
+    const adminRole = localStorage.getItem('adminRole') || localStorage.getItem('userRole');
+    if (adminRole !== 'admin') {
+      setErrorModalOpen(true);
+      return;
+    }
+
+    const slotVotes = filteredVotes.filter(v => {
+      const voteHour = format(parseISO(v.voted_at), 'HH:00');
+      return voteHour === timeSlot;
+    });
+    
+    setSelectedVotes(transformVotes(slotVotes));
+    setSelectedTimeSlot(timeSlot);
+    setTimeSlotDialogOpen(true);
+  };
+
+  const handleHourClick = (hour: number, votes: number) => {
+    // Check if user is admin
+    const adminRole = localStorage.getItem('adminRole') || localStorage.getItem('userRole');
+    if (adminRole !== 'admin') {
+      setErrorModalOpen(true);
+      return;
+    }
+
+    const hourVotes = filteredVotes.filter(v => {
+      const voteHour = parseISO(v.voted_at).getHours();
+      return voteHour === hour;
+    });
+    
+    setSelectedVotes(transformVotes(hourVotes));
+    setSelectedTimeSlot(`${String(hour).padStart(2, '0')}:00`);
+    setTimeSlotDialogOpen(true);
+  };
+
+  const handleCandidateClick = (candidateName: string, position: string) => {
+    const candidateVotes = filteredVotes.filter(v => 
+      v.candidate_name === candidateName && v.position === position
+    );
+    
+    setSelectedVotes(transformVotes(candidateVotes));
+    setSelectedCandidate({ name: candidateName, position });
+    setCandidateDialogOpen(true);
   };
 
   const handleExport = (format: "csv" | "pdf" | "print") => {
@@ -608,101 +661,12 @@ export default function ElectoralDashboard() {
       <AccessibleSkipLinks />
       
       <div className="min-h-screen bg-background">
-        {/* Enhanced Sticky Header */}
-        <header 
-          className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b shadow-sm"
-          role="banner"
-          aria-label="Dashboard header"
-        >
-          <div className="container mx-auto px-4 lg:px-6 py-3 lg:py-4">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-lg bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center shadow-md" aria-hidden="true">
-                    <Vote className="h-4 w-4 lg:h-5 lg:w-5 text-white" />
-                  </div>
-                  <div>
-                    <h1 className="text-lg lg:text-xl font-semibold">Election Dashboard</h1>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                      <span className="text-xs text-muted-foreground">Live monitoring</span>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Mobile Filter Button */}
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="lg:hidden"
-                  onClick={() => setIsMobileFilterOpen(true)}
-                  aria-label="Open filter menu"
-                >
-                  <Filter className="h-4 w-4" />
-                </Button>
-              </div>
-              
-              {/* Desktop Filters */}
-              <div className="hidden lg:flex flex-wrap items-center gap-2">
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={() => navigate('/admin/electoral/applications')}
-                  className="gap-2"
-                >
-                  <Users className="h-4 w-4" />
-                  View Applications
-                </Button>
-                <Input
-                  placeholder="Search..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-48"
-                  aria-label="Search voters or candidates"
-                />
-                <Select value={positionFilter} onValueChange={setPositionFilter}>
-                  <SelectTrigger className="w-40" aria-label="Filter by position">
-                    <SelectValue placeholder="All Positions" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Positions</SelectItem>
-                    {Array.from(new Set(mockElectoralVotes.map(v => v.position))).map(pos => (
-                      <SelectItem key={pos} value={pos}>{pos}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  onClick={handleRefresh}
-                  aria-label="Refresh dashboard data"
-                >
-                  <RefreshCw className="h-4 w-4" />
-                </Button>
-                <ExportControls onExport={handleExport} />
-              </div>
-            </div>
-            
-            {(positionFilter !== "all" || searchQuery) && (
-              <div className="mt-3 flex items-center gap-2" role="status" aria-live="polite">
-                <Badge variant="secondary" className="gap-2">
-                  Filter: {positionFilter !== "all" ? positionFilter : "Search active"}
-                  <button
-                    onClick={clearFilter}
-                    className="focus:outline-none focus:ring-2 focus:ring-ring rounded"
-                    aria-label="Clear filters"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              </div>
-            )}
-          </div>
-        </header>
-
         <main id="main-content" className="container mx-auto px-4 py-6 space-y-6">
           {/* Candidates Dashboard Section */}
-          <CandidatesSection />
+          <CandidatesSection 
+            userRole={userRole} 
+            votes={transformVotes(mockElectoralVotes)}
+          />
 
           {/* Leader Spotlight */}
           {leadersData.length > 0 && (
@@ -838,7 +802,11 @@ export default function ElectoralDashboard() {
                 <VoteDistributionChart data={positionData} onPositionClick={handlePositionClick} />
                 <PositionBarChart data={positionData} onPositionClick={handlePositionClick} />
                 <CandidateGroupedChart data={candidateData} />
-                <TimelineChart data={timelineData} />
+                <TimelineChart 
+                  data={timelineData} 
+                  onTimeSlotClick={handleTimeSlotClick}
+                  isAdmin={userRole === 'admin'}
+                />
               </div>
 
               {/* Right Column - Turnout & Stats */}
@@ -904,7 +872,11 @@ export default function ElectoralDashboard() {
 
           {/* Heatmap */}
           <section aria-label="Voting heatmap">
-            <VotingHeatmap data={heatmapData} />
+            <VotingHeatmap 
+              data={heatmapData} 
+              onHourClick={handleHourClick}
+              isAdmin={userRole === 'admin'}
+            />
           </section>
         </main>
 
@@ -945,6 +917,26 @@ export default function ElectoralDashboard() {
           onOpenChange={setStudentDetailOpen}
           votes={selectedStudentVotes}
           studentName={selectedStudentVotes[0]?.voter_name || ""}
+        />
+
+        {/* Time Slot Voters Dialog */}
+        <TimeSlotVotersDialog
+          open={timeSlotDialogOpen}
+          onOpenChange={setTimeSlotDialogOpen}
+          votes={selectedVotes}
+          timeSlot={selectedTimeSlot}
+          onStudentClick={handleStudentClick}
+        />
+
+        {/* Candidate Voters Dialog */}
+        <CandidateVotersDialog
+          open={candidateDialogOpen}
+          onOpenChange={setCandidateDialogOpen}
+          votes={selectedVotes}
+          candidateName={selectedCandidate.name}
+          position={selectedCandidate.position}
+          isAdmin={userRole === 'admin'}
+          onStudentClick={handleStudentClick}
         />
 
         <ErrorModal

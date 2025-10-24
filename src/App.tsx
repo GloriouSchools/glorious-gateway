@@ -230,6 +230,13 @@ const App = () => (
                   <Vote />
                 </ProtectedRoute>
               } />
+              <Route path="/student/electoral/results" element={
+                <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={["student"]}>
+                    <LiveResults />
+                  </RoleBasedRoute>
+                </ProtectedRoute>
+              } />
 
               {/* Teacher Routes */}
               <Route path="/teacher" element={

@@ -309,7 +309,7 @@ export default function LiveResults() {
         <div className="text-center space-y-4">
           <Button 
             variant="ghost" 
-            onClick={() => navigate('/student/electoral')}
+            onClick={() => navigate(`/${userRole}/electoral`)}
             className="mb-4 hover:bg-primary/10"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />

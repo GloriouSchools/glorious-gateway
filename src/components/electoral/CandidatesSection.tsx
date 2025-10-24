@@ -23,6 +23,26 @@ import { useToast } from "@/hooks/use-toast";
 import { Search, Filter, Loader2, Users } from "lucide-react";
 import { dummyCandidates } from "@/data/dummyElectoralCandidates";
 import { mockElectoralVotes } from "@/data/mockElectoralVotes";
+import { VoterDetailsDialog } from "./VoterDetailsDialog";
+import { StudentVoteDetailDialog } from "./StudentVoteDetailDialog";
+import { ErrorModal } from "@/components/ui/error-modal";
+
+interface Vote {
+  id: string;
+  voter_id: string;
+  voter_name: string;
+  voter_email: string;
+  voter_class: string;
+  voter_stream: string;
+  voter_photo?: string;
+  position_id: string;
+  position_title: string;
+  candidate_id: string;
+  candidate_name: string;
+  voted_at: string;
+  vote_status: string;
+  ip_address?: string;
+}
 
 interface Application {
   id: string;
@@ -42,7 +62,12 @@ interface CandidateWithVotes extends Application {
   totalCandidates: number;
 }
 
-export function CandidatesSection() {
+interface CandidatesSectionProps {
+  userRole?: string;
+  votes?: Vote[];
+}
+
+export function CandidatesSection({ userRole, votes: votesFromParent }: CandidatesSectionProps = {}) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -55,10 +80,29 @@ export function CandidatesSection() {
   const [itemsPerPage, setItemsPerPage] = useState(12);
   const [selectedCandidate, setSelectedCandidate] = useState<CandidateWithVotes | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [voterDialogOpen, setVoterDialogOpen] = useState(false);
+  const [selectedVotes, setSelectedVotes] = useState<Vote[]>([]);
+  const [dialogTitle, setDialogTitle] = useState("");
+  const [studentDetailOpen, setStudentDetailOpen] = useState(false);
+  const [selectedStudentVotes, setSelectedStudentVotes] = useState<Vote[]>([]);
+  const [errorModalOpen, setErrorModalOpen] = useState(false);
 
-  // Use dummy data
+  // Use dummy data or parent data
   const applications = dummyCandidates;
-  const votes = mockElectoralVotes;
+  const votes = votesFromParent || mockElectoralVotes.map(v => ({
+    id: v.id,
+    voter_id: v.voter_id,
+    voter_name: v.voter_name,
+    voter_email: `${v.voter_id}@school.com`,
+    voter_class: "Form 4",
+    voter_stream: "Sciences",
+    position_id: v.position,
+    position_title: v.position,
+    candidate_id: v.candidate_id,
+    candidate_name: v.candidate_name,
+    voted_at: v.voted_at,
+    vote_status: "valid"
+  }));
 
   // Calculate candidates with votes and rankings
   const candidatesWithVotes = useMemo(() => {
@@ -162,6 +206,7 @@ export function CandidatesSection() {
       .filter(c => c.position === position)
       .sort((a, b) => b.votes - a.votes)
       .map(c => ({
+        id: c.id,
         name: c.student_name,
         votes: c.votes,
         rank: c.rank
@@ -175,6 +220,31 @@ export function CandidatesSection() {
     setFilterClass("all");
     setFilterStream("all");
     setSortBy("votes");
+  };
+
+  const handleShowCandidateVoters = (candidateId: string, candidateName: string) => {
+    // Check if user is admin
+    if (userRole !== 'admin') {
+      setErrorModalOpen(true);
+      return;
+    }
+    
+    const candidateVotes = votes.filter(v => v.candidate_id === candidateId);
+    setSelectedVotes(candidateVotes);
+    setDialogTitle(`Voters for ${candidateName}`);
+    setVoterDialogOpen(true);
+  };
+
+  const handleStudentClick = (vote: Vote) => {
+    const studentVotes = votes.filter(v => v.voter_id === vote.voter_id);
+    setSelectedStudentVotes(studentVotes);
+    setStudentDetailOpen(true);
+  };
+
+  const handleVoterClick = (voterId: string, voterName: string) => {
+    const studentVotes = votes.filter(v => v.voter_id === voterId);
+    setSelectedStudentVotes(studentVotes);
+    setStudentDetailOpen(true);
   };
 
   if (loading) {
@@ -399,6 +469,35 @@ export function CandidatesSection() {
         onOpenChange={setDialogOpen}
         candidate={selectedCandidate}
         positionCandidates={selectedCandidate ? getPositionCandidates(selectedCandidate.position) : []}
+        userRole={userRole}
+        onShowVoters={handleShowCandidateVoters}
+        onVoterClick={handleVoterClick}
+        candidateVotes={selectedCandidate ? votes.filter(v => v.candidate_id === selectedCandidate.id) : []}
+      />
+
+      {/* Voter Details Dialog */}
+      <VoterDetailsDialog
+        open={voterDialogOpen}
+        onOpenChange={setVoterDialogOpen}
+        votes={selectedVotes}
+        title={dialogTitle}
+        onStudentClick={handleStudentClick}
+      />
+
+      {/* Student Vote Detail Dialog */}
+      <StudentVoteDetailDialog
+        open={studentDetailOpen}
+        onOpenChange={setStudentDetailOpen}
+        votes={selectedStudentVotes}
+        studentName={selectedStudentVotes[0]?.voter_name || ""}
+      />
+
+      {/* Error Modal for non-admins */}
+      <ErrorModal
+        open={errorModalOpen}
+        onOpenChange={setErrorModalOpen}
+        title="Access Restricted"
+        description="Only administrators can view detailed voter information."
       />
     </div>
   );
