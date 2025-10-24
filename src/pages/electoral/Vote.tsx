@@ -53,6 +53,8 @@ export default function Vote() {
     longitude: null as number | null,
     accuracy: null as number | null
   });
+  const [locationDenied, setLocationDenied] = useState(false);
+  const [showLocationWarning, setShowLocationWarning] = useState(false);
   const [fingerprintInfo, setFingerprintInfo] = useState({
     canvasFingerprint: '',
     webglFingerprint: '',
@@ -61,6 +63,28 @@ export default function Vote() {
     batteryCharging: null as boolean | null
   });
   const behaviorTrackerRef = useRef<BehaviorTracker | null>(null);
+  const locationWatchIdRef = useRef<number | null>(null);
+
+  // Warn user before leaving if voting is incomplete
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      const ballotData = sessionStorage.getItem('ballotData');
+      const voteSubmitted = sessionStorage.getItem('voteSubmitted');
+      
+      // Only warn if they have started voting but haven't completed
+      if (ballotData && voteSubmitted !== 'true') {
+        e.preventDefault();
+        e.returnValue = 'You have not completed voting yet. Your vote will not be recorded, but your selections will be restored if you return to this page.';
+        return e.returnValue;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
 
   // Gather device and location information
   useEffect(() => {
@@ -93,7 +117,9 @@ export default function Vote() {
       language: navigator.language
     });
     
+    // Continuous location monitoring
     if ('geolocation' in navigator) {
+      // Initial check
       navigator.geolocation.getCurrentPosition(
         (position) => {
           setLocationInfo({
@@ -101,9 +127,36 @@ export default function Vote() {
             longitude: position.coords.longitude,
             accuracy: position.coords.accuracy
           });
+          setLocationDenied(false);
+          setShowLocationWarning(false);
         },
         (error) => {
           console.log('Location access denied or unavailable:', error);
+          setLocationDenied(true);
+          setShowLocationWarning(true);
+        }
+      );
+
+      // Watch for location changes continuously
+      locationWatchIdRef.current = navigator.geolocation.watchPosition(
+        (position) => {
+          setLocationInfo({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy
+          });
+          setLocationDenied(false);
+          setShowLocationWarning(false);
+        },
+        (error) => {
+          console.log('Location tracking error:', error);
+          setLocationDenied(true);
+          setShowLocationWarning(true);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
         }
       );
     }
@@ -131,6 +184,10 @@ export default function Vote() {
     return () => {
       if (behaviorTrackerRef.current) {
         behaviorTrackerRef.current.stopTracking();
+      }
+      // Clear location watch on unmount
+      if (locationWatchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(locationWatchIdRef.current);
       }
     };
   }, []);
@@ -325,7 +382,7 @@ export default function Vote() {
         position_title: position.title,
         candidate_id: candidateId,
         candidate_name: candidate.name,
-        vote_status: 'valid',
+        vote_status: locationDenied ? 'invalid' : 'valid',
         session_id: crypto.randomUUID(),
         ip_address: 'internal',
         user_agent: navigator.userAgent,
@@ -359,14 +416,11 @@ export default function Vote() {
   };
 
   const handleVoteComplete = (votes: Record<string, string>) => {
+    // Success overlay will handle navigation - no auto-redirect
     toast({
-      title: "🎉 All Votes Submitted!",
+      title: "🗳️ All Votes Submitted!",
       description: "Thank you for voting in the Student Council Elections.",
     });
-    
-    setTimeout(() => {
-      navigate('/student/electoral');
-    }, 3000);
   };
 
   const handleLogout = async () => {
@@ -409,7 +463,7 @@ export default function Vote() {
             </p>
             <div className="flex flex-col gap-3">
               <button
-                onClick={() => navigate('/student/electoral/results')}
+                onClick={() => navigate('/student/electoral')}
                 className="px-8 py-4 text-lg font-bold uppercase tracking-wider bg-[#667eea] hover:bg-[#5568d3] text-white rounded-lg transition-colors"
               >
                 View Live Results
@@ -428,10 +482,44 @@ export default function Vote() {
   }
 
   return (
-    <BallotContainer 
-      positions={positions}
-      onVotePosition={handleVotePosition}
-      onVoteComplete={handleVoteComplete}
-    />
+    <>
+      {showLocationWarning && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-300">
+          <div className="max-w-md w-full bg-white dark:bg-gray-800 border-[3px] border-red-500 shadow-[0_20px_60px_rgba(220,38,38,0.4)] p-8 rounded-lg animate-in zoom-in duration-300">
+            <div className="text-center space-y-4">
+              <div className="text-5xl animate-pulse">🚨</div>
+              <h2 className="text-2xl font-bold text-red-600 dark:text-red-400">Location Turned Off!</h2>
+              <p className="text-gray-700 dark:text-gray-300 font-semibold">
+                Your location has been disabled. Your votes will be marked as <span className="font-bold text-red-600">INVALID</span> without location verification.
+              </p>
+              <div className="bg-red-50 dark:bg-red-900/20 border-2 border-red-300 dark:border-red-700 p-4 rounded-lg">
+                <p className="text-sm text-red-800 dark:text-red-300 font-medium">
+                  ⚠️ Please turn on your device location to ensure your vote is counted as valid.
+                </p>
+              </div>
+              <div className="flex flex-col gap-3 pt-4">
+                <button
+                  onClick={() => setShowLocationWarning(false)}
+                  className="px-6 py-3 text-base font-bold uppercase tracking-wider bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                >
+                  Continue Without Location (Invalid Vote)
+                </button>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="text-gray-600 dark:text-gray-400 hover:underline text-sm font-medium"
+                >
+                  Refresh to Enable Location
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      <BallotContainer 
+        positions={positions}
+        onVotePosition={handleVotePosition}
+        onVoteComplete={handleVoteComplete}
+      />
+    </>
   );
 }

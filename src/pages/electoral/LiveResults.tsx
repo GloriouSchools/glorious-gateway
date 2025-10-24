@@ -15,6 +15,7 @@ import {
   AlertCircle,
   CheckCircle
 } from "lucide-react";
+import { InvalidVotesCard } from "@/components/electoral/InvalidVotesCard";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -252,6 +253,7 @@ export default function LiveResults() {
   }, [electionPhase.current]);
 
   const totalVotesCount = Object.values(results).reduce((sum, position) => sum + position.totalVotes, 0);
+  const invalidVotesCount = 2; // Mock invalid votes count - will be dynamic from database
   const averageParticipation = Object.keys(results).length > 0 ? 
     Object.values(results).reduce((sum, position) => 
       sum + (position.totalVotes / position.totalEligible), 0) / Object.keys(results).length * 100 : 0;
@@ -363,7 +365,7 @@ export default function LiveResults() {
         </div>
 
         {/* Enhanced Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -455,6 +457,11 @@ export default function LiveResults() {
               </CardContent>
             </Card>
           </motion.div>
+
+          <InvalidVotesCard
+            count={invalidVotesCount}
+            isAdmin={userRole === 'admin'}
+          />
         </div>
 
         {/* Refresh Button */}

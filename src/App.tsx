@@ -33,7 +33,7 @@ import StockManagement from "./pages/admin/StockManagement";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminFinance from "./pages/admin/AdminFinance";
 import AdminReports from "./pages/admin/AdminReports";
-import Electoral from "./pages/Electoral";
+import ElectoralHub from "./pages/electoral/ElectoralHub";
 import Apply from "./pages/electoral/Apply";
 import ApplicationStatus from "./pages/electoral/ApplicationStatus";
 import Candidates from "./pages/electoral/Candidates";
@@ -201,7 +201,14 @@ const App = () => (
               <Route path="/student/electoral" element={
                 <ProtectedRoute>
                   <RoleBasedRoute allowedRoles={["student"]}>
-                    <Electoral />
+                    <ElectoralDashboard />
+                  </RoleBasedRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/student/electoral/hub" element={
+                <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={["student"]}>
+                    <ElectoralHub />
                   </RoleBasedRoute>
                 </ProtectedRoute>
               } />
@@ -222,19 +229,14 @@ const App = () => (
               } />
               <Route path="/student/electoral/results" element={
                 <ProtectedRoute>
-                  <LiveResults />
+                  <RoleBasedRoute allowedRoles={["student"]}>
+                    <LiveResults />
+                  </RoleBasedRoute>
                 </ProtectedRoute>
               } />
               <Route path="/student/electoral/vote" element={
                 <ProtectedRoute>
                   <Vote />
-                </ProtectedRoute>
-              } />
-              <Route path="/student/electoral/results" element={
-                <ProtectedRoute>
-                  <RoleBasedRoute allowedRoles={["student"]}>
-                    <LiveResults />
-                  </RoleBasedRoute>
                 </ProtectedRoute>
               } />
 

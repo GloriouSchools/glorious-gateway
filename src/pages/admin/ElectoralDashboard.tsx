@@ -18,7 +18,9 @@ import { MobileVotesList } from "@/components/electoral/dashboard/MobileVotesLis
 import { MobileSummaryCard } from "@/components/electoral/dashboard/MobileSummaryCard";
 import { AccessibleSkipLinks } from "@/components/electoral/dashboard/AccessibleSkipLinks";
 import { ErrorModal } from "@/components/ui/error-modal";
-import { Vote, Users, Award, Clock, RefreshCw, X, Filter, BarChart2, TrendingUp, Target, Bell, FileText, School, CheckCircle, Timer } from "lucide-react";
+import { Vote, Users, Award, Clock, RefreshCw, X, Filter, BarChart2, TrendingUp, Target, Bell, FileText, School, CheckCircle, Timer, UserPlus, AlertCircle } from "lucide-react";
+import { InvalidVotesCard } from "@/components/electoral/InvalidVotesCard";
+import { InvalidVotesDialog } from "@/components/electoral/InvalidVotesDialog";
 import { LeaderSpotlight } from "@/components/electoral/dashboard/LeaderSpotlight";
 import { HeadToHeadBattle } from "@/components/electoral/dashboard/HeadToHeadBattle";
 import { DemographicsCard } from "@/components/electoral/dashboard/DemographicsCard";
@@ -80,6 +82,7 @@ export default function ElectoralDashboard() {
   const [selectedTimeSlot, setSelectedTimeSlot] = useState("");
   const [candidateDialogOpen, setCandidateDialogOpen] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState({ name: "", position: "" });
+  const [invalidVotesDialogOpen, setInvalidVotesDialogOpen] = useState(false);
 
   useEffect(() => {
     setTimeout(() => setIsLoading(false), 600);
@@ -88,6 +91,9 @@ export default function ElectoralDashboard() {
   const handleLogout = () => {
     navigate('/login');
   };
+  
+  // Role-based prefix for navigation
+  const rolePrefix = userRole === 'admin' ? '/admin' : userRole === 'teacher' ? '/teacher' : '/student';
 
   // Transform electoral votes to match dialog Vote interface
   const transformVotes = (votes: typeof mockElectoralVotes): Vote[] => {
@@ -121,6 +127,8 @@ export default function ElectoralDashboard() {
   // Calculate statistics
   const stats = useMemo(() => {
     const totalVotes = filteredVotes.length;
+    const validVotes = filteredVotes.filter(v => v.vote_status === 'valid').length;
+    const invalidVotes = filteredVotes.filter(v => v.vote_status === 'invalid').length;
     const uniqueVoters = new Set(filteredVotes.map(v => v.voter_id)).size;
     const uniqueCandidates = new Set(filteredVotes.map(v => v.candidate_id)).size;
     const latestVote = filteredVotes.length > 0 
@@ -129,7 +137,26 @@ export default function ElectoralDashboard() {
         )[0].voted_at
       : null;
 
-    return { totalVotes, uniqueVoters, uniqueCandidates, latestVote };
+    return { totalVotes, validVotes, invalidVotes, uniqueVoters, uniqueCandidates, latestVote };
+  }, [filteredVotes]);
+
+  const invalidVotesData = useMemo(() => {
+    return filteredVotes
+      .filter(v => v.vote_status === 'invalid')
+      .map(v => ({
+        id: v.id,
+        voter_id: v.voter_id,
+        voter_name: v.voter_name,
+        voter_email: `${v.voter_id}@school.com`,
+        voter_class: "Form 4",
+        voter_stream: "Sciences",
+        position_title: v.position,
+        candidate_name: v.candidate_name,
+        voted_at: v.voted_at,
+        vote_status: v.vote_status || 'invalid',
+        latitude: v.latitude || null,
+        longitude: v.longitude || null
+      }));
   }, [filteredVotes]);
 
   // Position data for bar chart
@@ -636,7 +663,7 @@ export default function ElectoralDashboard() {
   if (isLoading) {
     return (
       <DashboardLayout 
-        userRole="admin" 
+        userRole={userRole as any} 
         userName={userName} 
         photoUrl={photoUrl} 
         onLogout={handleLogout}
@@ -653,7 +680,7 @@ export default function ElectoralDashboard() {
 
   return (
     <DashboardLayout 
-      userRole="admin" 
+      userRole={userRole as any} 
       userName={userName} 
       photoUrl={photoUrl} 
       onLogout={handleLogout}
@@ -662,6 +689,27 @@ export default function ElectoralDashboard() {
       
       <div className="min-h-screen bg-background">
         <main id="main-content" className="container mx-auto px-4 py-6 space-y-6">
+          {/* Student Quick Actions */}
+          {userRole === 'student' && (
+            <div className="flex gap-3 mb-4">
+              <Button 
+                onClick={() => navigate('/student/electoral/hub')}
+                variant="outline"
+                className="gap-2"
+              >
+                <UserPlus className="h-4 w-4" />
+                Apply for Leadership
+              </Button>
+              <Button 
+                onClick={() => navigate('/student/electoral/vote')}
+                className="gap-2"
+              >
+                <Vote className="h-4 w-4" />
+                Cast Your Vote
+              </Button>
+            </div>
+          )}
+          
           {/* Candidates Dashboard Section */}
           <CandidatesSection 
             userRole={userRole} 
@@ -708,7 +756,7 @@ export default function ElectoralDashboard() {
           {/* Enhanced Summary Cards */}
           <section id="summary-stats" aria-label="Summary statistics">
             {/* Desktop Cards */}
-            <div className="hidden lg:grid grid-cols-4 gap-6">
+            <div className="hidden lg:grid grid-cols-5 gap-6">
               <EnhancedMetricsCard
                 title="Total Votes Cast"
                 value={stats.totalVotes.toLocaleString()}
@@ -745,6 +793,11 @@ export default function ElectoralDashboard() {
                 iconColor="text-purple-600 dark:text-purple-400"
                 onClick={() => handleMetricsClick('candidates')}
               />
+              <InvalidVotesCard
+                count={stats.invalidVotes}
+                onClick={() => setInvalidVotesDialogOpen(true)}
+                isAdmin={userRole === 'admin'}
+              />
             </div>
 
             {/* Mobile Cards (2 per row) */}
@@ -779,6 +832,13 @@ export default function ElectoralDashboard() {
                 delay={300}
                 onClick={() => handleMetricsClick('turnout')}
               />
+              <div className="col-span-2">
+                <InvalidVotesCard
+                  count={stats.invalidVotes}
+                  onClick={() => setInvalidVotesDialogOpen(true)}
+                  isAdmin={userRole === 'admin'}
+                />
+              </div>
             </div>
           </section>
 
@@ -937,6 +997,13 @@ export default function ElectoralDashboard() {
           position={selectedCandidate.position}
           isAdmin={userRole === 'admin'}
           onStudentClick={handleStudentClick}
+        />
+
+        {/* Invalid Votes Dialog */}
+        <InvalidVotesDialog
+          open={invalidVotesDialogOpen}
+          onOpenChange={setInvalidVotesDialogOpen}
+          votes={invalidVotesData}
         />
 
         <ErrorModal

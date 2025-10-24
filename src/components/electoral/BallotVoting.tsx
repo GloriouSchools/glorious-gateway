@@ -340,19 +340,25 @@ export function BallotVoting({ positions, onVoteComplete, onVotePosition }: Ball
                     {/* Checkbox */}
                     <div 
                       className={cn(
-                        "h-10 w-10 border-2 flex items-center justify-center transition-all duration-300 rounded",
+                        "h-10 w-10 border-2 flex items-center justify-center transition-all duration-500 rounded overflow-hidden",
                         isSelected 
-                          ? "bg-green-500 border-green-500" 
-                          : "bg-white border-slate-400"
+                          ? "bg-green-500 border-green-500 scale-110" 
+                          : "bg-white border-slate-400 scale-100"
                       )}
                     >
                       <CheckCircle 
                         className={cn(
-                          "h-6 w-6 text-white transition-all duration-500",
+                          "h-6 w-6 text-white transition-all duration-700 ease-out",
                           isSelected 
-                            ? "opacity-100 scale-100 rotate-0" 
-                            : "opacity-0 scale-0 -rotate-180"
+                            ? "opacity-100 scale-100 rotate-0 animate-in zoom-in duration-700" 
+                            : "opacity-0 scale-0 rotate-[-120deg]"
                         )}
+                        style={{
+                          animationDelay: isSelected ? '100ms' : '0ms',
+                          strokeDasharray: isSelected ? '100' : '0',
+                          strokeDashoffset: isSelected ? '0' : '100',
+                          transition: 'stroke-dashoffset 0.8s ease-in-out, opacity 0.7s ease-out, transform 0.7s ease-out'
+                        }}
                       />
                     </div>
                   </CardContent>
