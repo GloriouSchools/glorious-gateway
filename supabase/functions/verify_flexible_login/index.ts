@@ -36,8 +36,10 @@ serve(async (req) => {
     if (student && !studentError) {
       // Use password_hash if it exists, otherwise use default_password
       const correctPassword = student.password_hash || student.default_password;
+      // Pad password to 4 digits for comparison with default_password
+      const paddedPassword = p_password.padStart(4, '0');
       
-      if (correctPassword === p_password) {
+      if (correctPassword === p_password || correctPassword === paddedPassword) {
         return new Response(
           JSON.stringify({
             success: true,
@@ -71,8 +73,10 @@ serve(async (req) => {
     if (teacher && !teacherError) {
       // Use password_hash if it exists, otherwise use default_password
       const correctPassword = teacher.password_hash || teacher.default_password;
+      // Pad password to 4 digits for comparison with default_password
+      const paddedPassword = p_password.padStart(4, '0');
       
-      if (correctPassword === p_password) {
+      if (correctPassword === p_password || correctPassword === paddedPassword) {
         return new Response(
           JSON.stringify({
             success: true,

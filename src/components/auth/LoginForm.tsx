@@ -29,6 +29,7 @@ interface LoginFormProps {
 
 export function LoginForm({ schoolLogo }: LoginFormProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -101,158 +102,121 @@ export function LoginForm({ schoolLogo }: LoginFormProps) {
     
     setIsLoading(true);
     
+    // Preserve non-auth data before clearing
+    const cookieConsent = localStorage.getItem('cookieConsent');
+    const redirectPath = localStorage.getItem('redirectAfterLogin');
+    
+    // Clear ALL auth-related localStorage to prevent session leakage
+    const authKeys = ['adminToken', 'adminRole', 'adminName', 'adminVerified', 'adminId', 'adminEmail', 'adminPersonalEmail',
+                      'teacherToken', 'teacherRole', 'teacherName', 'teacherId', 'teacherEmail', 'teacherVerified', 'teacherPersonalEmail',
+                      'studentToken', 'studentRole', 'studentName', 'studentId', 'studentEmail', 'studentVerified', 'studentPersonalEmail', 'studentPhotoUrl'];
+    authKeys.forEach(key => localStorage.removeItem(key));
+    
+    // Restore preserved data
+    if (cookieConsent) localStorage.setItem('cookieConsent', cookieConsent);
+    if (redirectPath) localStorage.setItem('redirectAfterLogin', redirectPath);
+    
     try {
-      console.log('Attempting login with email:', signInData.email);
-      console.log('Password entered:', signInData.password);
-      
-      // First, try direct database authentication as fallback
-      let userData = null;
-      let userRole = null;
-      
-      // Try to find user in students table
-      const { data: student, error: studentError } = await supabase
-        .from('students')
-        .select('*')
-        .eq('email', signInData.email)
-        .maybeSingle();
-      
-      console.log('Student query result:', { student, studentError });
-      
-      if (student) {
-        const correctPassword = student.password_hash || student.default_password;
-        console.log('Expected password for student:', correctPassword);
-        console.log('Password match:', correctPassword === signInData.password);
-        
-        if (correctPassword === signInData.password) {
-          userData = student;
-          userRole = 'student';
-          console.log('Student login successful');
+      // Use edge function for secure authentication
+      const { data: loginResponse, error: loginError } = await supabase.functions.invoke('verify_flexible_login', {
+        body: { 
+          p_identifier: signInData.email, 
+          p_password: signInData.password 
         }
-      }
-      
-      // Try teachers table if no student found
-      if (!userData) {
-        const { data: teacher, error: teacherError } = await supabase
-          .from('teachers')
-          .select('*')
-          .eq('email', signInData.email)
-          .maybeSingle();
-        
-        console.log('Teacher query result:', { teacher, teacherError });
-        
-        if (teacher) {
-          const correctPassword = (teacher as any).password_hash || (teacher as any).default_password;
-          console.log('Expected password for teacher:', correctPassword);
-          console.log('Password match:', correctPassword === signInData.password);
-          
-          if (correctPassword === signInData.password) {
-            console.log('Teacher login successful');
-            userData = teacher;
-            userRole = 'teacher';
-          }
-        }
-      }
-      
-      // Try admins table if no teacher found
-      if (!userData) {
-        const { data: admin, error: adminError } = await supabase
-          .from('admins')
-          .select('*')
-          .eq('email', signInData.email)
-          .maybeSingle();
-        
-        console.log('Admin query result:', { admin, adminError });
-        
-        if (admin && admin.password_hash === signInData.password) {
-          console.log('Admin login successful');
-          userData = admin;
-          userRole = 'admin';
-        }
-      }
-      
-      if (!userData) {
-        toast.error("Invalid email or password");
+      });
+
+      if (loginError) {
+        toast.error("Failed to connect to authentication service");
         setIsLoading(false);
         return;
       }
-      
+
+      if (!loginResponse.success) {
+        toast.error(loginResponse.message || "Invalid email or password");
+        setIsLoading(false);
+        return;
+      }
+
       // Store session info based on role
-      const name = userData.name;
-      const isVerified = userData.is_verified || false;
-      const personalEmail = userData.personal_email;
-      const photoUrl = userData.photo_url;
-      const email = userData.email;
-      const userId = userData.id;
+      const { role, name, email, token, is_verified, personal_email, photo_url, student_id, teacher_id } = loginResponse;
+      const userId = student_id || teacher_id || email;
       
-      if (userRole === 'admin') {
-        localStorage.setItem('adminToken', 'admin-token-' + userId);
-        localStorage.setItem('adminRole', 'admin');
+      if (role === 'admin') {
+        localStorage.setItem('adminToken', token);
+        localStorage.setItem('adminRole', role);
         localStorage.setItem('adminName', name);
-        localStorage.setItem('adminVerified', String(isVerified));
+        localStorage.setItem('adminVerified', String(is_verified));
         localStorage.setItem('adminId', userId);
         localStorage.setItem('adminEmail', email);
-        if (personalEmail) {
-          localStorage.setItem('adminPersonalEmail', personalEmail);
+        if (personal_email) {
+          localStorage.setItem('adminPersonalEmail', personal_email);
         }
-      } else if (userRole === 'teacher') {
-        localStorage.setItem('teacherToken', 'teacher-token-' + userId);
-        localStorage.setItem('teacherRole', 'teacher');
+      } else if (role === 'teacher') {
+        localStorage.setItem('teacherToken', token);
+        localStorage.setItem('teacherRole', role);
         localStorage.setItem('teacherName', name);
         localStorage.setItem('teacherId', userId);
         localStorage.setItem('teacherEmail', email);
-        localStorage.setItem('teacherVerified', String(isVerified));
-        if (personalEmail) {
-          localStorage.setItem('teacherPersonalEmail', personalEmail);
+        localStorage.setItem('teacherVerified', String(is_verified));
+        if (personal_email) {
+          localStorage.setItem('teacherPersonalEmail', personal_email);
         }
-      } else if (userRole === 'student') {
-        localStorage.setItem('studentToken', 'student-token-' + userId);
-        localStorage.setItem('studentRole', 'student');
+      } else if (role === 'student') {
+        localStorage.setItem('studentToken', token);
+        localStorage.setItem('studentRole', role);
         localStorage.setItem('studentName', name);
         localStorage.setItem('studentId', userId);
         localStorage.setItem('studentEmail', email);
-        localStorage.setItem('studentVerified', String(isVerified));
-        if (personalEmail) {
-          localStorage.setItem('studentPersonalEmail', personalEmail);
+        localStorage.setItem('studentVerified', String(is_verified));
+        if (personal_email) {
+          localStorage.setItem('studentPersonalEmail', personal_email);
         }
-        if (photoUrl) {
-          localStorage.setItem('studentPhotoUrl', photoUrl);
+        if (photo_url) {
+          localStorage.setItem('studentPhotoUrl', photo_url);
         }
       }
       
+      // Trigger storage event for cross-tab sync and immediate state update
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: `${role}Token`,
+        newValue: token,
+        url: window.location.href,
+        storageArea: localStorage
+      }));
+      
       toast.success(`Welcome, ${name}!`);
       
-      // Check for redirect path and validate it for the current user's role
-      const redirectPath = localStorage.getItem('redirectAfterLogin');
-      localStorage.removeItem('redirectAfterLogin'); // Clean up immediately
+      // Show loading indicator before navigation
+      setIsNavigating(true);
       
-      // Function to check if a path is valid for the user's role
-      const isValidPathForRole = (path: string, role: string): boolean => {
+      // Handle redirect with role validation
+      const storedRedirect = localStorage.getItem('redirectAfterLogin');
+      localStorage.removeItem('redirectAfterLogin');
+      
+      const isValidPathForRole = (path: string, userRole: string): boolean => {
         if (!path || path === '/' || path === '/login') return true;
-        
-        // Check if path starts with the user's role prefix
-        if (path.startsWith(`/${role}`)) return true;
-        
-        // Allow access to general pages like profile, settings (if they exist)
+        if (path.startsWith(`/${userRole}`)) return true;
         const allowedGeneralPaths = ['/profile', '/settings'];
         return allowedGeneralPaths.some(allowedPath => path.startsWith(allowedPath));
       };
       
-      // Determine target path based on role and redirect validation
-      let targetPath = '/'; // Default to home/dashboard
+      let targetPath = '/';
       
-      if (redirectPath && isValidPathForRole(redirectPath, userRole)) {
-        targetPath = redirectPath;
-      } else if (redirectPath && !isValidPathForRole(redirectPath, userRole)) {
-        // If user tried to access a path not allowed for their role, go to their dashboard
-        targetPath = `/${userRole}`;
+      if (storedRedirect && isValidPathForRole(storedRedirect, role)) {
+        targetPath = storedRedirect;
+      } else if (storedRedirect && !isValidPathForRole(storedRedirect, role)) {
+        targetPath = `/${role}`;
       }
       
-      // Force a page reload to ensure auth state is properly initialized
-      window.location.href = targetPath;
+      // Navigate with slight delay for state updates
+      setTimeout(() => {
+        navigate(targetPath, { replace: true });
+      }, 100);
       
     } catch (error: any) {
       console.error('Login error:', error);
       toast.error(error.message || "Failed to sign in");
+      setIsNavigating(false);
     } finally {
       setIsLoading(false);
     }
@@ -372,11 +336,16 @@ export function LoginForm({ schoolLogo }: LoginFormProps) {
             </Label>
           </div>
           
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button type="submit" className="w-full" disabled={isLoading || isNavigating}>
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Signing in...
+              </>
+            ) : isNavigating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Loading dashboard...
               </>
             ) : (
               "Sign In"

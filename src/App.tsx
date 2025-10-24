@@ -27,6 +27,7 @@ import TeachersList from "./pages/admin/TeachersList";
 import ClassesList from "./pages/admin/ClassesList";
 import StreamsList from "./pages/admin/StreamsList";
 import ElectoralApplications from "./pages/admin/ElectoralApplications";
+import ElectoralDashboard from "./pages/admin/ElectoralDashboard";
 import AdminGallery from "./pages/admin/AdminGallery";
 import StockManagement from "./pages/admin/StockManagement";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
@@ -311,6 +312,20 @@ const App = () => (
                   <MovieDetail />
                 </ProtectedRoute>
               } />
+              <Route path="/teacher/electoral" element={
+                <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={["teacher"]}>
+                    <ElectoralDashboard />
+                  </RoleBasedRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/teacher/electoral/applications" element={
+                <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={["teacher"]}>
+                    <ElectoralApplications />
+                  </RoleBasedRoute>
+                </ProtectedRoute>
+              } />
 
               {/* Admin Routes */}
               <Route path="/admin" element={
@@ -347,6 +362,13 @@ const App = () => (
                 </ProtectedRoute>
               } />
               <Route path="/admin/electoral" element={
+                <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={["admin", "teacher"]}>
+                    <ElectoralDashboard />
+                  </RoleBasedRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/electoral/applications" element={
                 <ProtectedRoute>
                   <RoleBasedRoute allowedRoles={["admin"]}>
                     <ElectoralApplications />

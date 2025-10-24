@@ -92,6 +92,7 @@ export function AppSidebar({ userRole, userName, photoUrl, onLogout }: AppSideba
           { title: "Timetable", icon: Clock, url: "/teacher/timetable" },
           { title: "Duty Rota", icon: CalendarClock, url: "/teacher/duty-rota" },
           { title: "Attendance", icon: UserCheck, url: "/teacher/attendance" },
+          { title: "Electoral", icon: Vote, url: "/teacher/electoral" },
           { title: "Gallery", icon: Image, url: "/teacher/gallery" },
           { title: "E-Learning", icon: Video, url: "/teacher/e-learning" },
           { title: "Events", icon: Film, url: "/teacher/events" },

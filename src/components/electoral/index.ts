@@ -1,1 +1,13 @@
 export { default as ApplicationPreview } from './ApplicationPreview';
+export { LeaderSpotlight } from './dashboard/LeaderSpotlight';
+export { HeadToHeadBattle } from './dashboard/HeadToHeadBattle';
+export { DemographicsCard } from './dashboard/DemographicsCard';
+export { GenderSupportChart } from './dashboard/GenderSupportChart';
+export { LiveFeed } from './dashboard/LiveFeed';
+export { TurnoutCard } from './dashboard/TurnoutCard';
+export { QuickStatsCard } from './dashboard/QuickStatsCard';
+export { EnhancedMetricsCard } from './dashboard/EnhancedMetricsCard';
+export { VoteDistributionChart } from './dashboard/VoteDistributionChart';
+export { CandidatesSection } from './CandidatesSection';
+export { CandidateCard } from './CandidateCard';
+export { CandidateProfileDialog } from './CandidateProfileDialog';

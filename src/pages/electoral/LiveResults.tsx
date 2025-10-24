@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { motion } from "framer-motion";
 
 interface ResultCandidate {
   name: string;
@@ -363,39 +364,97 @@ export default function LiveResults() {
 
         {/* Enhanced Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/30 border-blue-200 dark:border-blue-800">
-            <CardContent className="p-6 text-center">
-              <Users className="w-8 h-8 text-blue-600 dark:text-blue-400 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-blue-800 dark:text-blue-300">{totalVotesCount}</div>
-              <div className="text-sm text-blue-600 dark:text-blue-400">Total Votes Cast</div>
-            </CardContent>
-          </Card>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, delay: 0 }}
+          >
+            <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/30 border-blue-200 dark:border-blue-800 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+              <CardContent className="p-6 text-center">
+                <Users className="w-8 h-8 text-blue-600 dark:text-blue-400 mx-auto mb-2" />
+                <motion.div 
+                  className="text-2xl font-bold text-blue-800 dark:text-blue-300"
+                  initial={{ scale: 0.5 }}
+                  whileInView={{ scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: 0.2, type: "spring" }}
+                >
+                  {totalVotesCount}
+                </motion.div>
+                <div className="text-sm text-blue-600 dark:text-blue-400">Total Votes Cast</div>
+              </CardContent>
+            </Card>
+          </motion.div>
           
-          <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/50 dark:to-green-900/30 border-green-200 dark:border-green-800">
-            <CardContent className="p-6 text-center">
-              <TrendingUp className="w-8 h-8 text-green-600 dark:text-green-400 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-green-800 dark:text-green-300">
-                {electionPhase.current === 'applications' ? '0.0' : averageParticipation.toFixed(1)}%
-              </div>
-              <div className="text-sm text-green-600 dark:text-green-400">Voter Turnout</div>
-            </CardContent>
-          </Card>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+          >
+            <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/50 dark:to-green-900/30 border-green-200 dark:border-green-800 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+              <CardContent className="p-6 text-center">
+                <TrendingUp className="w-8 h-8 text-green-600 dark:text-green-400 mx-auto mb-2" />
+                <motion.div 
+                  className="text-2xl font-bold text-green-800 dark:text-green-300"
+                  initial={{ scale: 0.5 }}
+                  whileInView={{ scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: 0.3, type: "spring" }}
+                >
+                  {electionPhase.current === 'applications' ? '0.0' : averageParticipation.toFixed(1)}%
+                </motion.div>
+                <div className="text-sm text-green-600 dark:text-green-400">Voter Turnout</div>
+              </CardContent>
+            </Card>
+          </motion.div>
           
-          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/50 dark:to-purple-900/30 border-purple-200 dark:border-purple-800">
-            <CardContent className="p-6 text-center">
-              <Award className="w-8 h-8 text-purple-600 dark:text-purple-400 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-purple-800 dark:text-purple-300">{Object.keys(results).length}</div>
-              <div className="text-sm text-purple-600 dark:text-purple-400">Electoral Positions</div>
-            </CardContent>
-          </Card>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+          >
+            <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/50 dark:to-purple-900/30 border-purple-200 dark:border-purple-800 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+              <CardContent className="p-6 text-center">
+                <Award className="w-8 h-8 text-purple-600 dark:text-purple-400 mx-auto mb-2" />
+                <motion.div 
+                  className="text-2xl font-bold text-purple-800 dark:text-purple-300"
+                  initial={{ scale: 0.5 }}
+                  whileInView={{ scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: 0.4, type: "spring" }}
+                >
+                  {Object.keys(results).length}
+                </motion.div>
+                <div className="text-sm text-purple-600 dark:text-purple-400">Electoral Positions</div>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-          <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/50 dark:to-orange-900/30 border-orange-200 dark:border-orange-800">
-            <CardContent className="p-6 text-center">
-              <Users className="w-8 h-8 text-orange-600 dark:text-orange-400 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-orange-800 dark:text-orange-300">{totalCandidates}</div>
-              <div className="text-sm text-orange-600 dark:text-orange-400">Confirmed Candidates</div>
-            </CardContent>
-          </Card>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, delay: 0.3 }}
+          >
+            <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/50 dark:to-orange-900/30 border-orange-200 dark:border-orange-800 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+              <CardContent className="p-6 text-center">
+                <Users className="w-8 h-8 text-orange-600 dark:text-orange-400 mx-auto mb-2" />
+                <motion.div 
+                  className="text-2xl font-bold text-orange-800 dark:text-orange-300"
+                  initial={{ scale: 0.5 }}
+                  whileInView={{ scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: 0.5, type: "spring" }}
+                >
+                  {totalCandidates}
+                </motion.div>
+                <div className="text-sm text-orange-600 dark:text-orange-400">Confirmed Candidates</div>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
 
         {/* Refresh Button */}
@@ -449,8 +508,19 @@ export default function LiveResults() {
               <p className="text-muted-foreground">No confirmed candidates or active positions found.</p>
             </div>
           ) : (
-            Object.entries(results).map(([key, position]) => (
-              <Card key={key} className="overflow-hidden hover:shadow-lg transition-all duration-200 hover:shadow-primary/5 border-l-4 border-l-primary">
+            Object.entries(results).map(([key, position], posIndex) => (
+              <motion.div
+                key={key}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ 
+                  duration: 0.5, 
+                  delay: posIndex * 0.1,
+                  ease: [0.25, 0.46, 0.45, 0.94]
+                }}
+              >
+                <Card className="overflow-hidden hover:shadow-lg transition-all duration-200 hover:shadow-primary/5 border-l-4 border-l-primary">
                 <CardHeader className="bg-gradient-to-r from-muted/50 to-muted/30 pb-4">
                   <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                     <span className="text-xl font-semibold">{position.title}</span>
@@ -511,16 +581,35 @@ export default function LiveResults() {
                         
                         {electionPhase.current !== 'applications' && (
                           <>
-                            <Progress 
-                              value={candidate.percentage} 
-                              className="h-3"
-                            />
+                            <motion.div
+                              initial={{ scaleX: 0 }}
+                              whileInView={{ scaleX: 1 }}
+                              viewport={{ once: true }}
+                              transition={{ 
+                                duration: 0.8, 
+                                delay: index * 0.1,
+                                ease: [0.25, 0.46, 0.45, 0.94]
+                              }}
+                              style={{ transformOrigin: "left" }}
+                            >
+                              <Progress 
+                                value={candidate.percentage} 
+                                className="h-3"
+                              />
+                            </motion.div>
                             
                             {index === 0 && candidate.votes > 0 && (
-                              <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 border-yellow-300 dark:from-yellow-600 dark:to-yellow-700 dark:text-yellow-100">
-                                <Award className="w-3 h-3 mr-1" />
-                                Currently Leading
-                              </Badge>
+                              <motion.div
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                whileInView={{ opacity: 1, scale: 1 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.4, delay: 0.3 }}
+                              >
+                                <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 border-yellow-300 dark:from-yellow-600 dark:to-yellow-700 dark:text-yellow-100">
+                                  <Award className="w-3 h-3 mr-1" />
+                                  Currently Leading
+                                </Badge>
+                              </motion.div>
                             )}
                           </>
                         )}
@@ -529,6 +618,7 @@ export default function LiveResults() {
                   )}
                 </CardContent>
               </Card>
+              </motion.div>
             ))
           )}
         </div>

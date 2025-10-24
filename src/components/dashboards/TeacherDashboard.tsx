@@ -41,7 +41,8 @@ import {
   Video,
   Film,
   CalendarClock,
-  Quote
+  Quote,
+  Vote
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { AccountVerificationForm } from "@/components/auth/AccountVerificationForm";
@@ -168,6 +169,16 @@ export function TeacherDashboard() {
       action: 'Take Attendance',
       route: '/teacher/attendance',
       isHighlight: true
+    },
+    {
+      id: 'electoral',
+      title: 'Electoral',
+      description: 'Monitor school elections & voting',
+      icon: Vote,
+      color: 'from-red-400 to-pink-400',
+      stats: 'Elections Live',
+      action: 'View Electoral',
+      route: '/teacher/electoral'
     },
     {
       id: 'gallery',

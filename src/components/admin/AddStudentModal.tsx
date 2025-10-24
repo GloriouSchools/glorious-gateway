@@ -23,6 +23,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { generateSecurePassword } from "@/utils/emailGenerator";
 
 const studentSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -72,8 +73,8 @@ export function AddStudentModal({
   const onSubmit = async (data: StudentFormData) => {
     setLoading(true);
     try {
-      // Generate a random default password and student ID
-      const defaultPassword = Math.random().toString(36).slice(-8);
+      // Generate a 4-digit password with leading zeros and student ID
+      const defaultPassword = generateSecurePassword();
       const studentId = `STU${Date.now()}${Math.random().toString(36).slice(-4)}`;
 
       const { error } = await supabase.from("students").insert([

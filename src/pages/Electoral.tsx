@@ -18,6 +18,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { toast } from "sonner";
+import { CandidatesSection } from "@/components/electoral/CandidatesSection";
 
 
 export default function Electoral() {
@@ -567,6 +568,9 @@ export default function Electoral() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Electoral Candidates Section */}
+        <CandidatesSection />
 
         {/* Election Timeline */}
         <Card>

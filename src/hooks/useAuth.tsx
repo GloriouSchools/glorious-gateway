@@ -1,4 +1,5 @@
 import { useState, useEffect, createContext, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
 import { UserRole } from "@/types/user";
@@ -23,6 +24,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [userRole, setUserRole] = useState<UserRole | null>(null);
@@ -33,105 +35,133 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [personalEmail, setPersonalEmail] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check for admin token first
-    const adminToken = localStorage.getItem('adminToken');
-    const adminRole = localStorage.getItem('adminRole');
-    const adminName = localStorage.getItem('adminName');
-    const adminId = localStorage.getItem('adminId');
-    const adminEmail = localStorage.getItem('adminEmail');
+    // SECURITY: Function to check and load auth state from localStorage
+    const checkAuthState = () => {
+      // Check for admin token first
+      const adminToken = localStorage.getItem('adminToken');
+      const adminRole = localStorage.getItem('adminRole');
+      const adminName = localStorage.getItem('adminName');
+      const adminId = localStorage.getItem('adminId');
+      const adminEmail = localStorage.getItem('adminEmail');
+      
+      if (adminToken && adminRole === 'admin') {
+        // Set admin state from localStorage
+        setUserRole('admin');
+        setUserName(adminName || 'System Administrator');
+        setUser({ id: adminId || 'admin-hardcoded', email: adminEmail || 'admin@glorious.com' } as any);
+        const verified = localStorage.getItem('adminVerified');
+        setIsVerified(verified === 'true');
+        const storedPersonalEmail = localStorage.getItem('adminPersonalEmail');
+        setPersonalEmail(storedPersonalEmail || null);
+        setIsLoading(false);
+        return true;
+      }
+      
+      // Check for teacher token
+      const teacherToken = localStorage.getItem('teacherToken');
+      const teacherRole = localStorage.getItem('teacherRole');
+      const teacherName = localStorage.getItem('teacherName');
+      const teacherId = localStorage.getItem('teacherId');
+      const teacherEmail = localStorage.getItem('teacherEmail');
+      
+      if (teacherToken && teacherRole === 'teacher') {
+        // Set teacher state from localStorage
+        setUserRole('teacher');
+        setUserName(teacherName || 'Teacher');
+        setUser({ id: teacherId || 'teacher-hardcoded', email: teacherEmail || '' } as any);
+        const verified = localStorage.getItem('teacherVerified');
+        setIsVerified(verified === 'true');
+        const storedPersonalEmail = localStorage.getItem('teacherPersonalEmail');
+        setPersonalEmail(storedPersonalEmail || null);
+        setIsLoading(false);
+        return true;
+      }
+      
+      // Check for student token
+      const studentToken = localStorage.getItem('studentToken');
+      const studentRole = localStorage.getItem('studentRole');
+      const studentName = localStorage.getItem('studentName');
+      const studentId = localStorage.getItem('studentId');
+      const studentEmail = localStorage.getItem('studentEmail');
+      
+      if (studentToken && studentRole === 'student') {
+        // Set student state from localStorage
+        setUserRole('student');
+        setUserName(studentName || 'Student');
+        setUser({ id: studentId || 'student-hardcoded', email: studentEmail || '' } as any);
+        const verified = localStorage.getItem('studentVerified');
+        setIsVerified(verified === 'true');
+        const storedPersonalEmail = localStorage.getItem('studentPersonalEmail');
+        setPersonalEmail(storedPersonalEmail || null);
+        const storedPhotoUrl = localStorage.getItem('studentPhotoUrl');
+        setPhotoUrl(storedPhotoUrl || null);
+        setIsLoading(false);
+        return true;
+      }
+      
+      return false;
+    };
     
-    if (adminToken && adminRole === 'admin') {
-      // Set admin state from localStorage
-      setUserRole('admin');
-      setUserName(adminName || 'System Administrator');
-      setUser({ id: adminId || 'admin-hardcoded', email: adminEmail || 'admin@glorious.com' } as any);
-      const verified = localStorage.getItem('adminVerified');
-      setIsVerified(verified === 'true');
-      const storedPersonalEmail = localStorage.getItem('adminPersonalEmail');
-      setPersonalEmail(storedPersonalEmail || null);
-      setIsLoading(false);
-      return;
-    }
+    // Check auth state on mount
+    const hasCustomAuth = checkAuthState();
     
-    // Check for teacher token
-    const teacherToken = localStorage.getItem('teacherToken');
-    const teacherRole = localStorage.getItem('teacherRole');
-    const teacherName = localStorage.getItem('teacherName');
-    const teacherId = localStorage.getItem('teacherId');
-    const teacherEmail = localStorage.getItem('teacherEmail');
+    // SECURITY: Listen for storage changes (handles cross-tab and new logins)
+    const handleStorageChange = (e: StorageEvent) => {
+      // If any auth-related key changed, re-check auth state
+      if (e.key?.includes('Token') || e.key?.includes('Role') || e.key === null) {
+        checkAuthState();
+      }
+    };
     
-    if (teacherToken && teacherRole === 'teacher') {
-      // Set teacher state from localStorage
-      setUserRole('teacher');
-      setUserName(teacherName || 'Teacher');
-      setUser({ id: teacherId || 'teacher-hardcoded', email: teacherEmail || '' } as any);
-      const verified = localStorage.getItem('teacherVerified');
-      setIsVerified(verified === 'true');
-      const storedPersonalEmail = localStorage.getItem('teacherPersonalEmail');
-      setPersonalEmail(storedPersonalEmail || null);
-      setIsLoading(false);
-      return;
-    }
-    
-    // Check for student token
-    const studentToken = localStorage.getItem('studentToken');
-    const studentRole = localStorage.getItem('studentRole');
-    const studentName = localStorage.getItem('studentName');
-    const studentId = localStorage.getItem('studentId');
-    const studentEmail = localStorage.getItem('studentEmail');
-    
-    if (studentToken && studentRole === 'student') {
-      // Set student state from localStorage
-      setUserRole('student');
-      setUserName(studentName || 'Student');
-      setUser({ id: studentId || 'student-hardcoded', email: studentEmail || '' } as any);
-      const verified = localStorage.getItem('studentVerified');
-      setIsVerified(verified === 'true');
-      const storedPersonalEmail = localStorage.getItem('studentPersonalEmail');
-      setPersonalEmail(storedPersonalEmail || null);
-      const storedPhotoUrl = localStorage.getItem('studentPhotoUrl');
-      setPhotoUrl(storedPhotoUrl || null);
-      setIsLoading(false);
-      return;
-    }
+    window.addEventListener('storage', handleStorageChange);
     
     // Set up auth state listener FIRST for normal users
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        // Fetch user profile and role when authenticated
-        if (session?.user) {
-          setTimeout(() => {
-            fetchUserProfile(session.user.id);
-          }, 0);
-        } else {
-          setUserRole(null);
-          setUserName("");
+        // Only update if we don't have custom auth (admin/teacher/student tokens)
+        if (!localStorage.getItem('adminToken') && 
+            !localStorage.getItem('teacherToken') && 
+            !localStorage.getItem('studentToken')) {
+          setSession(session);
+          setUser(session?.user ?? null);
+          
+          // Fetch user profile and role when authenticated
+          if (session?.user) {
+            setTimeout(() => {
+              fetchUserProfile(session.user.id);
+            }, 0);
+          } else {
+            setUserRole(null);
+            setUserName("");
+          }
         }
       }
     );
 
-    // THEN check for existing session
-    supabase.auth.getSession()
-      .then(({ data: { session } }) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          fetchUserProfile(session.user.id);
-        }
-      })
-      .catch((error) => {
-        console.error('Error getting session:', error);
-        setSession(null);
-        setUser(null);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+    // THEN check for existing Supabase session only if no custom auth
+    if (!hasCustomAuth) {
+      supabase.auth.getSession()
+        .then(({ data: { session } }) => {
+          setSession(session);
+          setUser(session?.user ?? null);
+          if (session?.user) {
+            fetchUserProfile(session.user.id);
+          }
+        })
+        .catch((error) => {
+          console.error('Error getting session:', error);
+          setSession(null);
+          setUser(null);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    }
 
-    return () => subscription.unsubscribe();
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const fetchUserProfile = async (userId: string) => {
@@ -213,37 +243,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
-    // Clear admin session if present
-    clearAdminSession();
-    localStorage.removeItem('adminVerified');
-    localStorage.removeItem('adminPersonalEmail');
-    localStorage.removeItem('adminId');
-    localStorage.removeItem('adminEmail');
+    // CRITICAL SECURITY FIX: Clear ALL localStorage first to prevent any session leakage
+    const keysToPreserve = ['cookieConsent']; // Preserve non-auth data
+    const preservedData: Record<string, string> = {};
     
-    // Clear teacher session if present
-    localStorage.removeItem('teacherToken');
-    localStorage.removeItem('teacherRole');
-    localStorage.removeItem('teacherName');
-    localStorage.removeItem('teacherId');
-    localStorage.removeItem('teacherEmail');
-    localStorage.removeItem('teacherVerified');
-    localStorage.removeItem('teacherPersonalEmail');
+    keysToPreserve.forEach(key => {
+      const value = localStorage.getItem(key);
+      if (value) preservedData[key] = value;
+    });
     
-    // Clear student session if present
-    localStorage.removeItem('studentToken');
-    localStorage.removeItem('studentRole');
-    localStorage.removeItem('studentName');
-    localStorage.removeItem('studentId');
-    localStorage.removeItem('studentEmail');
-    localStorage.removeItem('studentVerified');
-    localStorage.removeItem('studentPersonalEmail');
-    localStorage.removeItem('studentPhotoUrl');
+    // Clear everything
+    localStorage.clear();
     
-    // Clear any pending verification data
-    localStorage.removeItem('pendingVerification');
-    
-    // Clear any redirect paths to prevent next user from being redirected to wrong page
-    localStorage.removeItem('redirectAfterLogin');
+    // Restore preserved data
+    Object.entries(preservedData).forEach(([key, value]) => {
+      localStorage.setItem(key, value);
+    });
     
     // Only sign out from Supabase if there's a real session
     if (session) {
@@ -251,6 +266,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
     }
     
+    // Reset all state immediately
     setUser(null);
     setSession(null);
     setUserRole(null);
@@ -263,8 +279,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const event = new CustomEvent('clearFormData');
     window.dispatchEvent(event);
     
-    // Redirect to login page immediately after logout
-    window.location.href = '/login';
+    // Use client-side navigation to prevent page reload and double navigation
+    navigate('/login', { replace: true });
   };
 
   return (

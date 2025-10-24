@@ -66,8 +66,8 @@ export function AddTeacherModal({
   const onSubmit = async (data: TeacherFormData) => {
     setLoading(true);
     try {
-      // Generate a random default password
-      const defaultPassword = Math.random().toString(36).slice(-8);
+      // Generate a random 4-digit default password
+      const defaultPassword = Math.floor(1000 + Math.random() * 9000).toString();
 
       const { error } = await supabase.from("teachers").insert([
         {

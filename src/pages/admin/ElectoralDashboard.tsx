@@ -1,0 +1,959 @@
+import { useState, useMemo, useEffect } from "react";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
+import { mockElectoralVotes } from "@/data/mockElectoralVotes";
+import { SummaryCard } from "@/components/electoral/dashboard/SummaryCard";
+import { PositionBarChart } from "@/components/electoral/dashboard/PositionBarChart";
+import { CandidateGroupedChart } from "@/components/electoral/dashboard/CandidateGroupedChart";
+import { TimelineChart } from "@/components/electoral/dashboard/TimelineChart";
+import { RecentVotesTable } from "@/components/electoral/dashboard/RecentVotesTable";
+import { AnomalyAlerts } from "@/components/electoral/dashboard/AnomalyAlerts";
+import { DrilldownPanel } from "@/components/electoral/dashboard/DrilldownPanel";
+import { VotingHeatmap } from "@/components/electoral/dashboard/VotingHeatmap";
+import { ExportControls } from "@/components/electoral/dashboard/ExportControls";
+import { MobileChartCarousel } from "@/components/electoral/dashboard/MobileChartCarousel";
+import { MobileFilterModal } from "@/components/electoral/dashboard/MobileFilterModal";
+import { MobileVotesList } from "@/components/electoral/dashboard/MobileVotesList";
+import { MobileSummaryCard } from "@/components/electoral/dashboard/MobileSummaryCard";
+import { AccessibleSkipLinks } from "@/components/electoral/dashboard/AccessibleSkipLinks";
+import { ErrorModal } from "@/components/ui/error-modal";
+import { Vote, Users, Award, Clock, RefreshCw, X, Filter, BarChart2, TrendingUp, Target, Bell, FileText, School, CheckCircle, Timer } from "lucide-react";
+import { LeaderSpotlight } from "@/components/electoral/dashboard/LeaderSpotlight";
+import { HeadToHeadBattle } from "@/components/electoral/dashboard/HeadToHeadBattle";
+import { DemographicsCard } from "@/components/electoral/dashboard/DemographicsCard";
+import { GenderSupportChart } from "@/components/electoral/dashboard/GenderSupportChart";
+import { LiveFeed } from "@/components/electoral/dashboard/LiveFeed";
+import { TurnoutCard } from "@/components/electoral/dashboard/TurnoutCard";
+import { QuickStatsCard } from "@/components/electoral/dashboard/QuickStatsCard";
+import { EnhancedMetricsCard } from "@/components/electoral/dashboard/EnhancedMetricsCard";
+import { VoteDistributionChart } from "@/components/electoral/dashboard/VoteDistributionChart";
+import { VoterDetailsDialog } from "@/components/electoral/VoterDetailsDialog";
+import { StudentVoteDetailDialog } from "@/components/electoral/StudentVoteDetailDialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { format, parseISO } from "date-fns";
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip as RechartsTooltip } from "recharts";
+import { CandidatesSection } from "@/components/electoral/CandidatesSection";
+
+interface Vote {
+  id: string;
+  voter_id: string;
+  voter_name: string;
+  voter_email: string;
+  voter_class: string;
+  voter_stream: string;
+  voter_photo?: string;
+  position_id: string;
+  position_title: string;
+  candidate_id: string;
+  candidate_name: string;
+  voted_at: string;
+  vote_status: string;
+  ip_address?: string;
+}
+
+export default function ElectoralDashboard() {
+  const navigate = useNavigate();
+  const { userName, photoUrl, userRole } = useAuth();
+  const { toast } = useToast();
+  const [positionFilter, setPositionFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isDrilldownOpen, setIsDrilldownOpen] = useState(false);
+  const [selectedPosition, setSelectedPosition] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+  
+  // Dialog states
+  const [voterDialogOpen, setVoterDialogOpen] = useState(false);
+  const [selectedVotes, setSelectedVotes] = useState<Vote[]>([]);
+  const [dialogTitle, setDialogTitle] = useState("");
+  const [studentDetailOpen, setStudentDetailOpen] = useState(false);
+  const [selectedStudentVotes, setSelectedStudentVotes] = useState<Vote[]>([]);
+  const [errorModalOpen, setErrorModalOpen] = useState(false);
+
+  useEffect(() => {
+    setTimeout(() => setIsLoading(false), 600);
+  }, []);
+
+  const handleLogout = () => {
+    navigate('/login');
+  };
+
+  // Transform electoral votes to match dialog Vote interface
+  const transformVotes = (votes: typeof mockElectoralVotes): Vote[] => {
+    return votes.map(v => ({
+      id: v.id,
+      voter_id: v.voter_id,
+      voter_name: v.voter_name,
+      voter_email: `${v.voter_id}@school.com`, // Mock email
+      voter_class: "Form 4", // Mock class
+      voter_stream: "Sciences", // Mock stream
+      position_id: v.position,
+      position_title: v.position,
+      candidate_id: v.candidate_id,
+      candidate_name: v.candidate_name,
+      voted_at: v.voted_at,
+      vote_status: "valid"
+    }));
+  };
+
+  // Filter votes
+  const filteredVotes = useMemo(() => {
+    return mockElectoralVotes.filter(vote => {
+      const matchesPosition = positionFilter === "all" || vote.position === positionFilter;
+      const matchesSearch = !searchQuery || 
+        vote.voter_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        vote.candidate_name.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesPosition && matchesSearch;
+    });
+  }, [positionFilter, searchQuery]);
+
+  // Calculate statistics
+  const stats = useMemo(() => {
+    const totalVotes = filteredVotes.length;
+    const uniqueVoters = new Set(filteredVotes.map(v => v.voter_id)).size;
+    const uniqueCandidates = new Set(filteredVotes.map(v => v.candidate_id)).size;
+    const latestVote = filteredVotes.length > 0 
+      ? filteredVotes.sort((a, b) => 
+          new Date(b.voted_at).getTime() - new Date(a.voted_at).getTime()
+        )[0].voted_at
+      : null;
+
+    return { totalVotes, uniqueVoters, uniqueCandidates, latestVote };
+  }, [filteredVotes]);
+
+  // Position data for bar chart
+  const positionData = useMemo(() => {
+    const counts = filteredVotes.reduce((acc, vote) => {
+      acc[vote.position] = (acc[vote.position] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
+
+    return Object.entries(counts).map(([position, votes]) => ({
+      position,
+      votes,
+      percentage: Math.round((votes / total) * 100)
+    }));
+  }, [filteredVotes]);
+
+  // Candidate data per position for grouped chart
+  const candidateData = useMemo(() => {
+    const positions = Array.from(new Set(filteredVotes.map(v => v.position)));
+
+    return positions.map(position => {
+      const positionVotes = filteredVotes.filter(v => v.position === position);
+      const candidateVotes: Record<string, number> = {};
+      
+      positionVotes.forEach(vote => {
+        candidateVotes[vote.candidate_name] = (candidateVotes[vote.candidate_name] || 0) + 1;
+      });
+
+      return {
+        position,
+        candidates: Object.entries(candidateVotes).map(([candidate, votes]) => ({
+          candidate,
+          votes
+        }))
+      };
+    });
+  }, [filteredVotes]);
+
+  // Timeline data
+  const timelineData = useMemo(() => {
+    const hourCounts: Record<string, number> = {};
+    
+    filteredVotes.forEach(vote => {
+      const hour = format(parseISO(vote.voted_at), 'HH:00');
+      hourCounts[hour] = (hourCounts[hour] || 0) + 1;
+    });
+
+    return Object.entries(hourCounts)
+      .map(([time, votes]) => ({ time, votes }))
+      .sort((a, b) => a.time.localeCompare(b.time));
+  }, [filteredVotes]);
+
+  // Heatmap data
+  const heatmapData = useMemo(() => {
+    const hourCounts: Record<number, number> = {};
+    
+    filteredVotes.forEach(vote => {
+      const hour = parseISO(vote.voted_at).getHours();
+      hourCounts[hour] = (hourCounts[hour] || 0) + 1;
+    });
+
+    return Array.from({ length: 24 }, (_, i) => ({
+      hour: i,
+      votes: hourCounts[i] || 0
+    }));
+  }, [filteredVotes]);
+
+  // Detect anomalies
+  const anomalies = useMemo(() => {
+    const voterCounts: Record<string, number> = {};
+    mockElectoralVotes.forEach(vote => {
+      voterCounts[vote.voter_id] = (voterCounts[vote.voter_id] || 0) + 1;
+    });
+
+    const duplicateVoters = Object.entries(voterCounts)
+      .filter(([_, count]) => count > 1);
+
+    return duplicateVoters.length > 0 ? [{
+      id: "duplicate-1",
+      type: "duplicate" as const,
+      severity: "high" as const,
+      title: "Duplicate Voter IDs Detected",
+      description: `${duplicateVoters.length} voters have cast multiple votes`,
+      affectedCount: duplicateVoters.length
+    }] : [];
+  }, []);
+
+  // Drilldown data
+  const drilldownCandidates = useMemo(() => {
+    if (!selectedPosition) return [];
+
+    const positionVotes = filteredVotes.filter(v => v.position === selectedPosition);
+    const candidateCounts: Record<string, { votes: number; id: string }> = {};
+
+    positionVotes.forEach(vote => {
+      if (!candidateCounts[vote.candidate_name]) {
+        candidateCounts[vote.candidate_name] = { votes: 0, id: vote.candidate_id };
+      }
+      candidateCounts[vote.candidate_name].votes++;
+    });
+
+    const total = Object.values(candidateCounts).reduce((sum, c) => sum + c.votes, 0);
+
+    return Object.entries(candidateCounts)
+      .map(([name, data]) => ({
+        candidate_id: data.id,
+        candidate_name: name,
+        votes: data.votes,
+        percentage: (data.votes / total) * 100,
+        minuteByMinute: Array.from({ length: 12 }, () => Math.floor(Math.random() * 3))
+      }))
+      .sort((a, b) => b.votes - a.votes);
+  }, [selectedPosition, filteredVotes]);
+
+  const handlePositionClick = (position: string) => {
+    setSelectedPosition(position);
+    setIsDrilldownOpen(true);
+  };
+
+  // Generic handler to show voter details dialog
+  const showVoterDialog = (votes: typeof mockElectoralVotes, title: string) => {
+    // Check if user is admin
+    const userRole = localStorage.getItem('adminRole') || localStorage.getItem('userRole');
+    if (userRole !== 'admin') {
+      setErrorModalOpen(true);
+      return;
+    }
+    
+    setSelectedVotes(transformVotes(votes));
+    setDialogTitle(title);
+    setVoterDialogOpen(true);
+  };
+
+  // Handlers for different click events
+  const handleMetricsClick = (type: 'total' | 'voters' | 'turnout' | 'candidates') => {
+    let votes: typeof mockElectoralVotes = [];
+    let title = "";
+
+    switch (type) {
+      case 'total':
+        votes = filteredVotes;
+        title = `Total Votes (${stats.totalVotes})`;
+        break;
+      case 'voters':
+        votes = filteredVotes;
+        title = `Unique Voters (${stats.uniqueVoters})`;
+        break;
+      case 'turnout':
+        votes = filteredVotes;
+        title = "Voter Turnout Details";
+        break;
+      case 'candidates':
+        votes = filteredVotes;
+        title = `Active Positions (${stats.uniqueCandidates})`;
+        break;
+    }
+
+    showVoterDialog(votes, title);
+  };
+
+  const handleDemographicsClick = (position: string, category?: string) => {
+    let votes = filteredVotes.filter(v => v.position === position);
+    let title = `${position} - ${category || 'All Voters'}`;
+
+    if (category === 'male' || category === 'female') {
+      // Filter by gender - this is mock data, in real implementation you'd have gender field
+      title = `${position} - ${category.charAt(0).toUpperCase() + category.slice(1)} Voters`;
+    } else if (category) {
+      // Filter by class or stream
+      title = `${position} - ${category}`;
+    }
+
+    showVoterDialog(votes, title);
+  };
+
+  const handleGenderSupportClick = (position: string, candidate: string) => {
+    const votes = filteredVotes.filter(v => 
+      v.position === position && v.candidate_name === candidate
+    );
+    showVoterDialog(votes, `${candidate} - ${position}`);
+  };
+
+  const handleHeadToHeadClick = (position: string, candidate: string) => {
+    const votes = filteredVotes.filter(v => 
+      v.position === position && v.candidate_name === candidate
+    );
+    showVoterDialog(votes, `${candidate} - ${position}`);
+  };
+
+  const handleLeaderVoteClick = (position: string, candidateName: string) => {
+    const votes = filteredVotes.filter(v => 
+      v.position === position && v.candidate_name === candidateName
+    );
+    showVoterDialog(votes, `${candidateName} - ${position} Voters`);
+  };
+
+  const handleTurnoutClick = (position: string) => {
+    const votes = filteredVotes.filter(v => v.position === position);
+    showVoterDialog(votes, `Turnout - ${position}`);
+  };
+
+  const handleQuickStatsClick = (type: string) => {
+    showVoterDialog(filteredVotes, type);
+  };
+
+  const handleVoteRowClick = (vote: any) => {
+    // Check if user is admin
+    const userRole = localStorage.getItem('adminRole') || localStorage.getItem('userRole');
+    if (userRole !== 'admin') {
+      setErrorModalOpen(true);
+      return;
+    }
+    
+    const voterVotes = filteredVotes.filter(v => v.voter_id === vote.voter_id);
+    setSelectedStudentVotes(transformVotes(voterVotes));
+    setStudentDetailOpen(true);
+  };
+
+  const handleStudentClick = (vote: any) => {
+    // Check if user is admin
+    const userRole = localStorage.getItem('adminRole') || localStorage.getItem('userRole');
+    if (userRole !== 'admin') {
+      setErrorModalOpen(true);
+      return;
+    }
+    
+    const studentVotes = filteredVotes.filter(v => v.voter_id === vote.voter_id);
+    setSelectedStudentVotes(transformVotes(studentVotes));
+    setVoterDialogOpen(false);
+    setStudentDetailOpen(true);
+  };
+
+  const handleExport = (format: "csv" | "pdf" | "print") => {
+    toast({
+      title: "Export Generated",
+      description: `Mock export in ${format.toUpperCase()} format`,
+    });
+  };
+
+  const handleRefresh = () => {
+    toast({
+      title: "Dashboard Refreshed",
+      description: "Data updated successfully",
+    });
+  };
+
+  const clearFilter = () => {
+    setPositionFilter("all");
+    setSearchQuery("");
+  };
+
+  const applyMobileFilters = () => {
+    setIsMobileFilterOpen(false);
+    toast({
+      title: "Filters Applied",
+      description: "Dashboard updated with your filters",
+    });
+  };
+
+  // Calculate leader data per position
+  const leadersData = useMemo(() => {
+    const positions = Array.from(new Set(filteredVotes.map(v => v.position)));
+    
+    return positions.map(position => {
+      const positionVotes = filteredVotes.filter(v => v.position === position);
+      const candidateVotes: Record<string, number> = {};
+      
+      positionVotes.forEach(vote => {
+        candidateVotes[vote.candidate_name] = (candidateVotes[vote.candidate_name] || 0) + 1;
+      });
+
+      const sortedCandidates = Object.entries(candidateVotes)
+        .map(([name, votes]) => ({ name, votes }))
+        .sort((a, b) => b.votes - a.votes);
+
+      if (sortedCandidates.length < 2) return null;
+
+      const leader = sortedCandidates[0];
+      const runnerUp = sortedCandidates[1];
+      const totalVotes = sortedCandidates.reduce((sum, c) => sum + c.votes, 0);
+      const voteMargin = leader.votes - runnerUp.votes;
+      const voteShare = (leader.votes / totalVotes) * 100;
+
+      let raceStatus: "comfortable" | "tight" | "close" = "comfortable";
+      if (voteMargin < 5) raceStatus = "close";
+      else if (voteMargin < 15) raceStatus = "tight";
+
+      return {
+        candidateName: leader.name,
+        position,
+        totalVotes: leader.votes,
+        voteShare,
+        voteMargin,
+        raceStatus
+      };
+    }).filter(Boolean);
+  }, [filteredVotes]);
+
+  // Calculate head-to-head battles per position
+  const battlesData = useMemo(() => {
+    const positions = Array.from(new Set(filteredVotes.map(v => v.position)));
+    
+    return positions.map(position => {
+      const positionVotes = filteredVotes.filter(v => v.position === position);
+      const candidateVotes: Record<string, number> = {};
+      
+      positionVotes.forEach(vote => {
+        candidateVotes[vote.candidate_name] = (candidateVotes[vote.candidate_name] || 0) + 1;
+      });
+
+      const sortedCandidates = Object.entries(candidateVotes)
+        .map(([name, votes]) => ({ name, votes }))
+        .sort((a, b) => b.votes - a.votes);
+
+      if (sortedCandidates.length < 2) return null;
+
+      const leader = sortedCandidates[0];
+      const runnerUp = sortedCandidates[1];
+      const totalVotes = sortedCandidates.reduce((sum, c) => sum + c.votes, 0);
+
+      return {
+        position,
+        candidate1: {
+          name: leader.name,
+          votes: leader.votes,
+          percentage: (leader.votes / totalVotes) * 100,
+          rank: 1
+        },
+        candidate2: {
+          name: runnerUp.name,
+          votes: runnerUp.votes,
+          percentage: (runnerUp.votes / totalVotes) * 100,
+          rank: 2
+        },
+        voteDifference: leader.votes - runnerUp.votes
+      };
+    }).filter(Boolean);
+  }, [filteredVotes]);
+
+  // Demographics data per position
+  const demographicsData = useMemo(() => {
+    const positions = Array.from(new Set(filteredVotes.map(v => v.position)));
+    
+    return {
+      gender: positions.map(position => {
+        const positionVotes = filteredVotes.filter(v => v.position === position);
+        const maleVotes = positionVotes.filter(v => v.voter_name.includes('Male') || Math.random() > 0.5).length;
+        const femaleVotes = positionVotes.length - maleVotes;
+        const total = positionVotes.length || 1;
+
+        return {
+          position,
+          malePercentage: Math.round((maleVotes / total) * 100),
+          femalePercentage: Math.round((femaleVotes / total) * 100)
+        };
+      }),
+      classData: positions.map(position => ({
+        position,
+        data: [
+          { name: "Form 4", percentage: 42, color: "#3b82f6" },
+          { name: "Form 3", percentage: 28, color: "#10b981" },
+          { name: "Form 2", percentage: 20, color: "#f59e0b" },
+          { name: "Form 1", percentage: 10, color: "#ef4444" }
+        ]
+      })),
+      streamData: positions.map(position => ({
+        position,
+        data: [
+          { name: "Sciences", percentage: 45, color: "#3b82f6" },
+          { name: "Arts", percentage: 30, color: "#ec4899" },
+          { name: "Commerce", percentage: 25, color: "#10b981" }
+        ]
+      }))
+    };
+  }, [filteredVotes]);
+
+  // Gender support data per position
+  const genderSupportData = useMemo(() => {
+    const positions = Array.from(new Set(filteredVotes.map(v => v.position)));
+    
+    return positions.map(position => {
+      const positionVotes = filteredVotes.filter(v => v.position === position);
+      const candidates = Array.from(new Set(positionVotes.map(v => v.candidate_name))).slice(0, 4);
+      
+      return {
+        position,
+        candidates: candidates.map(candidate => ({
+          candidateName: candidate,
+          maleSupport: 30 + Math.random() * 50,
+          femaleSupport: 30 + Math.random() * 50
+        }))
+      };
+    });
+  }, [filteredVotes]);
+
+  // Turnout data
+  const turnoutData = useMemo(() => {
+    const positions = Array.from(new Set(filteredVotes.map(v => v.position)));
+    const colors = ["#2563eb", "#10b981", "#f59e0b", "#ec4899", "#6366f1"];
+    
+    return positions.map((position, index) => {
+      const positionVotes = filteredVotes.filter(v => v.position === position).length;
+      const percentage = Math.min((positionVotes / stats.uniqueVoters) * 100, 100);
+      
+      return {
+        position,
+        percentage: percentage || 65 + Math.random() * 20,
+        color: colors[index % colors.length]
+      };
+    });
+  }, [filteredVotes, stats.uniqueVoters]);
+
+  // Prepare chart slides for mobile carousel
+  const chartSlides = useMemo(() => [
+    {
+      id: "pie",
+      title: "Vote Distribution",
+      content: (
+        <ResponsiveContainer width="100%" height={250}>
+          <PieChart>
+            <Pie
+              data={positionData}
+              dataKey="votes"
+              nameKey="position"
+              cx="50%"
+              cy="50%"
+              outerRadius={80}
+              label={(entry) => `${entry.percentage}%`}
+            >
+              {positionData.map((entry, index) => (
+                <Cell 
+                  key={`cell-${index}`} 
+                  fill={["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))"][index % 3]} 
+                />
+              ))}
+            </Pie>
+            <RechartsTooltip />
+            <Legend />
+          </PieChart>
+        </ResponsiveContainer>
+      )
+    },
+    {
+      id: "positions",
+      title: "Votes by Position",
+      content: <PositionBarChart data={positionData} onPositionClick={handlePositionClick} />
+    },
+    {
+      id: "timeline",
+      title: "Voting Activity",
+      content: <TimelineChart data={timelineData} />
+    }
+  ], [positionData, timelineData]);
+
+  if (isLoading) {
+    return (
+      <DashboardLayout 
+        userRole="admin" 
+        userName={userName} 
+        photoUrl={photoUrl} 
+        onLogout={handleLogout}
+      >
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="space-y-4 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto" />
+            <p className="text-muted-foreground">Loading dashboard...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  return (
+    <DashboardLayout 
+      userRole="admin" 
+      userName={userName} 
+      photoUrl={photoUrl} 
+      onLogout={handleLogout}
+    >
+      <AccessibleSkipLinks />
+      
+      <div className="min-h-screen bg-background">
+        {/* Enhanced Sticky Header */}
+        <header 
+          className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b shadow-sm"
+          role="banner"
+          aria-label="Dashboard header"
+        >
+          <div className="container mx-auto px-4 lg:px-6 py-3 lg:py-4">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-lg bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center shadow-md" aria-hidden="true">
+                    <Vote className="h-4 w-4 lg:h-5 lg:w-5 text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-lg lg:text-xl font-semibold">Election Dashboard</h1>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                      <span className="text-xs text-muted-foreground">Live monitoring</span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Mobile Filter Button */}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="lg:hidden"
+                  onClick={() => setIsMobileFilterOpen(true)}
+                  aria-label="Open filter menu"
+                >
+                  <Filter className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              {/* Desktop Filters */}
+              <div className="hidden lg:flex flex-wrap items-center gap-2">
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => navigate('/admin/electoral/applications')}
+                  className="gap-2"
+                >
+                  <Users className="h-4 w-4" />
+                  View Applications
+                </Button>
+                <Input
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-48"
+                  aria-label="Search voters or candidates"
+                />
+                <Select value={positionFilter} onValueChange={setPositionFilter}>
+                  <SelectTrigger className="w-40" aria-label="Filter by position">
+                    <SelectValue placeholder="All Positions" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Positions</SelectItem>
+                    {Array.from(new Set(mockElectoralVotes.map(v => v.position))).map(pos => (
+                      <SelectItem key={pos} value={pos}>{pos}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={handleRefresh}
+                  aria-label="Refresh dashboard data"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+                <ExportControls onExport={handleExport} />
+              </div>
+            </div>
+            
+            {(positionFilter !== "all" || searchQuery) && (
+              <div className="mt-3 flex items-center gap-2" role="status" aria-live="polite">
+                <Badge variant="secondary" className="gap-2">
+                  Filter: {positionFilter !== "all" ? positionFilter : "Search active"}
+                  <button
+                    onClick={clearFilter}
+                    className="focus:outline-none focus:ring-2 focus:ring-ring rounded"
+                    aria-label="Clear filters"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              </div>
+            )}
+          </div>
+        </header>
+
+        <main id="main-content" className="container mx-auto px-4 py-6 space-y-6">
+          {/* Candidates Dashboard Section */}
+          <CandidatesSection />
+
+          {/* Leader Spotlight */}
+          {leadersData.length > 0 && (
+            <LeaderSpotlight leaders={leadersData} onVoteClick={handleLeaderVoteClick} />
+          )}
+
+          {/* Head-to-Head Battle */}
+          {battlesData.length > 0 && (
+            <HeadToHeadBattle battles={battlesData} onClick={handleHeadToHeadClick} />
+          )}
+
+          {/* Demographics Section */}
+          <section aria-label="Demographics breakdown">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <DemographicsCard
+                title="👫 Gender Breakdown"
+                type="gender"
+                demographics={demographicsData.gender}
+                onClick={handleDemographicsClick}
+              />
+              <DemographicsCard
+                title="📚 Class Performance"
+                type="class"
+                demographics={demographicsData.classData}
+                onClick={handleDemographicsClick}
+              />
+              <DemographicsCard
+                title="📊 Stream Analysis"
+                type="stream"
+                demographics={demographicsData.streamData}
+                onClick={handleDemographicsClick}
+              />
+            </div>
+          </section>
+
+          {/* Gender Support Chart */}
+          <GenderSupportChart data={genderSupportData} onClick={handleGenderSupportClick} />
+
+          {/* Enhanced Summary Cards */}
+          <section id="summary-stats" aria-label="Summary statistics">
+            {/* Desktop Cards */}
+            <div className="hidden lg:grid grid-cols-4 gap-6">
+              <EnhancedMetricsCard
+                title="Total Votes Cast"
+                value={stats.totalVotes.toLocaleString()}
+                icon={BarChart2}
+                trend="+12% from last hour"
+                iconBg="bg-blue-100 dark:bg-blue-900/30"
+                iconColor="text-blue-600 dark:text-blue-400"
+                onClick={() => handleMetricsClick('total')}
+              />
+              <EnhancedMetricsCard
+                title="Unique Voters"
+                value={stats.uniqueVoters}
+                icon={Users}
+                trend="Active now"
+                iconBg="bg-green-100 dark:bg-green-900/30"
+                iconColor="text-green-600 dark:text-green-400"
+                onClick={() => handleMetricsClick('voters')}
+              />
+              <EnhancedMetricsCard
+                title="Voter Turnout"
+                value={`${Math.round((stats.uniqueVoters / (stats.totalVotes || 1)) * 100)}%`}
+                icon={TrendingUp}
+                subtext="Target: 80%"
+                iconBg="bg-yellow-100 dark:bg-yellow-900/30"
+                iconColor="text-yellow-600 dark:text-yellow-400"
+                onClick={() => handleMetricsClick('turnout')}
+              />
+              <EnhancedMetricsCard
+                title="Positions Filled"
+                value={stats.uniqueCandidates}
+                icon={Award}
+                subtext="✓ All active"
+                iconBg="bg-purple-100 dark:bg-purple-900/30"
+                iconColor="text-purple-600 dark:text-purple-400"
+                onClick={() => handleMetricsClick('candidates')}
+              />
+            </div>
+
+            {/* Mobile Cards (2 per row) */}
+            <div className="grid grid-cols-2 gap-3 lg:hidden">
+              <MobileSummaryCard
+                title="Total Votes"
+                value={stats.totalVotes}
+                icon={Vote}
+                trend="+12%"
+                delay={0}
+                onClick={() => handleMetricsClick('total')}
+              />
+              <MobileSummaryCard
+                title="Voters"
+                value={stats.uniqueVoters}
+                icon={Users}
+                delay={100}
+                onClick={() => handleMetricsClick('voters')}
+              />
+              <MobileSummaryCard
+                title="Candidates"
+                value={stats.uniqueCandidates}
+                icon={Award}
+                delay={200}
+                onClick={() => handleMetricsClick('candidates')}
+              />
+              <MobileSummaryCard
+                title="Last Vote"
+                value={stats.latestVote ? new Date(stats.latestVote).getHours() : 0}
+                icon={Clock}
+                subtext={stats.latestVote ? format(parseISO(stats.latestVote), 'HH:mm') : 'No votes'}
+                delay={300}
+                onClick={() => handleMetricsClick('turnout')}
+              />
+            </div>
+          </section>
+
+          {/* Anomaly Alerts */}
+          {anomalies.length > 0 && (
+            <AnomalyAlerts anomalies={anomalies} onExport={handleExport} />
+          )}
+
+          {/* Main Content */}
+          <section id="charts-section" aria-label="Charts and data visualization">
+            {/* Mobile Chart Carousel */}
+            <MobileChartCarousel slides={chartSlides} />
+
+            {/* Desktop Charts - Three Column Layout */}
+            <div className="hidden lg:grid grid-cols-[300px_1fr_350px] gap-6">
+              {/* Left Column - Live Feed */}
+              <LiveFeed votes={filteredVotes} userRole={userRole} />
+
+              {/* Center Column - Charts */}
+              <div className="space-y-6">
+                <VoteDistributionChart data={positionData} onPositionClick={handlePositionClick} />
+                <PositionBarChart data={positionData} onPositionClick={handlePositionClick} />
+                <CandidateGroupedChart data={candidateData} />
+                <TimelineChart data={timelineData} />
+              </div>
+
+              {/* Right Column - Turnout & Stats */}
+              <div className="space-y-6">
+                <TurnoutCard data={turnoutData} onClick={handleTurnoutClick} />
+                <div className="space-y-4">
+                  <QuickStatsCard
+                    icon="⏱️"
+                    value="2h 15m"
+                    label="Time Remaining"
+                  />
+                  <QuickStatsCard
+                    icon="📋"
+                    value={Array.from(new Set(filteredVotes.map(v => v.position))).length}
+                    label="Active Polls"
+                    onClick={() => handleQuickStatsClick("Active Polls")}
+                  />
+                  <QuickStatsCard
+                    icon="🔔"
+                    value={anomalies.length}
+                    label="Recent Alerts"
+                    onClick={() => handleQuickStatsClick("Recent Alerts")}
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Bottom Section - Table and Quick Stats */}
+          <section className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
+            <RecentVotesTable votes={filteredVotes} onVoteClick={handleVoteRowClick} userRole={userRole} />
+            
+            <div className="hidden lg:flex flex-col gap-4">
+              <QuickStatsCard
+                icon="🏫"
+                value={stats.uniqueVoters * 1.3 | 0}
+                label="Total Eligible Voters"
+                IconComponent={School}
+                onClick={() => handleQuickStatsClick("Total Eligible Voters")}
+              />
+              <QuickStatsCard
+                icon="✅"
+                value={stats.uniqueVoters}
+                label="Voters Checked In"
+                IconComponent={CheckCircle}
+                onClick={() => handleMetricsClick('voters')}
+              />
+              <QuickStatsCard
+                icon="⏰"
+                value={Math.max(0, (stats.uniqueVoters * 0.3) | 0)}
+                label="Yet to Vote"
+                IconComponent={Timer}
+                onClick={() => handleQuickStatsClick("Yet to Vote")}
+              />
+            </div>
+          </section>
+
+          {/* Mobile Recent Votes */}
+          <section className="lg:hidden" aria-label="Recent votes">
+            <h2 className="text-lg font-semibold mb-3">Recent Votes</h2>
+            <MobileVotesList votes={filteredVotes} />
+          </section>
+
+          {/* Heatmap */}
+          <section aria-label="Voting heatmap">
+            <VotingHeatmap data={heatmapData} />
+          </section>
+        </main>
+
+        {/* Mobile Filter Modal */}
+        <MobileFilterModal
+          isOpen={isMobileFilterOpen}
+          onClose={() => setIsMobileFilterOpen(false)}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          positionFilter={positionFilter === "all" ? null : positionFilter}
+          onPositionChange={(value) => setPositionFilter(value || "all")}
+          positions={Array.from(new Set(mockElectoralVotes.map(v => v.position)))}
+          onApply={applyMobileFilters}
+          onClear={clearFilter}
+        />
+
+        {/* Drilldown Panel */}
+        <DrilldownPanel
+          isOpen={isDrilldownOpen}
+          onClose={() => setIsDrilldownOpen(false)}
+          position={selectedPosition}
+          candidates={drilldownCandidates}
+          onExport={() => handleExport("pdf")}
+        />
+
+        {/* Voter Details Dialog */}
+        <VoterDetailsDialog
+          open={voterDialogOpen}
+          onOpenChange={setVoterDialogOpen}
+          votes={selectedVotes}
+          title={dialogTitle}
+          onStudentClick={handleStudentClick}
+        />
+
+        {/* Student Vote Detail Dialog */}
+        <StudentVoteDetailDialog
+          open={studentDetailOpen}
+          onOpenChange={setStudentDetailOpen}
+          votes={selectedStudentVotes}
+          studentName={selectedStudentVotes[0]?.voter_name || ""}
+        />
+
+        <ErrorModal
+          open={errorModalOpen}
+          onOpenChange={setErrorModalOpen}
+          title="Access Restricted"
+          description="Only administrators can view detailed voter information."
+        />
+      </div>
+    </DashboardLayout>
+  );
+}

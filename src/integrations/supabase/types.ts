@@ -51,55 +51,40 @@ export type Database = {
         Row: {
           absent_reason: string | null
           created_at: string | null
-          date: string
-          id: string
+          date: string | null
+          id: string | null
           marked_at: string | null
           marked_by: string | null
-          status: string
-          stream_id: string
-          student_id: string
+          status: string | null
+          stream_id: string | null
+          student_id: string | null
           updated_at: string | null
         }
         Insert: {
           absent_reason?: string | null
           created_at?: string | null
-          date: string
-          id?: string
+          date?: string | null
+          id?: string | null
           marked_at?: string | null
           marked_by?: string | null
-          status: string
-          stream_id: string
-          student_id: string
+          status?: string | null
+          stream_id?: string | null
+          student_id?: string | null
           updated_at?: string | null
         }
         Update: {
           absent_reason?: string | null
           created_at?: string | null
-          date?: string
-          id?: string
+          date?: string | null
+          id?: string | null
           marked_at?: string | null
           marked_by?: string | null
-          status?: string
-          stream_id?: string
-          student_id?: string
+          status?: string | null
+          stream_id?: string | null
+          student_id?: string | null
           updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "attendance_records_stream_id_fkey"
-            columns: ["stream_id"]
-            isOneToOne: false
-            referencedRelation: "streams"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "attendance_records_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       classes: {
         Row: {
@@ -227,6 +212,60 @@ export type Database = {
         }
         Relationships: []
       }
+      staff: {
+        Row: {
+          contact_number: number | null
+          created_at: string | null
+          default_password: number | null
+          department: string | null
+          email: string | null
+          id: string | null
+          is_active: boolean | null
+          is_verified: boolean | null
+          name: string | null
+          password_hash: string | null
+          personal_email: string | null
+          photo_url: string | null
+          responsibilities: string | null
+          role: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          contact_number?: number | null
+          created_at?: string | null
+          default_password?: number | null
+          department?: string | null
+          email?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          is_verified?: boolean | null
+          name?: string | null
+          password_hash?: string | null
+          personal_email?: string | null
+          photo_url?: string | null
+          responsibilities?: string | null
+          role?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          contact_number?: number | null
+          created_at?: string | null
+          default_password?: number | null
+          department?: string | null
+          email?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          is_verified?: boolean | null
+          name?: string | null
+          password_hash?: string | null
+          personal_email?: string | null
+          photo_url?: string | null
+          responsibilities?: string | null
+          role?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       streams: {
         Row: {
           Class: string | null
@@ -234,7 +273,7 @@ export type Database = {
           "Created At": string | null
           created_at: string | null
           Description: string | null
-          id: string
+          id: string | null
           ID: string | null
           name: string | null
           Name: string | null
@@ -248,7 +287,7 @@ export type Database = {
           "Created At"?: string | null
           created_at?: string | null
           Description?: string | null
-          id: string
+          id?: string | null
           ID?: string | null
           name?: string | null
           Name?: string | null
@@ -262,7 +301,7 @@ export type Database = {
           "Created At"?: string | null
           created_at?: string | null
           Description?: string | null
-          id?: string
+          id?: string | null
           ID?: string | null
           name?: string | null
           Name?: string | null
@@ -278,7 +317,9 @@ export type Database = {
           created_at: string | null
           default_password: string | null
           email: string | null
-          id: string
+          gender: string | null
+          id: string | null
+          is_active: boolean | null
           is_verified: boolean | null
           name: string | null
           password_hash: string | null
@@ -291,7 +332,9 @@ export type Database = {
           created_at?: string | null
           default_password?: string | null
           email?: string | null
-          id: string
+          gender?: string | null
+          id?: string | null
+          is_active?: boolean | null
           is_verified?: boolean | null
           name?: string | null
           password_hash?: string | null
@@ -304,7 +347,9 @@ export type Database = {
           created_at?: string | null
           default_password?: string | null
           email?: string | null
-          id?: string
+          gender?: string | null
+          id?: string | null
+          is_active?: boolean | null
           is_verified?: boolean | null
           name?: string | null
           password_hash?: string | null
@@ -368,6 +413,66 @@ export type Database = {
           sex?: string | null
           subjectsTaught?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      votes: {
+        Row: {
+          candidate_id: string
+          candidate_name: string
+          created_at: string
+          id: string
+          ip_address: string | null
+          position_id: string
+          position_title: string
+          session_id: string | null
+          updated_at: string
+          user_agent: string | null
+          vote_status: string
+          voted_at: string
+          voter_class: string
+          voter_email: string
+          voter_id: string
+          voter_name: string
+          voter_stream: string
+        }
+        Insert: {
+          candidate_id: string
+          candidate_name: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          position_id: string
+          position_title: string
+          session_id?: string | null
+          updated_at?: string
+          user_agent?: string | null
+          vote_status?: string
+          voted_at?: string
+          voter_class: string
+          voter_email: string
+          voter_id: string
+          voter_name: string
+          voter_stream: string
+        }
+        Update: {
+          candidate_id?: string
+          candidate_name?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          position_id?: string
+          position_title?: string
+          session_id?: string | null
+          updated_at?: string
+          user_agent?: string | null
+          vote_status?: string
+          voted_at?: string
+          voter_class?: string
+          voter_email?: string
+          voter_id?: string
+          voter_name?: string
+          voter_stream?: string
         }
         Relationships: []
       }
