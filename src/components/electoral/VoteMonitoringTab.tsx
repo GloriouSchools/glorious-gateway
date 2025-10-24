@@ -26,24 +26,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { VoterDetailsDialog } from "./VoterDetailsDialog";
-import { StudentVoteDetailDialog } from "./StudentVoteDetailDialog";
 
 interface Vote {
   id: string;
   voter_id: string;
   voter_name: string;
-  voter_email: string;
-  voter_class: string;
-  voter_stream: string;
-  voter_photo?: string;
-  position_id: string;
-  position_title: string;
   candidate_id: string;
   candidate_name: string;
+  position: string;
   voted_at: string;
-  vote_status: string;
-  ip_address?: string;
+  created_at: string;
 }
 
 interface VoteStats {
@@ -63,11 +55,6 @@ export function VoteMonitoringTab() {
   const [refreshing, setRefreshing] = useState(false);
   const [filterPosition, setFilterPosition] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [voterDialogOpen, setVoterDialogOpen] = useState(false);
-  const [selectedVotes, setSelectedVotes] = useState<Vote[]>([]);
-  const [dialogTitle, setDialogTitle] = useState("");
-  const [studentDetailOpen, setStudentDetailOpen] = useState(false);
-  const [selectedStudentVotes, setSelectedStudentVotes] = useState<Vote[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -81,7 +68,7 @@ export function VoteMonitoringTab() {
         {
           event: '*',
           schema: 'public',
-          table: 'votes'
+          table: 'electoral_votes'
         },
         () => {
           fetchVotes();
@@ -100,7 +87,7 @@ export function VoteMonitoringTab() {
       
       // Fetch votes
       const { data: votesData, error: votesError } = await supabase
-        .from('votes')
+        .from('electoral_votes')
         .select('*')
         .order('voted_at', { ascending: false });
 
@@ -154,15 +141,15 @@ export function VoteMonitoringTab() {
     const votesByCandidate: Record<string, number> = {};
     
     votesData.forEach(vote => {
-      votesByPosition[vote.position_title] = (votesByPosition[vote.position_title] || 0) + 1;
+      votesByPosition[vote.position] = (votesByPosition[vote.position] || 0) + 1;
       votesByCandidate[vote.candidate_name] = (votesByCandidate[vote.candidate_name] || 0) + 1;
     });
 
     setStats({
       total_votes: votesData.length,
-      valid_votes: votesData.filter(v => v.vote_status === 'valid').length,
-      invalid_votes: votesData.filter(v => v.vote_status === 'invalid').length,
-      verified_votes: votesData.filter(v => v.vote_status === 'verified').length,
+      valid_votes: votesData.length,
+      invalid_votes: 0,
+      verified_votes: votesData.length,
       unique_voters: uniqueVoters,
       votes_by_position: votesByPosition,
       votes_by_candidate: votesByCandidate
@@ -172,17 +159,13 @@ export function VoteMonitoringTab() {
   const downloadVotingReport = async () => {
     try {
       // Generate CSV report
-      const headers = ['Voter Name', 'Email', 'Class', 'Stream', 'Position', 'Candidate', 'Voted At', 'Status', 'IP Address'];
+      const headers = ['Voter ID', 'Voter Name', 'Position', 'Candidate', 'Voted At'];
       const rows = filteredVotes.map(vote => [
+        vote.voter_id,
         vote.voter_name,
-        vote.voter_email,
-        vote.voter_class,
-        vote.voter_stream,
-        vote.position_title,
+        vote.position,
         vote.candidate_name,
-        new Date(vote.voted_at).toLocaleString(),
-        vote.vote_status,
-        vote.ip_address || 'N/A'
+        new Date(vote.voted_at).toLocaleString()
       ]);
       
       const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
@@ -210,70 +193,13 @@ export function VoteMonitoringTab() {
     }
   };
 
-  const handleStatCardClick = (type: string) => {
-    let filteredVotes: Vote[] = [];
-    let title = "";
 
-    switch (type) {
-      case "total":
-        filteredVotes = votes;
-        title = "All Voters";
-        break;
-      case "unique":
-        filteredVotes = votes;
-        title = "Unique Voters";
-        break;
-      case "valid":
-        filteredVotes = votes.filter(v => v.vote_status === "valid");
-        title = "Valid Votes";
-        break;
-      case "invalid":
-        filteredVotes = votes.filter(v => v.vote_status === "invalid");
-        title = "Invalid Votes";
-        break;
-      case "verified":
-        filteredVotes = votes.filter(v => v.vote_status === "verified");
-        title = "Verified Votes";
-        break;
-    }
 
-    setSelectedVotes(filteredVotes);
-    setDialogTitle(title);
-    setVoterDialogOpen(true);
-  };
-
-  const handleStudentClick = (vote: Vote) => {
-    const studentVotes = votes.filter(v => v.voter_id === vote.voter_id);
-    setSelectedStudentVotes(studentVotes);
-    setVoterDialogOpen(false);
-    setStudentDetailOpen(true);
-  };
-
-  const getStatusBadge = (status: string) => {
-    const configs = {
-      valid: { color: 'bg-green-500', icon: CheckCircle2, label: 'Valid' },
-      invalid: { color: 'bg-red-500', icon: AlertCircle, label: 'Invalid' },
-      verified: { color: 'bg-blue-500', icon: CheckCircle2, label: 'Verified' },
-      contested: { color: 'bg-yellow-500', icon: AlertCircle, label: 'Contested' }
-    };
-    
-    const config = configs[status as keyof typeof configs] || configs.valid;
-    const Icon = config.icon;
-    
-    return (
-      <Badge className={`${config.color} text-white`}>
-        <Icon className="h-3 w-3 mr-1" />
-        {config.label}
-      </Badge>
-    );
-  };
-
-  const positions = [...new Set(votes.map(v => v.position_title))];
+  const positions = [...new Set(votes.map(v => v.position))];
   
   const filteredVotes = votes.filter(vote => {
-    const matchesPosition = filterPosition === "all" || vote.position_title === filterPosition;
-    const matchesStatus = filterStatus === "all" || vote.vote_status === filterStatus;
-    return matchesPosition && matchesStatus;
+    const matchesPosition = filterPosition === "all" || vote.position === filterPosition;
+    return matchesPosition;
   });
 
   if (loading) {
@@ -291,8 +217,7 @@ export function VoteMonitoringTab() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <ProfessionalCard 
           variant="elevated" 
-          className="border-l-4 border-l-blue-500 cursor-pointer hover:shadow-lg transition-shadow"
-          onClick={() => handleStatCardClick("total")}
+          className="border-l-4 border-l-blue-500"
         >
           <CardHeader className="p-4 pb-2">
             <div className="flex items-center justify-between">
@@ -304,14 +229,12 @@ export function VoteMonitoringTab() {
           </CardHeader>
           <CardContent className="p-4 pt-0">
             <div className="text-2xl font-bold text-blue-600">{stats?.total_votes || 0}</div>
-            <p className="text-xs text-muted-foreground mt-1">Click to view details</p>
           </CardContent>
         </ProfessionalCard>
 
         <ProfessionalCard 
           variant="elevated" 
-          className="border-l-4 border-l-purple-500 cursor-pointer hover:shadow-lg transition-shadow"
-          onClick={() => handleStatCardClick("unique")}
+          className="border-l-4 border-l-purple-500"
         >
           <CardHeader className="p-4 pb-2">
             <div className="flex items-center justify-between">
@@ -323,14 +246,12 @@ export function VoteMonitoringTab() {
           </CardHeader>
           <CardContent className="p-4 pt-0">
             <div className="text-2xl font-bold text-purple-600">{stats?.unique_voters || 0}</div>
-            <p className="text-xs text-muted-foreground mt-1">Click to view details</p>
           </CardContent>
         </ProfessionalCard>
 
         <ProfessionalCard 
           variant="elevated" 
-          className="border-l-4 border-l-green-500 cursor-pointer hover:shadow-lg transition-shadow"
-          onClick={() => handleStatCardClick("valid")}
+          className="border-l-4 border-l-green-500"
         >
           <CardHeader className="p-4 pb-2">
             <div className="flex items-center justify-between">
@@ -342,14 +263,12 @@ export function VoteMonitoringTab() {
           </CardHeader>
           <CardContent className="p-4 pt-0">
             <div className="text-2xl font-bold text-green-600">{stats?.valid_votes || 0}</div>
-            <p className="text-xs text-muted-foreground mt-1">Click to view details</p>
           </CardContent>
         </ProfessionalCard>
 
         <ProfessionalCard 
           variant="elevated" 
-          className="border-l-4 border-l-red-500 cursor-pointer hover:shadow-lg transition-shadow"
-          onClick={() => handleStatCardClick("invalid")}
+          className="border-l-4 border-l-red-500"
         >
           <CardHeader className="p-4 pb-2">
             <div className="flex items-center justify-between">
@@ -361,14 +280,12 @@ export function VoteMonitoringTab() {
           </CardHeader>
           <CardContent className="p-4 pt-0">
             <div className="text-2xl font-bold text-red-600">{stats?.invalid_votes || 0}</div>
-            <p className="text-xs text-muted-foreground mt-1">Click to view details</p>
           </CardContent>
         </ProfessionalCard>
 
         <ProfessionalCard 
           variant="elevated" 
-          className="border-l-4 border-l-orange-500 cursor-pointer hover:shadow-lg transition-shadow"
-          onClick={() => handleStatCardClick("verified")}
+          className="border-l-4 border-l-orange-500"
         >
           <CardHeader className="p-4 pb-2">
             <div className="flex items-center justify-between">
@@ -380,7 +297,6 @@ export function VoteMonitoringTab() {
           </CardHeader>
           <CardContent className="p-4 pt-0">
             <div className="text-2xl font-bold text-orange-600">{stats?.verified_votes || 0}</div>
-            <p className="text-xs text-muted-foreground mt-1">Click to view details</p>
           </CardContent>
         </ProfessionalCard>
       </div>
@@ -402,18 +318,6 @@ export function VoteMonitoringTab() {
                 </SelectContent>
               </Select>
 
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className="w-full sm:w-40">
-                  <SelectValue placeholder="Filter by Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="valid">Valid</SelectItem>
-                  <SelectItem value="invalid">Invalid</SelectItem>
-                  <SelectItem value="verified">Verified</SelectItem>
-                  <SelectItem value="contested">Contested</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
 
             <div className="flex gap-2 w-full sm:w-auto">
@@ -462,23 +366,18 @@ export function VoteMonitoringTab() {
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
                         <h4 className="font-semibold text-base truncate">{vote.voter_name}</h4>
-                        <p className="text-sm text-muted-foreground truncate">{vote.voter_email}</p>
+                        <p className="text-sm text-muted-foreground truncate">{vote.voter_id}</p>
                       </div>
-                      {getStatusBadge(vote.vote_status)}
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                       <div className="space-y-1">
                         <p className="text-muted-foreground text-xs font-medium">Position</p>
-                        <p className="font-medium text-primary">{vote.position_title}</p>
+                        <p className="font-medium text-primary">{vote.position}</p>
                       </div>
                       <div className="space-y-1">
                         <p className="text-muted-foreground text-xs font-medium">Voted For</p>
                         <p className="font-medium">{vote.candidate_name}</p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-muted-foreground text-xs font-medium">Class & Stream</p>
-                        <p className="font-medium">{vote.voter_class} - {vote.voter_stream}</p>
                       </div>
                       <div className="space-y-1">
                         <p className="text-muted-foreground text-xs font-medium">Voted At</p>
@@ -496,21 +395,6 @@ export function VoteMonitoringTab() {
         </div>
       )}
 
-      {/* Dialogs */}
-      <VoterDetailsDialog
-        open={voterDialogOpen}
-        onOpenChange={setVoterDialogOpen}
-        votes={selectedVotes}
-        title={dialogTitle}
-        onStudentClick={handleStudentClick}
-      />
-      
-      <StudentVoteDetailDialog
-        open={studentDetailOpen}
-        onOpenChange={setStudentDetailOpen}
-        votes={selectedStudentVotes}
-        studentName={selectedStudentVotes[0]?.voter_name || ""}
-      />
     </div>
   );
 }

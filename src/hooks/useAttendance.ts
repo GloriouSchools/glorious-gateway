@@ -81,8 +81,8 @@ export const useStreams = () => {
       // Map database streams to our Stream interface
       const streams: Stream[] = (data as DbStream[]).map(stream => ({
         id: stream.id || '',
-        name: stream.name || stream.Name || '',
-        class_id: stream.class_id || stream.Class || ''
+        name: stream.name || '',
+        class_id: stream.class_id || ''
       }));
 
       return streams;

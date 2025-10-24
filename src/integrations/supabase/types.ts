@@ -212,101 +212,59 @@ export type Database = {
         }
         Relationships: []
       }
-      staff: {
+      electoral_votes: {
         Row: {
-          contact_number: number | null
+          candidate_id: string
+          candidate_name: string
           created_at: string | null
-          default_password: number | null
-          department: string | null
-          email: string | null
-          id: string | null
-          is_active: boolean | null
-          is_verified: boolean | null
-          name: string | null
-          password_hash: string | null
-          personal_email: string | null
-          photo_url: string | null
-          responsibilities: string | null
-          role: string | null
-          updated_at: string | null
+          id: string
+          position: string
+          voted_at: string | null
+          voter_id: string
+          voter_name: string
         }
         Insert: {
-          contact_number?: number | null
+          candidate_id: string
+          candidate_name: string
           created_at?: string | null
-          default_password?: number | null
-          department?: string | null
-          email?: string | null
-          id?: string | null
-          is_active?: boolean | null
-          is_verified?: boolean | null
-          name?: string | null
-          password_hash?: string | null
-          personal_email?: string | null
-          photo_url?: string | null
-          responsibilities?: string | null
-          role?: string | null
-          updated_at?: string | null
+          id?: string
+          position: string
+          voted_at?: string | null
+          voter_id: string
+          voter_name: string
         }
         Update: {
-          contact_number?: number | null
+          candidate_id?: string
+          candidate_name?: string
           created_at?: string | null
-          default_password?: number | null
-          department?: string | null
-          email?: string | null
-          id?: string | null
-          is_active?: boolean | null
-          is_verified?: boolean | null
-          name?: string | null
-          password_hash?: string | null
-          personal_email?: string | null
-          photo_url?: string | null
-          responsibilities?: string | null
-          role?: string | null
-          updated_at?: string | null
+          id?: string
+          position?: string
+          voted_at?: string | null
+          voter_id?: string
+          voter_name?: string
         }
         Relationships: []
       }
       streams: {
         Row: {
-          Class: string | null
           class_id: string | null
-          "Created At": string | null
           created_at: string | null
-          Description: string | null
           id: string | null
-          ID: string | null
           name: string | null
-          Name: string | null
-          Students: string | null
-          "Updated At": string | null
           updated_at: string | null
         }
         Insert: {
-          Class?: string | null
           class_id?: string | null
-          "Created At"?: string | null
           created_at?: string | null
-          Description?: string | null
           id?: string | null
-          ID?: string | null
           name?: string | null
-          Name?: string | null
-          Students?: string | null
-          "Updated At"?: string | null
           updated_at?: string | null
         }
         Update: {
-          Class?: string | null
           class_id?: string | null
-          "Created At"?: string | null
           created_at?: string | null
-          Description?: string | null
           id?: string | null
-          ID?: string | null
           name?: string | null
-          Name?: string | null
-          Students?: string | null
-          "Updated At"?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -413,66 +371,6 @@ export type Database = {
           sex?: string | null
           subjectsTaught?: string | null
           updated_at?: string | null
-        }
-        Relationships: []
-      }
-      votes: {
-        Row: {
-          candidate_id: string
-          candidate_name: string
-          created_at: string
-          id: string
-          ip_address: string | null
-          position_id: string
-          position_title: string
-          session_id: string | null
-          updated_at: string
-          user_agent: string | null
-          vote_status: string
-          voted_at: string
-          voter_class: string
-          voter_email: string
-          voter_id: string
-          voter_name: string
-          voter_stream: string
-        }
-        Insert: {
-          candidate_id: string
-          candidate_name: string
-          created_at?: string
-          id?: string
-          ip_address?: string | null
-          position_id: string
-          position_title: string
-          session_id?: string | null
-          updated_at?: string
-          user_agent?: string | null
-          vote_status?: string
-          voted_at?: string
-          voter_class: string
-          voter_email: string
-          voter_id: string
-          voter_name: string
-          voter_stream: string
-        }
-        Update: {
-          candidate_id?: string
-          candidate_name?: string
-          created_at?: string
-          id?: string
-          ip_address?: string | null
-          position_id?: string
-          position_title?: string
-          session_id?: string | null
-          updated_at?: string
-          user_agent?: string | null
-          vote_status?: string
-          voted_at?: string
-          voter_class?: string
-          voter_email?: string
-          voter_id?: string
-          voter_name?: string
-          voter_stream?: string
         }
         Relationships: []
       }

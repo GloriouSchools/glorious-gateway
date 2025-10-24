@@ -73,8 +73,9 @@ export function AddStudentModal({
   const onSubmit = async (data: StudentFormData) => {
     setLoading(true);
     try {
-      // Generate a 4-digit password with leading zeros and student ID
-      const defaultPassword = generateSecurePassword();
+      // Generate a 4-digit password with leading zeros (0001-9999)
+      const randomNum = Math.floor(Math.random() * 10000);
+      const defaultPassword = randomNum.toString().padStart(4, '0');
       const studentId = `STU${Date.now()}${Math.random().toString(36).slice(-4)}`;
 
       const { error } = await supabase.from("students").insert([

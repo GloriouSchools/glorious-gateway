@@ -371,40 +371,13 @@ export default function Vote() {
     };
     
     const { error } = await supabase
-      .from('votes')
+      .from('electoral_votes')
       .insert({
         voter_id: user.id,
         voter_name: studentData.name,
-        voter_email: studentData.email,
-        voter_class: studentData.classes?.name || '',
-        voter_stream: studentData.streams?.name || '',
-        position_id: positionId,
-        position_title: position.title,
         candidate_id: candidateId,
         candidate_name: candidate.name,
-        vote_status: locationDenied ? 'invalid' : 'valid',
-        session_id: crypto.randomUUID(),
-        ip_address: 'internal',
-        user_agent: navigator.userAgent,
-        device_type: deviceInfo.device,
-        browser: deviceInfo.browser,
-        operating_system: deviceInfo.os,
-        screen_resolution: deviceInfo.screenResolution,
-        timezone: deviceInfo.timezone,
-        language: deviceInfo.language,
-        latitude: locationInfo.latitude,
-        longitude: locationInfo.longitude,
-        location_accuracy: locationInfo.accuracy,
-        canvas_fingerprint: fingerprintInfo.canvasFingerprint,
-        webgl_fingerprint: fingerprintInfo.webglFingerprint,
-        installed_fonts: fingerprintInfo.installedFonts.join(','),
-        battery_level: fingerprintInfo.batteryLevel,
-        battery_charging: fingerprintInfo.batteryCharging,
-        mouse_movement_count: behaviorAnalytics.mouse_movement_count,
-        average_mouse_speed: behaviorAnalytics.average_mouse_speed,
-        typing_speed: behaviorAnalytics.average_typing_speed,
-        click_count: behaviorAnalytics.click_count,
-        behavior_signature: behaviorAnalytics.behavior_signature
+        position: position.title,
       });
     
     if (error) throw error;
