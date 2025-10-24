@@ -30,6 +30,7 @@ import { parseStudentCSV, StudentCSVRow } from '@/utils/csvParser';
 import studentsCSV from '@/data/students.csv?raw';
 import AttendanceOverview from "./admin/AttendanceOverview";
 import { supabase } from "@/integrations/supabase/client";
+import { EmptyAttendanceState } from "@/components/attendance/EmptyAttendanceState";
 
 interface Student {
   id: string;
@@ -100,7 +101,7 @@ const realClasses: ClassInfo[] = buildClassList();
 const AttendanceMarking = () => {
   const { userRole, userName, photoUrl, signOut } = useAuth();
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [selectedClass, setSelectedClass] = useState(realClasses[0].id);
+  const [selectedClass, setSelectedClass] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [attendanceRecords, setAttendanceRecords] = useState<{ [key: string]: AttendanceRecord }>({});
   const [isSaving, setIsSaving] = useState(false);
@@ -346,16 +347,18 @@ const AttendanceMarking = () => {
               Roll call and attendance marking for your classes
             </p>
           </div>
-          <div className="flex justify-center md:justify-end">
-            <Button 
-              onClick={saveAttendance} 
-              disabled={isSaving || stats.marked === 0}
-              className="bg-primary hover:bg-primary/90 w-full sm:w-auto"
-            >
-              <Save className="h-4 w-4 mr-2" />
-              {isSaving ? "Saving..." : "Update Attendance"}
-            </Button>
-          </div>
+          {selectedClass && (
+            <div className="flex justify-center md:justify-end">
+              <Button 
+                onClick={saveAttendance} 
+                disabled={isSaving || stats.marked === 0}
+                className="bg-primary hover:bg-primary/90 w-full sm:w-auto"
+              >
+                <Save className="h-4 w-4 mr-2" />
+                {isSaving ? "Saving..." : "Update Attendance"}
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Class and Date Selection */}
@@ -391,7 +394,7 @@ const AttendanceMarking = () => {
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Select value={selectedClass} onValueChange={setSelectedClass}>
                     <SelectTrigger className="w-full sm:flex-1">
-                      <SelectValue placeholder="Select class" />
+                      <SelectValue placeholder="Select a class" />
                     </SelectTrigger>
                     <SelectContent className="bg-background border z-50">
                       {realClasses.map(cls => (
@@ -402,219 +405,228 @@ const AttendanceMarking = () => {
                     </SelectContent>
                   </Select>
                   
-                  <div className="relative w-full sm:flex-1">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                    <Input 
-                      placeholder="Search students..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-              </div>
-          </CardContent>
-        </Card>
-
-        {/* Attendance Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="hover-scale">
-            <CardContent className="p-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold">{stats.total}</div>
-                <div className="text-sm text-muted-foreground">Total Students</div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="hover-scale">
-            <CardContent className="p-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-gray-600">{stats.marked}</div>
-                <div className="text-sm text-muted-foreground">Marked</div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="hover-scale">
-            <CardContent className="p-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-emerald-600">{stats.present}</div>
-                <div className="text-sm text-muted-foreground">Present</div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="hover-scale">
-            <CardContent className="p-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-red-600">{stats.absent}</div>
-                <div className="text-sm text-muted-foreground">Absent</div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Quick Actions
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              <Button 
-                onClick={markAllPresent}
-                variant="outline"
-                className="text-emerald-600 border-emerald-200 hover:bg-emerald-50"
-              >
-                <CheckCircle className="h-4 w-4 mr-2" />
-                Mark All Present
-              </Button>
-              <Button 
-                onClick={markAllAbsent}
-                variant="outline"
-                className="text-red-600 border-red-200 hover:bg-red-50"
-              >
-                <XCircle className="h-4 w-4 mr-2" />
-                Mark All Absent
-              </Button>
-              <Button 
-                onClick={() => setAttendanceRecords({})}
-                variant="outline"
-              >
-                Clear All
-              </Button>
-              <Button 
-                variant="outline"
-                onClick={() => {
-                  const csvContent = [
-                    ['Name', 'Email', 'Class', 'Stream', 'Status'].join(','),
-                    ...filteredStudents.map(s => {
-                      const record = attendanceRecords[s.id];
-                      return [s.name, s.email, s.class, s.stream, record?.status || 'not-marked'].join(',');
-                    })
-                  ].join('\n');
-                  const blob = new Blob([csvContent], { type: 'text/csv' });
-                  const url = window.URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = `attendance-${currentClass?.name}-${format(selectedDate, 'yyyy-MM-dd')}.csv`;
-                  a.click();
-                  window.URL.revokeObjectURL(url);
-                }}
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Export Report
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Student List */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <UserCheck className="h-5 w-5" />
-              Student Roll Call - {currentClass?.name}
-            </CardTitle>
-            <CardDescription>
-              Mark attendance for each student by clicking the status buttons
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {filteredStudents.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No students found matching your search criteria</p>
-                </div>
-              ) : (
-                filteredStudents.map((student) => {
-                  const record = attendanceRecords[student.id];
-                  return (
-                    <div 
-                      key={student.id} 
-                      className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-lg border bg-card hover:bg-accent/20 transition-colors"
-                    >
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        {student.photoUrl ? (
-                          <img 
-                            src={student.photoUrl} 
-                            alt={student.name}
-                            className="w-10 h-10 rounded-full object-cover flex-shrink-0"
-                            onError={(e) => {
-                              // Fallback to initials if image fails to load
-                              e.currentTarget.style.display = 'none';
-                              e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                            }}
-                          />
-                        ) : null}
-                        <div className={`w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 ${student.photoUrl ? 'hidden' : ''}`}>
-                          <span className="text-sm font-semibold">
-                            {student.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                          </span>
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <h3 
-                            className="font-semibold truncate cursor-pointer hover:text-primary transition-colors"
-                            onClick={() => handleStudentClick(student)}
-                          >
-                            {student.name}
-                          </h3>
-                          <p className="text-sm text-muted-foreground truncate">
-                            {student.email}
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex flex-col items-end gap-2 w-full sm:w-auto">
-                        {/* Segmented Control for Attendance */}
-                        <div className="flex rounded-lg border bg-muted p-1 w-full sm:w-auto">
-                          <button
-                            onClick={() => markAttendance(student.id, 'present')}
-                            className={`flex-1 sm:flex-none px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                              record?.status === 'present'
-                                ? 'bg-emerald-600 text-white shadow-sm'
-                                : 'text-muted-foreground hover:text-foreground'
-                            }`}
-                          >
-                            <div className="flex items-center justify-center gap-1">
-                              <CheckCircle className="h-4 w-4" />
-                              <span>Present</span>
-                            </div>
-                          </button>
-                          <button
-                            onClick={() => handleAbsentClick(student)}
-                            className={`flex-1 sm:flex-none px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                              record?.status === 'absent'
-                                ? 'bg-red-600 text-white shadow-sm'
-                                : 'text-muted-foreground hover:text-foreground'
-                            }`}
-                          >
-                            <div className="flex items-center justify-center gap-1">
-                              <XCircle className="h-4 w-4" />
-                              <span>Absent</span>
-                            </div>
-                          </button>
-                        </div>
-                        
-                        {/* Show absence reason if student is marked absent */}
-                        {record?.status === 'absent' && record.absentReason && (
-                          <div className="text-xs text-muted-foreground bg-red-50 dark:bg-red-950/20 px-2 py-1 rounded border border-red-200 dark:border-red-900">
-                            <span className="font-medium">Reason:</span> {record.absentReason}
-                          </div>
-                        )}
-                      </div>
+                  {selectedClass && (
+                    <div className="relative w-full sm:flex-1">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                      <Input 
+                        placeholder="Search students..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10"
+                      />
                     </div>
-                  );
-                })
-              )}
-            </div>
+                  )}
+                </div>
+              </div>
           </CardContent>
         </Card>
+
+        {/* Empty State or Attendance Content */}
+        {!selectedClass ? (
+          <EmptyAttendanceState />
+        ) : (
+          <>
+            {/* Attendance Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Card className="hover-scale">
+                <CardContent className="p-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold">{stats.total}</div>
+                    <div className="text-sm text-muted-foreground">Total Students</div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="hover-scale">
+                <CardContent className="p-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-gray-600">{stats.marked}</div>
+                    <div className="text-sm text-muted-foreground">Marked</div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="hover-scale">
+                <CardContent className="p-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-emerald-600">{stats.present}</div>
+                    <div className="text-sm text-muted-foreground">Present</div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="hover-scale">
+                <CardContent className="p-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-red-600">{stats.absent}</div>
+                    <div className="text-sm text-muted-foreground">Absent</div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Quick Actions */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Quick Actions
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  <Button 
+                    onClick={markAllPresent}
+                    variant="outline"
+                    className="text-emerald-600 border-emerald-200 hover:bg-emerald-50"
+                  >
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Mark All Present
+                  </Button>
+                  <Button 
+                    onClick={markAllAbsent}
+                    variant="outline"
+                    className="text-red-600 border-red-200 hover:bg-red-50"
+                  >
+                    <XCircle className="h-4 w-4 mr-2" />
+                    Mark All Absent
+                  </Button>
+                  <Button 
+                    onClick={() => setAttendanceRecords({})}
+                    variant="outline"
+                  >
+                    Clear All
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      const csvContent = [
+                        ['Name', 'Email', 'Class', 'Stream', 'Status'].join(','),
+                        ...filteredStudents.map(s => {
+                          const record = attendanceRecords[s.id];
+                          return [s.name, s.email, s.class, s.stream, record?.status || 'not-marked'].join(',');
+                        })
+                      ].join('\n');
+                      const blob = new Blob([csvContent], { type: 'text/csv' });
+                      const url = window.URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `attendance-${currentClass?.name}-${format(selectedDate, 'yyyy-MM-dd')}.csv`;
+                      a.click();
+                      window.URL.revokeObjectURL(url);
+                    }}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Export Report
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Student List */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <UserCheck className="h-5 w-5" />
+                  Student Roll Call - {currentClass?.name}
+                </CardTitle>
+                <CardDescription>
+                  Mark attendance for each student by clicking the status buttons
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {filteredStudents.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>No students found matching your search criteria</p>
+                    </div>
+                  ) : (
+                    filteredStudents.map((student) => {
+                      const record = attendanceRecords[student.id];
+                      return (
+                        <div 
+                          key={student.id} 
+                          className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-lg border bg-card hover:bg-accent/20 transition-colors"
+                        >
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            {student.photoUrl ? (
+                              <img 
+                                src={student.photoUrl} 
+                                alt={student.name}
+                                className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                                onError={(e) => {
+                                  // Fallback to initials if image fails to load
+                                  e.currentTarget.style.display = 'none';
+                                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                                }}
+                              />
+                            ) : null}
+                            <div className={`w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 ${student.photoUrl ? 'hidden' : ''}`}>
+                              <span className="text-sm font-semibold">
+                                {student.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                              </span>
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <h3 
+                                className="font-semibold truncate cursor-pointer hover:text-primary transition-colors"
+                                onClick={() => handleStudentClick(student)}
+                              >
+                                {student.name}
+                              </h3>
+                              <p className="text-sm text-muted-foreground truncate">
+                                {student.email}
+                              </p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex flex-col items-end gap-2 w-full sm:w-auto">
+                            {/* Segmented Control for Attendance */}
+                            <div className="flex rounded-lg border bg-muted p-1 w-full sm:w-auto">
+                              <button
+                                onClick={() => markAttendance(student.id, 'present')}
+                                className={`flex-1 sm:flex-none px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                                  record?.status === 'present'
+                                    ? 'bg-emerald-600 text-white shadow-sm'
+                                    : 'text-muted-foreground hover:text-foreground'
+                                }`}
+                              >
+                                <div className="flex items-center justify-center gap-1">
+                                  <CheckCircle className="h-4 w-4" />
+                                  <span>Present</span>
+                                </div>
+                              </button>
+                              <button
+                                onClick={() => handleAbsentClick(student)}
+                                className={`flex-1 sm:flex-none px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                                  record?.status === 'absent'
+                                    ? 'bg-red-600 text-white shadow-sm'
+                                    : 'text-muted-foreground hover:text-foreground'
+                                }`}
+                              >
+                                <div className="flex items-center justify-center gap-1">
+                                  <XCircle className="h-4 w-4" />
+                                  <span>Absent</span>
+                                </div>
+                              </button>
+                            </div>
+                            
+                            {/* Show absence reason if student is marked absent */}
+                            {record?.status === 'absent' && record.absentReason && (
+                              <div className="text-xs text-muted-foreground bg-red-50 dark:bg-red-950/20 px-2 py-1 rounded border border-red-200 dark:border-red-900">
+                                <span className="font-medium">Reason:</span> {record.absentReason}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
 
         {/* Student Details Modal */}
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>

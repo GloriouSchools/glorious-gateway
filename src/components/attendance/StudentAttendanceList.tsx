@@ -6,8 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, UserCheck, UserX, Download } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { parseStudentCSV } from '@/utils/csvParser';
-import studentsCSV from '@/data/students.csv?raw';
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { generateAttendancePDF } from '@/utils/pdfGenerator';
@@ -36,9 +34,8 @@ export const StudentAttendanceList = ({ students }: StudentAttendanceListProps) 
   const observerTarget = useRef<HTMLDivElement>(null);
   const ITEMS_PER_PAGE = 20;
 
-  // Get unique streams
-  const allStudentsData = parseStudentCSV(studentsCSV);
-  const streams = Array.from(new Set(allStudentsData.map(s => s.stream_id))).sort();
+  // Get unique streams from students prop
+  const streams = Array.from(new Set(students.map(s => s.stream))).sort();
 
   // Filter students based on selected criteria
   let filteredStudents = students.filter(student =>

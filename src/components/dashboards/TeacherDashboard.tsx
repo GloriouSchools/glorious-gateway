@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -60,6 +62,18 @@ export function TeacherDashboard() {
   const [currentQuote, setCurrentQuote] = useState<PhotoQuote>({ src: '/placeholder.svg', alt: 'Loading quote...' });
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
 
+  // Fetch real student count from database
+  const { data: studentsCount } = useQuery({
+    queryKey: ['students-count'],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('students')
+        .select('*', { count: 'exact', head: true });
+      if (error) throw error;
+      return count || 0;
+    }
+  });
+
   // Get time-based greeting and load quote on component mount
   useEffect(() => {
     setGreeting(getTimeBasedGreeting());
@@ -105,7 +119,7 @@ export function TeacherDashboard() {
       description: 'View and manage your students',
       icon: Users,
       color: 'from-purple-400 to-pink-400',
-      stats: '156 Students',
+      stats: `${studentsCount || 0} Students`,
       action: 'View Students',
       route: '/teacher/students'
     },
@@ -243,7 +257,7 @@ export function TeacherDashboard() {
   ];
 
   const quickStats = [
-    { label: 'Total Students', value: '156', icon: GraduationCap, color: 'text-blue-500', route: '/teacher/classes', clickable: true },
+    { label: 'Total Students', value: studentsCount?.toString() || '0', icon: GraduationCap, color: 'text-blue-500', route: '/teacher/classes', clickable: true },
     { label: 'Classes Today', value: '5', icon: BookOpen, color: 'text-green-500', route: '/teacher/schedule', clickable: true },
     { label: 'Pending Grades', value: '23', icon: ClipboardList, color: 'text-orange-500', route: '/teacher/grades', clickable: true },
     { label: 'Average Score', value: '82%', icon: TrendingUp, color: 'text-purple-500', route: '/teacher/grades', clickable: true }

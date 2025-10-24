@@ -39,7 +39,11 @@ export const useStudents = (streamId?: string) => {
     queryFn: async () => {
       let query = supabase
         .from('students')
-        .select('*')
+        .select(`
+          *,
+          class:classes(name),
+          stream:streams(name)
+        `)
         .order('name');
 
       if (streamId) {
@@ -51,12 +55,12 @@ export const useStudents = (streamId?: string) => {
       if (error) throw error;
       
       // Map database students to our Student interface
-      const students: Student[] = (data as DbStudent[]).map(student => ({
+      const students: Student[] = (data as any[]).map((student: any) => ({
         id: student.id || '',
         name: student.name || '',
         student_id: student.id || '',
-        grade: student.class_id || '',
-        section: '',
+        grade: student.class?.name || student.class_id || '',
+        section: student.stream?.name || student.stream_id || '',
         photo_url: student.photo_url || undefined,
         class_id: student.class_id || undefined,
         stream_id: student.stream_id || undefined

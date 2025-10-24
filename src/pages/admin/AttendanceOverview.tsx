@@ -1,55 +1,36 @@
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useAuth } from "@/hooks/useAuth";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { AttendanceStats } from "@/components/attendance/AttendanceStats";
 import { ClassAttendanceTable } from "@/components/attendance/ClassAttendanceTable";
+import { EmptyAttendanceState } from "@/components/attendance/EmptyAttendanceState";
 import { format, addDays } from "date-fns";
-import { parseStudentCSV } from '@/utils/csvParser';
-import studentsCSV from '@/data/students.csv?raw';
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-
-// Parse student data
-const allStudents = parseStudentCSV(studentsCSV).map(row => ({
-  id: row.id,
-  name: row.name,
-  email: row.email,
-  class: row.class_id,
-  stream: row.stream_id,
-  photoUrl: row.photo_url
-}));
-
-// Build class list
-const buildClassList = () => {
-  const classMap = new Map();
-  allStudents.forEach(student => {
-    if (!classMap.has(student.stream)) {
-      classMap.set(student.stream, {
-        id: student.stream,
-        name: student.stream.replace('-', ' - '),
-        students: []
-      });
-    }
-    classMap.get(student.stream).students.push(student);
-  });
-  return Array.from(classMap.values()).sort((a, b) => a.id.localeCompare(b.id));
-};
-
-const classList = buildClassList();
 
 const AttendanceOverview = () => {
   const { userRole, userName, photoUrl, signOut } = useAuth();
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [attendanceData, setAttendanceData] = useState<any>({});
+  const [allStudents, setAllStudents] = useState<any[]>([]);
+  const [classList, setClassList] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasViewedData, setHasViewedData] = useState(false);
+  
+  // Load students from database
+  useEffect(() => {
+    loadStudents();
+  }, []);
   
   // Load attendance from database
   useEffect(() => {
-    loadAttendance();
+    if (allStudents.length > 0) {
+      loadAttendance();
+    }
     
     // Subscribe to realtime changes
     const channel = supabase
@@ -70,7 +51,52 @@ const AttendanceOverview = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [selectedDate]);
+  }, [selectedDate, allStudents]);
+
+  const loadStudents = async () => {
+    try {
+      setIsLoading(true);
+      const { data: students, error } = await supabase
+        .from('students')
+        .select('id, name, email, class_id, stream_id, photo_url')
+        .order('class_id')
+        .order('stream_id')
+        .order('name')
+        .limit(10000);
+      
+      if (error) throw error;
+      
+      const formattedStudents = students?.map(s => ({
+        id: s.id,
+        name: s.name,
+        email: s.email,
+        class: s.class_id,
+        stream: s.stream_id,
+        photoUrl: s.photo_url
+      })) || [];
+      
+      setAllStudents(formattedStudents);
+      
+      // Build class list from database students
+      const classMap = new Map();
+      formattedStudents.forEach(student => {
+        if (!classMap.has(student.stream)) {
+          classMap.set(student.stream, {
+            id: student.stream,
+            name: student.stream.replace('-', ' - '),
+            students: []
+          });
+        }
+        classMap.get(student.stream).students.push(student);
+      });
+      setClassList(Array.from(classMap.values()).sort((a, b) => a.id.localeCompare(b.id)));
+      
+    } catch (error) {
+      console.error('Error loading students:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   const loadAttendance = async () => {
     try {
@@ -130,10 +156,11 @@ const AttendanceOverview = () => {
   });
 
   const handleClassClick = (classId: string) => {
+    setHasViewedData(true);
     navigate(`/admin/attendance/details?class=${classId}`);
   };
 
-  if (!userRole) return null;
+  if (!userRole || isLoading) return null;
 
   return (
     <DashboardLayout
@@ -156,39 +183,47 @@ const AttendanceOverview = () => {
         </div>
 
         {/* Date Selection */}
-        <Card>
-          <CardContent className="p-3 sm:p-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-              <div className="flex items-center gap-2 shrink-0">
-                <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
-                <span className="text-xs sm:text-sm font-medium text-muted-foreground whitespace-nowrap">Viewing Date:</span>
+        {hasViewedData && (
+          <Card>
+            <CardContent className="p-3 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                <div className="flex items-center gap-2 shrink-0">
+                  <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
+                  <span className="text-xs sm:text-sm font-medium text-muted-foreground whitespace-nowrap">Viewing Date:</span>
+                </div>
+                <div className="flex items-center gap-2 min-w-0">
+                  <Button variant="outline" size="sm" onClick={() => navigateDate('prev')} className="shrink-0">
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <span className="font-semibold text-xs sm:text-sm text-center min-w-0 truncate sm:whitespace-nowrap px-2">
+                    {format(selectedDate, 'EEE, MMM d, yyyy')}
+                  </span>
+                  <Button variant="outline" size="sm" onClick={() => navigateDate('next')} className="shrink-0">
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-              <div className="flex items-center gap-2 min-w-0">
-                <Button variant="outline" size="sm" onClick={() => navigateDate('prev')} className="shrink-0">
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <span className="font-semibold text-xs sm:text-sm text-center min-w-0 truncate sm:whitespace-nowrap px-2">
-                  {format(selectedDate, 'EEE, MMM d, yyyy')}
-                </span>
-                <Button variant="outline" size="sm" onClick={() => navigateDate('next')} className="shrink-0">
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
-        {/* Statistics Cards */}
-        <AttendanceStats
-          totalStudents={totalStudents}
-          present={presentCount}
-          absent={absentCount}
-          pending={pendingCount}
-          attendanceRate={attendanceRate}
-        />
+        {/* Statistics Cards - only show after viewing data */}
+        {hasViewedData && (
+          <AttendanceStats
+            totalStudents={totalStudents}
+            present={presentCount}
+            absent={absentCount}
+            pending={pendingCount}
+            attendanceRate={attendanceRate}
+          />
+        )}
 
-        {/* Class-wise Table */}
-        <ClassAttendanceTable classData={classData} onClassClick={handleClassClick} />
+        {/* Empty State or Class Table */}
+        {!hasViewedData ? (
+          <EmptyAttendanceState />
+        ) : (
+          <ClassAttendanceTable classData={classData} onClassClick={handleClassClick} />
+        )}
       </div>
     </DashboardLayout>
   );

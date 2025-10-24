@@ -7,8 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Download, Search } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { parseStudentCSV } from '@/utils/csvParser';
-import studentsCSV from '@/data/students.csv?raw';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
@@ -18,37 +16,7 @@ import { generateAttendancePDF } from "@/utils/pdfGenerator";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 
-const allStudents = parseStudentCSV(studentsCSV).map(row => ({
-  id: row.id,
-  name: row.name,
-  email: row.email,
-  class: row.class_id,
-  stream: row.stream_id,
-  photoUrl: row.photo_url
-}));
-
-const generateMockAttendance = () => {
-  const attendance: any = {};
-  allStudents.forEach(student => {
-    const rand = Math.random();
-    attendance[student.id] = {
-      status: rand > 0.85 ? 'not-marked' : (rand > 0.15 ? 'present' : 'absent'),
-      timeMarked: rand > 0.85 ? null : new Date().toISOString()
-    };
-  });
-  return attendance;
-};
-
 const ITEMS_PER_PAGE = 20;
-
-// Build unique stream list from all students
-const buildStreamList = () => {
-  const streams = new Set<string>();
-  allStudents.forEach(student => streams.add(student.stream));
-  return Array.from(streams).sort();
-};
-
-const streamList = buildStreamList();
 
 const AttendanceDetails = () => {
   const { userRole, userName, photoUrl, signOut } = useAuth();
@@ -63,11 +31,57 @@ const AttendanceDetails = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [attendanceData, setAttendanceData] = useState<any>({});
   const [isDownloading, setIsDownloading] = useState(false);
+  const [allStudents, setAllStudents] = useState<any[]>([]);
+  const [streamList, setStreamList] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load students from database
+  useEffect(() => {
+    loadStudents();
+  }, []);
 
   // Load attendance from database
   useEffect(() => {
-    loadAttendance();
-  }, []);
+    if (allStudents.length > 0) {
+      loadAttendance();
+    }
+  }, [allStudents]);
+
+  const loadStudents = async () => {
+    try {
+      setIsLoading(true);
+      const { data: students, error } = await supabase
+        .from('students')
+        .select('id, name, email, class_id, stream_id, photo_url')
+        .order('class_id')
+        .order('stream_id')
+        .order('name')
+        .limit(10000);
+      
+      if (error) throw error;
+      
+      const formattedStudents = students?.map(s => ({
+        id: s.id,
+        name: s.name,
+        email: s.email,
+        class: s.class_id,
+        stream: s.stream_id,
+        photoUrl: s.photo_url
+      })) || [];
+      
+      setAllStudents(formattedStudents);
+      
+      // Build unique stream list
+      const streams = new Set<string>();
+      formattedStudents.forEach(student => streams.add(student.stream));
+      setStreamList(Array.from(streams).sort());
+      
+    } catch (error) {
+      console.error('Error loading students:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const loadAttendance = async () => {
     try {
@@ -214,7 +228,7 @@ const AttendanceDetails = () => {
     return <Badge variant="outline">Not Marked</Badge>;
   };
 
-  if (!userRole) return null;
+  if (!userRole || isLoading) return null;
 
   return (
     <DashboardLayout userRole={userRole} userName={userName || "Admin"} photoUrl={photoUrl} onLogout={handleLogout}>
