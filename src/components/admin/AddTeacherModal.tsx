@@ -82,7 +82,7 @@ export function AddTeacherModal({
           subjectsTaught: data.subjectsTaught,
           classesTaught: data.classesTaught || null,
           photo_url: data.photo_url || null,
-          default_password: defaultPassword,
+          default_password: parseInt(defaultPassword),
           is_verified: false,
         },
       ]);

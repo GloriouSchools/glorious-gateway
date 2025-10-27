@@ -28,6 +28,7 @@ import ClassesList from "./pages/admin/ClassesList";
 import StreamsList from "./pages/admin/StreamsList";
 import ElectoralApplications from "./pages/admin/ElectoralApplications";
 import ElectoralDashboard from "./pages/admin/ElectoralDashboard";
+import BallotGeneration from "./pages/admin/BallotGeneration";
 import AdminGallery from "./pages/admin/AdminGallery";
 import StockManagement from "./pages/admin/StockManagement";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
@@ -60,6 +61,10 @@ import MovieDetail from "./pages/MovieDetail";
 import StudentAttendanceView from "./pages/student/StudentAttendanceView";
 import AttendanceDetails from "./pages/admin/AttendanceDetails";
 import StudentAttendanceSummary from "./pages/admin/StudentAttendanceSummary";
+import Friends from "./pages/Friends";
+import FriendRequests from "./pages/FriendRequests";
+import Classmates from "./pages/Classmates";
+import Streammates from "./pages/Streammates";
 
 const queryClient = new QueryClient();
 
@@ -239,6 +244,28 @@ const App = () => (
                   <Vote />
                 </ProtectedRoute>
               } />
+              
+              {/* Student Social Routes */}
+              <Route path="/friends" element={
+                <ProtectedRoute>
+                  <Friends />
+                </ProtectedRoute>
+              } />
+              <Route path="/friend-requests" element={
+                <ProtectedRoute>
+                  <FriendRequests />
+                </ProtectedRoute>
+              } />
+              <Route path="/classmates" element={
+                <ProtectedRoute>
+                  <Classmates />
+                </ProtectedRoute>
+              } />
+              <Route path="/streammates" element={
+                <ProtectedRoute>
+                  <Streammates />
+                </ProtectedRoute>
+              } />
 
               {/* Teacher Routes */}
               <Route path="/teacher" element={
@@ -384,6 +411,13 @@ const App = () => (
                   </RoleBasedRoute>
                 </ProtectedRoute>
               } />
+              <Route path="/admin/ballot-generation" element={
+                <ProtectedRoute>
+                  <RoleBasedRoute allowedRoles={["admin"]}>
+                    <BallotGeneration />
+                  </RoleBasedRoute>
+                </ProtectedRoute>
+              } />
               <Route path="/admin/gallery" element={
                 <ProtectedRoute>
                   <RoleBasedRoute allowedRoles={["admin"]}>
@@ -489,6 +523,14 @@ const App = () => (
                   </RoleBasedRoute>
                 </ProtectedRoute>
               } />
+                
+                {/* Public/General Routes */}
+                <Route path="/about" element={<About />} />
+                <Route path="/cookies" element={<Cookies />} />
+                <Route path="/disclaimer" element={<Disclaimer />} />
+                <Route path="/legal" element={<Legal />} />
+                <Route path="/terms" element={<Terms />} />
+                <Route path="/privacy" element={<Privacy />} />
                 
                 <Route path="/404" element={<NotFound />} />
                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

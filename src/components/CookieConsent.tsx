@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
 
 export function CookieConsent() {
   const [showConsent, setShowConsent] = useState(false);
@@ -31,15 +30,8 @@ export function CookieConsent() {
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 p-4 animate-slide-in-up">
       <Card className="max-w-2xl mx-auto p-6 bg-background/95 backdrop-blur-sm border-border shadow-lg">
-        <div className="flex justify-between items-start mb-4">
+        <div className="mb-4">
           <h3 className="text-lg font-semibold">Cookie Notice</h3>
-          <button
-            onClick={handleDecline}
-            className="text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="Close cookie notice"
-          >
-            <X className="h-5 w-5" />
-          </button>
         </div>
         <p className="text-sm text-muted-foreground mb-4">
           By logging in to the school portal, you agree to the use of cookies. 

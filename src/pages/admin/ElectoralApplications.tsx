@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ProfessionalCard } from "@/components/ui/professional-card";
@@ -31,7 +31,8 @@ import {
   MessageSquare,
   Plus,
   Edit,
-  Trash2
+  Trash2,
+  Vote
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -73,9 +74,6 @@ interface ElectoralApplication {
   class_teacher_tel?: string;
   parent_name?: string;
   parent_tel?: number;
-  experience: string;
-  qualifications: string;
-  why_apply: string;
   status: 'pending' | 'confirmed' | 'rejected';
   created_at: string;
 }
@@ -84,6 +82,7 @@ export default function ElectoralApplications() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { userName, photoUrl } = useAuth();
+  const containerRef = useRef<HTMLDivElement>(null);
   const [applications, setApplications] = useState<ElectoralApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -349,6 +348,13 @@ export default function ElectoralApplications() {
   useEffect(() => {
     setCurrentPage(1);
   }, [debouncedSearchTerm, filterType]);
+
+  // Auto scroll to top when page changes
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [currentPage]);
 
   const downloadIndividualApplication = async (application: ElectoralApplication) => {
     setDownloadingApplications(prev => new Set(prev).add(application.id));
@@ -666,6 +672,11 @@ export default function ElectoralApplications() {
     rejected: applications.filter(app => app.status === 'rejected').length
   };
 
+  const handleStatCardClick = (statusFilter: string) => {
+    setFilterType(statusFilter);
+    setCurrentPage(1);
+  };
+
   if (loading) {
     return (
       <div className="w-full min-h-screen overflow-x-hidden">
@@ -687,7 +698,7 @@ export default function ElectoralApplications() {
       onLogout={handleLogout}
     >
       <div className="w-full min-h-screen overflow-x-hidden">
-        <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 max-w-7xl">
+        <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 max-w-7xl" ref={containerRef}>
           <div className="space-y-4 sm:space-y-6">
             {/* Modern Header */}
             <ProfessionalCard variant="elevated" className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
@@ -706,7 +717,7 @@ export default function ElectoralApplications() {
                       </p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                     <ProfessionalButton 
                       onClick={() => setShowAddModal(true)}
                       size="sm"
@@ -741,6 +752,14 @@ export default function ElectoralApplications() {
                       )}
                       <span className="truncate">{bulkDownloading ? 'Processing...' : 'Download Bulk Applications'}</span>
                     </ProfessionalButton>
+                    <ProfessionalButton 
+                      onClick={() => navigate('/admin/ballot-generation')}
+                      size="sm"
+                      className="gap-2 bg-purple-600 hover:bg-purple-700"
+                    >
+                      <Vote className="h-4 w-4" />
+                      <span className="truncate">Generate Ballots</span>
+                    </ProfessionalButton>
                   </div>
                 </div>
               </CardHeader>
@@ -749,7 +768,11 @@ export default function ElectoralApplications() {
             {/* Modern Stats Grid */}
             <div className="w-full">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                <ProfessionalCard variant="elevated" className="border-l-4 border-l-blue-500">
+                <ProfessionalCard 
+                  variant="elevated" 
+                  className="border-l-4 border-l-blue-500 cursor-pointer hover:shadow-lg transition-shadow"
+                  onClick={() => handleStatCardClick("all")}
+                >
                   <CardHeader className="p-4 pb-2">
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-sm font-medium text-muted-foreground">Total Applications</CardTitle>
@@ -763,7 +786,11 @@ export default function ElectoralApplications() {
                   </CardContent>
                 </ProfessionalCard>
                 
-                <ProfessionalCard variant="elevated" className="border-l-4 border-l-yellow-500">
+                <ProfessionalCard 
+                  variant="elevated" 
+                  className="border-l-4 border-l-yellow-500 cursor-pointer hover:shadow-lg transition-shadow"
+                  onClick={() => handleStatCardClick("status-pending")}
+                >
                   <CardHeader className="p-4 pb-2">
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-sm font-medium text-muted-foreground">Pending</CardTitle>
@@ -777,7 +804,11 @@ export default function ElectoralApplications() {
                   </CardContent>
                 </ProfessionalCard>
                 
-                <ProfessionalCard variant="elevated" className="border-l-4 border-l-green-500">
+                <ProfessionalCard 
+                  variant="elevated" 
+                  className="border-l-4 border-l-green-500 cursor-pointer hover:shadow-lg transition-shadow"
+                  onClick={() => handleStatCardClick("status-confirmed")}
+                >
                   <CardHeader className="p-4 pb-2">
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-sm font-medium text-muted-foreground">Confirmed</CardTitle>
@@ -791,7 +822,11 @@ export default function ElectoralApplications() {
                   </CardContent>
                 </ProfessionalCard>
                 
-                <ProfessionalCard variant="elevated" className="border-l-4 border-l-red-500">
+                <ProfessionalCard 
+                  variant="elevated" 
+                  className="border-l-4 border-l-red-500 cursor-pointer hover:shadow-lg transition-shadow"
+                  onClick={() => handleStatCardClick("status-rejected")}
+                >
                   <CardHeader className="p-4 pb-2">
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-sm font-medium text-muted-foreground">Rejected</CardTitle>

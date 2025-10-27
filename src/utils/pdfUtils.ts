@@ -280,3 +280,200 @@ export const generateCandidatesListPDF = async (
   
   return doc;
 };
+
+interface BallotCandidate {
+  id: string;
+  name: string;
+  class: string;
+  stream: string;
+  photo?: string | null;
+}
+
+interface BallotPosition {
+  title: string;
+  candidates: BallotCandidate[];
+}
+
+export const generateBallotPDF = async (
+  positions: BallotPosition[],
+  title: string = 'Official Ballot Paper',
+  ballotsPerPage: number = 2
+) => {
+  const doc = new jsPDF('portrait', 'mm', 'a4');
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  
+  // Calculate layout based on ballots per page
+  let ballotConfigs: Array<{x: number, y: number, width: number, height: number}> = [];
+  
+  if (ballotsPerPage === 2) {
+    // 2 ballots side by side
+    const w = pageWidth / 2;
+    const h = pageHeight;
+    ballotConfigs = [
+      { x: 0, y: 0, width: w, height: h },
+      { x: w, y: 0, width: w, height: h }
+    ];
+  } else if (ballotsPerPage === 3) {
+    // 3 ballots horizontal strips
+    const h = pageHeight / 3;
+    const w = pageWidth;
+    ballotConfigs = [
+      { x: 0, y: 0, width: w, height: h },
+      { x: 0, y: h, width: w, height: h },
+      { x: 0, y: h * 2, width: w, height: h }
+    ];
+  } else if (ballotsPerPage === 4) {
+    // 4 ballots in 2x2 grid
+    const w = pageWidth / 2;
+    const h = pageHeight / 2;
+    ballotConfigs = [
+      { x: 0, y: 0, width: w, height: h },
+      { x: w, y: 0, width: w, height: h },
+      { x: 0, y: h, width: w, height: h },
+      { x: w, y: h, width: w, height: h }
+    ];
+  }
+  
+  // Helper function to draw a single ballot
+  const drawBallot = (
+    config: {x: number, y: number, width: number, height: number},
+    positionIndex: number
+  ) => {
+    const position = positions[positionIndex];
+    const margin = 5;
+    const contentWidth = config.width - (margin * 2);
+    let yPos = config.y + margin;
+    
+    // Scale fonts based on ballot size
+    const scaleFactor = config.width / pageWidth;
+    const titleFontSize = Math.max(8, 12 * scaleFactor);
+    const headerFontSize = Math.max(6, 8 * scaleFactor);
+    const nameFontSize = Math.max(7, 9 * scaleFactor);
+    const detailFontSize = Math.max(6, 7 * scaleFactor);
+    
+    // Title
+    doc.setFontSize(titleFontSize);
+    doc.setFont('courier', 'bold');
+    doc.setTextColor(0, 0, 0);
+    const titleText = position.title.toUpperCase();
+    doc.text(titleText, config.x + config.width / 2, yPos + 5, { align: 'center', maxWidth: contentWidth });
+    yPos += titleFontSize * 0.5;
+    
+    // Instructions
+    doc.setFontSize(detailFontSize);
+    doc.setFont('courier', 'normal');
+    doc.text('(Mark ONE with ✓)', config.x + config.width / 2, yPos + 3, { align: 'center' });
+    yPos += 6;
+    
+    // Table setup
+    const col1Width = contentWidth * 0.45; // Name
+    const col2Width = contentWidth * 0.30; // Photo
+    const col3Width = contentWidth * 0.25; // Mark
+    
+    // Header row
+    doc.setFillColor(44, 62, 80);
+    doc.rect(config.x + margin, yPos, col1Width, 6, 'F');
+    doc.rect(config.x + margin + col1Width, yPos, col2Width, 6, 'F');
+    doc.rect(config.x + margin + col1Width + col2Width, yPos, col3Width, 6, 'F');
+    
+    doc.setFont('courier', 'bold');
+    doc.setFontSize(headerFontSize);
+    doc.setTextColor(255, 255, 255);
+    doc.text('NAME', config.x + margin + 1, yPos + 4);
+    doc.text('PHOTO', config.x + margin + col1Width + col2Width / 2, yPos + 4, { align: 'center' });
+    doc.text('MARK', config.x + margin + col1Width + col2Width + col3Width / 2, yPos + 4, { align: 'center' });
+    
+    yPos += 6;
+    
+    // Candidate rows
+    const rowHeight = Math.min(18, (config.height - yPos + config.y - 10) / position.candidates.length);
+    doc.setTextColor(0, 0, 0);
+    
+    for (const candidate of position.candidates) {
+      // Row borders
+      doc.setDrawColor(44, 62, 80);
+      doc.setLineWidth(0.3);
+      doc.rect(config.x + margin, yPos, col1Width, rowHeight);
+      doc.rect(config.x + margin + col1Width, yPos, col2Width, rowHeight);
+      doc.rect(config.x + margin + col1Width + col2Width, yPos, col3Width, rowHeight);
+      
+      // Candidate name
+      doc.setFont('courier', 'bold');
+      doc.setFontSize(nameFontSize);
+      const nameY = yPos + rowHeight * 0.35;
+      doc.text(candidate.name, config.x + margin + 1, nameY, { maxWidth: col1Width - 2 });
+      
+      doc.setFont('courier', 'normal');
+      doc.setFontSize(detailFontSize);
+      doc.text(`${candidate.class}-${candidate.stream}`, config.x + margin + 1, nameY + 3, { maxWidth: col1Width - 2 });
+      
+      // Photo
+      const photoSize = Math.min(14, rowHeight - 2);
+      const photoX = config.x + margin + col1Width + (col2Width - photoSize) / 2;
+      const photoY = yPos + (rowHeight - photoSize) / 2;
+      
+      if (!candidate.photo) {
+        const initials = candidate.name
+          .split(' ')
+          .map(n => n[0])
+          .join('')
+          .toUpperCase()
+          .slice(0, 2);
+        
+        doc.setFillColor(102, 126, 234);
+        doc.circle(photoX + photoSize / 2, photoY + photoSize / 2, photoSize / 2, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('courier', 'bold');
+        doc.setFontSize(Math.max(7, photoSize / 2));
+        doc.text(initials, photoX + photoSize / 2, photoY + photoSize / 2 + 1, { align: 'center' });
+        doc.setTextColor(0, 0, 0);
+      }
+      
+      // Mark box
+      const boxSize = Math.min(10, rowHeight - 4);
+      const boxX = config.x + margin + col1Width + col2Width + (col3Width - boxSize) / 2;
+      const boxY = yPos + (rowHeight - boxSize) / 2;
+      
+      doc.setDrawColor(44, 62, 80);
+      doc.setLineWidth(0.5);
+      doc.rect(boxX, boxY, boxSize, boxSize);
+      
+      yPos += rowHeight;
+    }
+    
+    // Outer border
+    doc.setLineWidth(1);
+    doc.setDrawColor(44, 62, 80);
+    doc.rect(config.x + margin, config.y + margin, contentWidth, yPos - config.y - margin);
+  };
+  
+  // Generate ballots
+  for (let posIdx = 0; posIdx < positions.length; posIdx++) {
+    const ballotNum = posIdx % ballotsPerPage;
+    
+    // Add new page if starting first ballot on page and not first position
+    if (ballotNum === 0 && posIdx > 0) {
+      doc.addPage();
+    }
+    
+    drawBallot(ballotConfigs[ballotNum], posIdx);
+  }
+  
+  // Add footer on all pages
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(7);
+    doc.setFont('courier', 'normal');
+    doc.setTextColor(150, 150, 150);
+    doc.text(
+      `Official Ballot Paper | Page ${i}/${pageCount}`,
+      pageWidth / 2,
+      pageHeight - 3,
+      { align: 'center' }
+    );
+  }
+  
+  return doc;
+};
