@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ProfessionalCard } from "@/components/ui/professional-card";
@@ -24,15 +24,13 @@ import {
   Download,
   Plus,
   Edit,
-  Trash2,
-  Vote
+  Trash2
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ApplicationPreview from "@/components/electoral/ApplicationPreview";
 import AddPrefectModal from "@/components/electoral/AddPrefectModal";
 import EditPrefectModal from "@/components/electoral/EditPrefectModal";
-import { useNavigate } from "react-router-dom";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -64,14 +62,15 @@ interface ElectoralApplication {
   class_teacher_tel?: string;
   parent_name?: string;
   parent_tel?: number;
+  experience: string;
+  qualifications: string;
+  why_apply: string;
   status: 'pending' | 'approved' | 'rejected';
   created_at: string;
 }
 
 export function ApplicationsManagementTab() {
   const { toast } = useToast();
-  const navigate = useNavigate();
-  const containerRef = useRef<HTMLDivElement>(null);
   const [applications, setApplications] = useState<ElectoralApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -98,13 +97,6 @@ export function ApplicationsManagementTab() {
     }, 300);
     return () => clearTimeout(timer);
   }, [searchTerm]);
-
-  // Auto scroll to top when page changes
-  useEffect(() => {
-    if (containerRef.current) {
-      containerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }, [currentPage]);
 
   useEffect(() => {
     fetchApplications();
@@ -303,32 +295,14 @@ export function ApplicationsManagementTab() {
     );
   }
 
-  const handleStatCardClick = (statusFilter: string) => {
-    setFilterType(statusFilter);
-    setCurrentPage(1);
-  };
-
   return (
-    <div className="space-y-6" ref={containerRef}>
+    <div className="space-y-6">
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {stats.map((stat) => {
           const Icon = stat.icon;
-          const statusMap: Record<string, string> = {
-            "Total Applications": "all",
-            "Pending Review": "pending",
-            "Approved": "approved",
-            "Rejected": "rejected"
-          };
-          const statusFilter = statusMap[stat.title];
-          
           return (
-            <ProfessionalCard 
-              key={stat.title} 
-              variant="elevated"
-              className="cursor-pointer hover:shadow-lg transition-shadow"
-              onClick={() => handleStatCardClick(statusFilter)}
-            >
+            <ProfessionalCard key={stat.title} variant="elevated">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -369,20 +343,10 @@ export function ApplicationsManagementTab() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Button onClick={() => setShowAddModal(true)} className="gap-2">
-                <Plus className="h-4 w-4" />
-                Add Prefect
-              </Button>
-              <Button 
-                onClick={() => navigate('/admin/ballot-generation')} 
-                className="gap-2"
-                variant="default"
-              >
-                <Vote className="h-4 w-4" />
-                Generate Ballots
-              </Button>
-            </div>
+            <Button onClick={() => setShowAddModal(true)} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Add Prefect
+            </Button>
           </div>
         </CardContent>
       </Card>

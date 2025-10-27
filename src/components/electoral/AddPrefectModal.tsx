@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Check, Search } from "lucide-react";
+import { saveManualApplication } from "@/utils/electoralStorageUtils";
 
 interface AddPrefectModalProps {
   open: boolean;
@@ -15,77 +16,21 @@ interface AddPrefectModalProps {
   onSuccess: () => void;
 }
 
-const allPositions = [
-  {
-    value: "head_prefect",
-    label: "Head Prefect",
-    eligibleClasses: ["P5", "P6"]
-  },
-  {
-    value: "academic_prefect",
-    label: "Academic Prefect", 
-    eligibleClasses: ["P5", "P6"]
-  },
-  {
-    value: "head_monitors",
-    label: "Head Monitor(es)",
-    eligibleClasses: ["P3", "P4"]
-  },
-  {
-    value: "welfare_prefect",
-    label: "Welfare Prefect (Mess Prefect)",
-    eligibleClasses: ["P4", "P5"]
-  },
-  {
-    value: "entertainment_prefect",
-    label: "Entertainment Prefect",
-    eligibleClasses: ["P3", "P4", "P5"]
-  },
-  {
-    value: "games_sports_prefect",
-    label: "Games and Sports Prefect",
-    eligibleClasses: ["P4", "P5"]
-  },
-  {
-    value: "health_sanitation",
-    label: "Health & Sanitation",
-    eligibleClasses: ["P3", "P4", "P5"]
-  },
-  {
-    value: "uniform_uniformity",
-    label: "Uniform & Uniformity",
-    eligibleClasses: ["P2", "P3", "P4"]
-  },
-  {
-    value: "time_keeper",
-    label: "Time Keeper",
-    eligibleClasses: ["P4", "P5"]
-  },
-  {
-    value: "ict_prefect",
-    label: "ICT Prefect",
-    eligibleClasses: ["P3", "P4"]
-  },
-  {
-    value: "furniture_prefect",
-    label: "Furniture Prefect(s)",
-    eligibleClasses: ["P3", "P4", "P5"]
-  },
-  {
-    value: "prefect_upper_section",
-    label: "Prefect for Upper Section",
-    eligibleClasses: ["P5"]
-  },
-  {
-    value: "prefect_lower_section",
-    label: "Prefect for Lower Section",
-    eligibleClasses: ["P2"]
-  },
-  {
-    value: "discipline_prefect",
-    label: "Prefect in Charge of Discipline",
-    eligibleClasses: ["P3", "P4", "P5"]
-  }
+const positions = [
+  { value: 'head_prefect', label: 'Head Prefect' },
+  { value: 'academic_prefect', label: 'Academic Prefect' },
+  { value: 'head_monitors', label: 'Head Monitor(es)' },
+  { value: 'welfare_prefect', label: 'Welfare Prefect (Mess Prefect)' },
+  { value: 'entertainment_prefect', label: 'Entertainment Prefect' },
+  { value: 'games_sports_prefect', label: 'Games and Sports Prefect' },
+  { value: 'health_sanitation', label: 'Health & Sanitation' },
+  { value: 'uniform_uniformity', label: 'Uniform & Uniformity' },
+  { value: 'time_keeper', label: 'Time Keeper' },
+  { value: 'ict_prefect', label: 'ICT Prefect' },
+  { value: 'furniture_prefect', label: 'Furniture Prefect(s)' },
+  { value: 'prefect_upper_section', label: 'Prefect for Upper Section' },
+  { value: 'prefect_lower_section', label: 'Prefect for Lower Section' },
+  { value: 'discipline_prefect', label: 'Prefect in Charge of Discipline' }
 ];
 
 export default function AddPrefectModal({ open, onOpenChange, onSuccess }: AddPrefectModalProps) {
@@ -94,7 +39,6 @@ export default function AddPrefectModal({ open, onOpenChange, onSuccess }: AddPr
   const [students, setStudents] = useState<any[]>([]);
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
   const [streams, setStreams] = useState<{ id: string; name: string; class_id?: string }[]>([]);
-  const [positions, setPositions] = useState<{ id: string; title: string; eligibleClasses: string[] }[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
   const [showResults, setShowResults] = useState(false);
@@ -113,6 +57,9 @@ export default function AddPrefectModal({ open, onOpenChange, onSuccess }: AddPr
     class_teacher_tel: "",
     parent_name: "",
     parent_tel: "",
+    experience: "",
+    qualifications: "",
+    why_apply: "",
     status: "pending"
   });
 
@@ -135,39 +82,24 @@ export default function AddPrefectModal({ open, onOpenChange, onSuccess }: AddPr
 
   const fetchStudents = async () => {
     try {
-      // Fetch students, classes, streams, and positions separately
+      // Fetch students, classes, and streams separately
       const [
         { data: studentsData, error: studentsError },
         { data: classesData, error: classesError },
-        { data: streamsData, error: streamsError },
-        { data: positionsData, error: positionsError }
+        { data: streamsData, error: streamsError }
       ] = await Promise.all([
         supabase.from('students').select('id, name, email, class_id, stream_id').order('name'),
         supabase.from('classes').select('id, name'),
-        supabase.from('streams').select('id, name, class_id'),
-        supabase.from('electoral_positions').select('id, title').eq('is_active', true)
+        supabase.from('streams').select('id, name, class_id')
       ]);
 
       if (studentsError) throw studentsError;
       if (classesError) throw classesError;
       if (streamsError) throw streamsError;
-      if (positionsError) throw positionsError;
 
       setStudents(studentsData || []);
       setClasses(classesData || []);
       setStreams(streamsData || []);
-      
-      // Map positions with their IDs and eligible classes
-      const mappedPositions = allPositions.map(pos => {
-        const dbPosition = positionsData?.find(p => p.title?.toLowerCase().includes(pos.label.toLowerCase().split(' ')[0]));
-        return {
-          id: dbPosition?.id || pos.value,
-          title: pos.label,
-          eligibleClasses: pos.eligibleClasses
-        };
-      });
-      
-      setPositions(mappedPositions);
     } catch (error) {
       console.error('Error fetching students:', error);
       toast({
@@ -209,38 +141,18 @@ export default function AddPrefectModal({ open, onOpenChange, onSuccess }: AddPr
 
   const filteredStudents = students.filter(student => {
     const query = searchQuery.toLowerCase();
-    const matchesQuery = student.name.toLowerCase().includes(query) || 
-                        student.email.toLowerCase().includes(query);
-    
-    // Filter out P1 and P7 students (only P2-P6 can apply)
-    const studentClass = classes.find(c => c.id === student.class_id);
-    const isEligibleClass = studentClass && !['P1', 'P7'].includes(studentClass.name);
-    
-    return matchesQuery && isEligibleClass;
+    return student.name.toLowerCase().includes(query) || 
+           student.email.toLowerCase().includes(query);
   });
-
-  // Get available positions based on selected student's class
-  const getAvailablePositions = () => {
-    if (!formData.class_name) return [];
-    
-    return positions.filter(position => 
-      position.eligibleClasses.includes(formData.class_name)
-    );
-  };
-
-  const availablePositions = getAvailablePositions();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // Generate a unique ID for the application
-      const applicationId = crypto.randomUUID();
-      
       // Create application data object
       const applicationData = {
-        id: applicationId,
+        id: `manual_${crypto.randomUUID()}`,
         student_id: formData.student_id,
         student_name: formData.student_name,
         student_email: formData.student_email,
@@ -254,21 +166,23 @@ export default function AddPrefectModal({ open, onOpenChange, onSuccess }: AddPr
         class_teacher_tel: formData.class_teacher_tel || null,
         parent_name: formData.parent_name || null,
         parent_tel: formData.parent_tel ? parseInt(formData.parent_tel) : null,
-        status: formData.status as 'pending' | 'confirmed' | 'rejected'
+        experience: formData.experience || null,
+        qualifications: formData.qualifications || null,
+        why_apply: formData.why_apply || null,
+        status: formData.status as 'pending' | 'confirmed' | 'rejected',
+        created_at: new Date().toISOString()
       };
 
-      // Insert into database
-      const { error } = await supabase
-        .from('electoral_applications')
-        .insert([applicationData]);
+      // Store in localStorage using utility function
+      const saved = saveManualApplication(applicationData);
       
-      if (error) {
-        throw error;
+      if (!saved) {
+        throw new Error('Failed to save application to local storage');
       }
 
       toast({
         title: "Success",
-        description: "Prefect application added successfully to database."
+        description: "Prefect application added successfully (stored locally and will persist)."
       });
 
       // Reset form
@@ -286,6 +200,9 @@ export default function AddPrefectModal({ open, onOpenChange, onSuccess }: AddPr
         class_teacher_tel: "",
         parent_name: "",
         parent_tel: "",
+        experience: "",
+        qualifications: "",
+        why_apply: "",
         status: "pending"
       });
       setSelectedStudent("");
@@ -437,26 +354,16 @@ export default function AddPrefectModal({ open, onOpenChange, onSuccess }: AddPr
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="position">Position *</Label>
-                <Select 
-                  value={formData.position} 
-                  onValueChange={(value) => setFormData({ ...formData, position: value })}
-                  disabled={!formData.class_name}
-                >
+                <Select value={formData.position} onValueChange={(value) => setFormData({ ...formData, position: value })}>
                   <SelectTrigger className="bg-background">
-                    <SelectValue placeholder={formData.class_name ? "Select position" : "Select student first"} />
+                    <SelectValue placeholder="Select position" />
                   </SelectTrigger>
                   <SelectContent className="bg-background border z-50">
-                    {availablePositions.length > 0 ? (
-                      availablePositions.map((pos) => (
-                        <SelectItem key={pos.id} value={pos.id}>
-                          {pos.title}
-                        </SelectItem>
-                      ))
-                    ) : (
-                      <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                        No positions available for this class
-                      </div>
-                    )}
+                    {positions.map((pos) => (
+                      <SelectItem key={pos.value} value={pos.value}>
+                        {pos.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

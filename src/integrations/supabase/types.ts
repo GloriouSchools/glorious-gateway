@@ -117,10 +117,12 @@ export type Database = {
           class_teacher_name: string | null
           class_teacher_tel: string | null
           created_at: string | null
-          id: string
+          experience: string | null
+          id: string | null
           parent_name: string | null
           parent_tel: number | null
           position: string | null
+          qualifications: string | null
           sex: string | null
           status: string | null
           stream_name: string | null
@@ -130,6 +132,7 @@ export type Database = {
           student_photo: string | null
           submitted_at: string | null
           updated_at: string | null
+          why_apply: string | null
         }
         Insert: {
           age?: number | null
@@ -137,10 +140,12 @@ export type Database = {
           class_teacher_name?: string | null
           class_teacher_tel?: string | null
           created_at?: string | null
-          id?: string
+          experience?: string | null
+          id?: string | null
           parent_name?: string | null
           parent_tel?: number | null
           position?: string | null
+          qualifications?: string | null
           sex?: string | null
           status?: string | null
           stream_name?: string | null
@@ -150,6 +155,7 @@ export type Database = {
           student_photo?: string | null
           submitted_at?: string | null
           updated_at?: string | null
+          why_apply?: string | null
         }
         Update: {
           age?: number | null
@@ -157,10 +163,12 @@ export type Database = {
           class_teacher_name?: string | null
           class_teacher_tel?: string | null
           created_at?: string | null
-          id?: string
+          experience?: string | null
+          id?: string | null
           parent_name?: string | null
           parent_tel?: number | null
           position?: string | null
+          qualifications?: string | null
           sex?: string | null
           status?: string | null
           stream_name?: string | null
@@ -170,6 +178,7 @@ export type Database = {
           student_photo?: string | null
           submitted_at?: string | null
           updated_at?: string | null
+          why_apply?: string | null
         }
         Relationships: []
       }
@@ -205,97 +214,34 @@ export type Database = {
       }
       electoral_votes: {
         Row: {
-          average_mouse_speed: number | null
-          battery_charging: boolean | null
-          battery_level: number | null
-          behavior_signature: string | null
-          browser: string | null
           candidate_id: string
           candidate_name: string
-          canvas_fingerprint: string | null
-          click_count: number | null
           created_at: string | null
-          device_type: string | null
           id: string
-          installed_fonts: string | null
-          ip_address: string | null
-          language: string | null
-          latitude: number | null
-          location_accuracy: number | null
-          longitude: number | null
-          mouse_movement_count: number | null
-          os: string | null
           position: string
-          screen_resolution: string | null
-          timezone: string | null
-          typing_speed: number | null
-          vote_status: string | null
           voted_at: string | null
           voter_id: string
           voter_name: string
-          webgl_fingerprint: string | null
         }
         Insert: {
-          average_mouse_speed?: number | null
-          battery_charging?: boolean | null
-          battery_level?: number | null
-          behavior_signature?: string | null
-          browser?: string | null
           candidate_id: string
           candidate_name: string
-          canvas_fingerprint?: string | null
-          click_count?: number | null
           created_at?: string | null
-          device_type?: string | null
           id?: string
-          installed_fonts?: string | null
-          ip_address?: string | null
-          language?: string | null
-          latitude?: number | null
-          location_accuracy?: number | null
-          longitude?: number | null
-          mouse_movement_count?: number | null
-          os?: string | null
           position: string
-          screen_resolution?: string | null
-          timezone?: string | null
-          typing_speed?: number | null
-          vote_status?: string | null
           voted_at?: string | null
           voter_id: string
           voter_name: string
-          webgl_fingerprint?: string | null
         }
         Update: {
-          average_mouse_speed?: number | null
-          battery_charging?: boolean | null
-          battery_level?: number | null
-          behavior_signature?: string | null
-          browser?: string | null
           candidate_id?: string
           candidate_name?: string
-          canvas_fingerprint?: string | null
-          click_count?: number | null
           created_at?: string | null
-          device_type?: string | null
           id?: string
-          installed_fonts?: string | null
-          ip_address?: string | null
-          language?: string | null
-          latitude?: number | null
-          location_accuracy?: number | null
-          longitude?: number | null
-          mouse_movement_count?: number | null
-          os?: string | null
           position?: string
-          screen_resolution?: string | null
-          timezone?: string | null
-          typing_speed?: number | null
-          vote_status?: string | null
           voted_at?: string | null
           voter_id?: string
           voter_name?: string
-          webgl_fingerprint?: string | null
         }
         Relationships: []
       }
@@ -376,7 +322,7 @@ export type Database = {
           classesTaught: string | null
           contactNumber: number | null
           created_at: string | null
-          default_password: number | null
+          default_password: string | null
           email: string | null
           id: string | null
           is_verified: boolean | null
@@ -394,7 +340,7 @@ export type Database = {
           classesTaught?: string | null
           contactNumber?: number | null
           created_at?: string | null
-          default_password?: number | null
+          default_password?: string | null
           email?: string | null
           id?: string | null
           is_verified?: boolean | null
@@ -412,7 +358,7 @@ export type Database = {
           classesTaught?: string | null
           contactNumber?: number | null
           created_at?: string | null
-          default_password?: number | null
+          default_password?: string | null
           email?: string | null
           id?: string | null
           is_verified?: boolean | null

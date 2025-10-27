@@ -1,5 +1,4 @@
 export { default as ApplicationPreview } from './ApplicationPreview';
-export { ApplicationsManagementTab } from './ApplicationsManagementTab';
 export { LeaderSpotlight } from './dashboard/LeaderSpotlight';
 export { HeadToHeadBattle } from './dashboard/HeadToHeadBattle';
 export { DemographicsCard } from './dashboard/DemographicsCard';
