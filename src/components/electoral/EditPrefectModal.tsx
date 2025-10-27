@@ -23,6 +23,9 @@ interface ElectoralApplication {
   class_teacher_tel?: string;
   parent_name?: string;
   parent_tel?: number;
+  experience: string;
+  qualifications: string;
+  why_apply: string;
   status: 'pending' | 'confirmed' | 'rejected';
 }
 

@@ -2,9 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
+import { mockElectoralVotes } from "@/data/mockElectoralVotes";
 import { SummaryCard } from "@/components/electoral/dashboard/SummaryCard";
 import { PositionBarChart } from "@/components/electoral/dashboard/PositionBarChart";
 import { CandidateGroupedChart } from "@/components/electoral/dashboard/CandidateGroupedChart";
@@ -20,7 +18,7 @@ import { MobileVotesList } from "@/components/electoral/dashboard/MobileVotesLis
 import { MobileSummaryCard } from "@/components/electoral/dashboard/MobileSummaryCard";
 import { AccessibleSkipLinks } from "@/components/electoral/dashboard/AccessibleSkipLinks";
 import { ErrorModal } from "@/components/ui/error-modal";
-import { Vote, Users, Award, Clock, RefreshCw, X, Filter, BarChart2, TrendingUp, Target, Bell, FileText, School, CheckCircle, Timer, UserPlus, AlertCircle, Activity, PieChart as PieChartIcon } from "lucide-react";
+import { Vote, Users, Award, Clock, RefreshCw, X, Filter, BarChart2, TrendingUp, Target, Bell, FileText, School, CheckCircle, Timer, UserPlus, AlertCircle } from "lucide-react";
 import { InvalidVotesCard } from "@/components/electoral/InvalidVotesCard";
 import { InvalidVotesDialog } from "@/components/electoral/InvalidVotesDialog";
 import { LeaderSpotlight } from "@/components/electoral/dashboard/LeaderSpotlight";
@@ -97,92 +95,34 @@ export default function ElectoralDashboard() {
   // Role-based prefix for navigation
   const rolePrefix = userRole === 'admin' ? '/admin' : userRole === 'teacher' ? '/teacher' : '/student';
 
-  const [allVotes, setAllVotes] = useState<any[]>([]);
-  
-  // Load votes from database
-  useEffect(() => {
-    const loadVotes = async () => {
-      const { data, error } = await supabase
-        .from('electoral_votes')
-        .select('*')
-        .order('voted_at', { ascending: false });
-      
-      if (!error && data) {
-        // Enrich with student data
-        const enrichedVotes = await Promise.all(
-          data.map(async (vote) => {
-            const { data: student } = await supabase
-              .from('students')
-              .select('email, class_id, stream_id')
-              .eq('id', vote.voter_id)
-              .single();
-              
-            if (student) {
-              const [classData, streamData] = await Promise.all([
-                supabase.from('classes').select('name').eq('id', student.class_id).single(),
-                supabase.from('streams').select('name').eq('id', student.stream_id).single()
-              ]);
-              
-              return {
-                ...vote,
-                voter: {
-                  email: student.email,
-                  classes: { name: classData.data?.name },
-                  streams: { name: streamData.data?.name }
-                }
-              };
-            }
-            return vote;
-          })
-        );
-        setAllVotes(enrichedVotes);
-      }
-      setIsLoading(false);
-    };
-    loadVotes();
-    
-    // Set up real-time subscription
-    const channel = supabase
-      .channel('votes-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'electoral_votes' }, () => {
-        loadVotes();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-  // Transform database votes to match dialog Vote interface
-  const transformVotes = (votes: any[]): Vote[] => {
+  // Transform electoral votes to match dialog Vote interface
+  const transformVotes = (votes: typeof mockElectoralVotes): Vote[] => {
     return votes.map(v => ({
       id: v.id,
       voter_id: v.voter_id,
       voter_name: v.voter_name,
-      voter_email: v.voter?.email || `${v.voter_id}@school.com`,
-      voter_class: v.voter?.classes?.name || "Unknown",
-      voter_stream: v.voter?.streams?.name || "Unknown",
+      voter_email: `${v.voter_id}@school.com`, // Mock email
+      voter_class: "Form 4", // Mock class
+      voter_stream: "Sciences", // Mock stream
       position_id: v.position,
       position_title: v.position,
       candidate_id: v.candidate_id,
       candidate_name: v.candidate_name,
       voted_at: v.voted_at,
-      vote_status: v.vote_status || "valid",
-      ip_address: v.ip_address
+      vote_status: "valid"
     }));
   };
 
   // Filter votes
   const filteredVotes = useMemo(() => {
-    return allVotes.filter(vote => {
+    return mockElectoralVotes.filter(vote => {
       const matchesPosition = positionFilter === "all" || vote.position === positionFilter;
       const matchesSearch = !searchQuery || 
         vote.voter_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         vote.candidate_name.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesPosition && matchesSearch;
     });
-  }, [allVotes, positionFilter, searchQuery]);
+  }, [positionFilter, searchQuery]);
 
   // Calculate statistics
   const stats = useMemo(() => {
@@ -222,17 +162,16 @@ export default function ElectoralDashboard() {
   // Position data for bar chart
   const positionData = useMemo(() => {
     const counts = filteredVotes.reduce((acc, vote) => {
-      acc[vote.position] = ((acc[vote.position] as number) || 0) + 1;
+      acc[vote.position] = (acc[vote.position] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
-    const countValues = Object.values(counts) as number[];
-    const total: number = countValues.reduce((sum, count) => sum + count, 0);
+    const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
 
     return Object.entries(counts).map(([position, votes]) => ({
       position,
-      votes: votes as number,
-      percentage: total > 0 ? Math.round(((votes as number) / total) * 100) : 0
+      votes,
+      percentage: Math.round((votes / total) * 100)
     }));
   }, [filteredVotes]);
 
@@ -245,14 +184,14 @@ export default function ElectoralDashboard() {
       const candidateVotes: Record<string, number> = {};
       
       positionVotes.forEach(vote => {
-        candidateVotes[vote.candidate_name] = ((candidateVotes[vote.candidate_name] as number) || 0) + 1;
+        candidateVotes[vote.candidate_name] = (candidateVotes[vote.candidate_name] || 0) + 1;
       });
 
       return {
         position,
         candidates: Object.entries(candidateVotes).map(([candidate, votes]) => ({
           candidate,
-          votes: votes as number
+          votes
         }))
       };
     });
@@ -290,7 +229,7 @@ export default function ElectoralDashboard() {
   // Detect anomalies
   const anomalies = useMemo(() => {
     const voterCounts: Record<string, number> = {};
-    allVotes.forEach(vote => {
+    mockElectoralVotes.forEach(vote => {
       voterCounts[vote.voter_id] = (voterCounts[vote.voter_id] || 0) + 1;
     });
 
@@ -305,7 +244,7 @@ export default function ElectoralDashboard() {
       description: `${duplicateVoters.length} voters have cast multiple votes`,
       affectedCount: duplicateVoters.length
     }] : [];
-  }, [allVotes]);
+  }, []);
 
   // Drilldown data
   const drilldownCandidates = useMemo(() => {
@@ -340,7 +279,7 @@ export default function ElectoralDashboard() {
   };
 
   // Generic handler to show voter details dialog
-  const showVoterDialog = (votes: any[], title: string) => {
+  const showVoterDialog = (votes: typeof mockElectoralVotes, title: string) => {
     // Check if user is admin
     const userRole = localStorage.getItem('adminRole') || localStorage.getItem('userRole');
     if (userRole !== 'admin') {
@@ -355,7 +294,7 @@ export default function ElectoralDashboard() {
 
   // Handlers for different click events
   const handleMetricsClick = (type: 'total' | 'voters' | 'turnout' | 'candidates') => {
-    let votes: any[] = [];
+    let votes: typeof mockElectoralVotes = [];
     let title = "";
 
     switch (type) {
@@ -748,156 +687,219 @@ export default function ElectoralDashboard() {
     >
       <AccessibleSkipLinks />
       
-      <div className="w-full min-w-0 space-y-4 sm:space-y-6 animate-fade-in px-2 sm:px-4 lg:px-6">
-        {/* Header */}
-        <div className="flex flex-col gap-2 sm:gap-4">
-          <div className="min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-elegant bg-clip-text text-transparent truncate">
-              Electoral Dashboard
-            </h1>
-            <p className="text-sm sm:text-base text-muted-foreground mt-1">
-              Monitor and analyze electoral voting in real-time
-            </p>
-          </div>
-        </div>
+      <div className="min-h-screen bg-background">
+        <main id="main-content" className="container mx-auto px-4 py-6 space-y-6">
+          {/* Student Quick Actions */}
+          {userRole === 'student' && (
+            <div className="flex gap-3 mb-4">
+              <Button 
+                onClick={() => navigate('/student/electoral/hub')}
+                variant="outline"
+                className="gap-2"
+              >
+                <UserPlus className="h-4 w-4" />
+                Apply for Leadership
+              </Button>
+              <Button 
+                onClick={() => navigate('/student/electoral/vote')}
+                className="gap-2"
+              >
+                <Vote className="h-4 w-4" />
+                Cast Your Vote
+              </Button>
+            </div>
+          )}
+          
+          {/* Candidates Dashboard Section */}
+          <CandidatesSection 
+            userRole={userRole} 
+            votes={transformVotes(mockElectoralVotes)}
+          />
 
-        {/* Student Quick Actions */}
-        {userRole === 'student' && (
-          <div className="flex gap-3 mb-4">
-            <Button 
-              onClick={() => navigate('/student/electoral/hub')}
-              variant="outline"
-              className="gap-2"
-            >
-              <UserPlus className="h-4 w-4" />
-              Apply for Leadership
-            </Button>
-            <Button 
-              onClick={() => navigate('/student/electoral/vote')}
-              className="gap-2"
-            >
-              <Vote className="h-4 w-4" />
-              Cast Your Vote
-            </Button>
-          </div>
-        )}
+          {/* Leader Spotlight */}
+          {leadersData.length > 0 && (
+            <LeaderSpotlight leaders={leadersData} onVoteClick={handleLeaderVoteClick} />
+          )}
 
-        {/* Tabs for different views */}
-        <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="live">Live Results</TabsTrigger>
-            <TabsTrigger value="candidates">Candidates</TabsTrigger>
-            <TabsTrigger value="monitoring">Monitoring</TabsTrigger>
-          </TabsList>
+          {/* Head-to-Head Battle */}
+          {battlesData.length > 0 && (
+            <HeadToHeadBattle battles={battlesData} onClick={handleHeadToHeadClick} />
+          )}
 
-          {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6">
-            {/* Enhanced Summary Cards */}
-            <section id="summary-stats" aria-label="Summary statistics">
-              {/* Desktop Cards */}
-              <div className="hidden lg:grid grid-cols-5 gap-6">
-                <EnhancedMetricsCard
-                  title="Total Votes Cast"
-                  value={stats.totalVotes.toLocaleString()}
-                  icon={BarChart2}
-                  trend="+12% from last hour"
-                  iconBg="bg-blue-100 dark:bg-blue-900/30"
-                  iconColor="text-blue-600 dark:text-blue-400"
-                  onClick={() => handleMetricsClick('total')}
-                />
-                <EnhancedMetricsCard
-                  title="Unique Voters"
-                  value={stats.uniqueVoters}
-                  icon={Users}
-                  trend="Active now"
-                  iconBg="bg-green-100 dark:bg-green-900/30"
-                  iconColor="text-green-600 dark:text-green-400"
-                  onClick={() => handleMetricsClick('voters')}
-                />
-                <EnhancedMetricsCard
-                  title="Voter Turnout"
-                  value={`${Math.round((stats.uniqueVoters / (stats.totalVotes || 1)) * 100)}%`}
-                  icon={TrendingUp}
-                  subtext="Target: 80%"
-                  iconBg="bg-yellow-100 dark:bg-yellow-900/30"
-                  iconColor="text-yellow-600 dark:text-yellow-400"
-                  onClick={() => handleMetricsClick('turnout')}
-                />
-                <EnhancedMetricsCard
-                  title="Positions Filled"
-                  value={stats.uniqueCandidates}
-                  icon={Award}
-                  subtext="✓ All active"
-                  iconBg="bg-purple-100 dark:bg-purple-900/30"
-                  iconColor="text-purple-600 dark:text-purple-400"
-                  onClick={() => handleMetricsClick('candidates')}
-                />
+          {/* Demographics Section */}
+          <section aria-label="Demographics breakdown">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <DemographicsCard
+                title="👫 Gender Breakdown"
+                type="gender"
+                demographics={demographicsData.gender}
+                onClick={handleDemographicsClick}
+              />
+              <DemographicsCard
+                title="📚 Class Performance"
+                type="class"
+                demographics={demographicsData.classData}
+                onClick={handleDemographicsClick}
+              />
+              <DemographicsCard
+                title="📊 Stream Analysis"
+                type="stream"
+                demographics={demographicsData.streamData}
+                onClick={handleDemographicsClick}
+              />
+            </div>
+          </section>
+
+          {/* Gender Support Chart */}
+          <GenderSupportChart data={genderSupportData} onClick={handleGenderSupportClick} />
+
+          {/* Enhanced Summary Cards */}
+          <section id="summary-stats" aria-label="Summary statistics">
+            {/* Desktop Cards */}
+            <div className="hidden lg:grid grid-cols-5 gap-6">
+              <EnhancedMetricsCard
+                title="Total Votes Cast"
+                value={stats.totalVotes.toLocaleString()}
+                icon={BarChart2}
+                trend="+12% from last hour"
+                iconBg="bg-blue-100 dark:bg-blue-900/30"
+                iconColor="text-blue-600 dark:text-blue-400"
+                onClick={() => handleMetricsClick('total')}
+              />
+              <EnhancedMetricsCard
+                title="Unique Voters"
+                value={stats.uniqueVoters}
+                icon={Users}
+                trend="Active now"
+                iconBg="bg-green-100 dark:bg-green-900/30"
+                iconColor="text-green-600 dark:text-green-400"
+                onClick={() => handleMetricsClick('voters')}
+              />
+              <EnhancedMetricsCard
+                title="Voter Turnout"
+                value={`${Math.round((stats.uniqueVoters / (stats.totalVotes || 1)) * 100)}%`}
+                icon={TrendingUp}
+                subtext="Target: 80%"
+                iconBg="bg-yellow-100 dark:bg-yellow-900/30"
+                iconColor="text-yellow-600 dark:text-yellow-400"
+                onClick={() => handleMetricsClick('turnout')}
+              />
+              <EnhancedMetricsCard
+                title="Positions Filled"
+                value={stats.uniqueCandidates}
+                icon={Award}
+                subtext="✓ All active"
+                iconBg="bg-purple-100 dark:bg-purple-900/30"
+                iconColor="text-purple-600 dark:text-purple-400"
+                onClick={() => handleMetricsClick('candidates')}
+              />
+              <InvalidVotesCard
+                count={stats.invalidVotes}
+                onClick={() => setInvalidVotesDialogOpen(true)}
+                isAdmin={userRole === 'admin'}
+              />
+            </div>
+
+            {/* Mobile Cards (2 per row) */}
+            <div className="grid grid-cols-2 gap-3 lg:hidden">
+              <MobileSummaryCard
+                title="Total Votes"
+                value={stats.totalVotes}
+                icon={Vote}
+                trend="+12%"
+                delay={0}
+                onClick={() => handleMetricsClick('total')}
+              />
+              <MobileSummaryCard
+                title="Voters"
+                value={stats.uniqueVoters}
+                icon={Users}
+                delay={100}
+                onClick={() => handleMetricsClick('voters')}
+              />
+              <MobileSummaryCard
+                title="Candidates"
+                value={stats.uniqueCandidates}
+                icon={Award}
+                delay={200}
+                onClick={() => handleMetricsClick('candidates')}
+              />
+              <MobileSummaryCard
+                title="Last Vote"
+                value={stats.latestVote ? new Date(stats.latestVote).getHours() : 0}
+                icon={Clock}
+                subtext={stats.latestVote ? format(parseISO(stats.latestVote), 'HH:mm') : 'No votes'}
+                delay={300}
+                onClick={() => handleMetricsClick('turnout')}
+              />
+              <div className="col-span-2">
                 <InvalidVotesCard
                   count={stats.invalidVotes}
                   onClick={() => setInvalidVotesDialogOpen(true)}
                   isAdmin={userRole === 'admin'}
                 />
               </div>
+            </div>
+          </section>
 
-              {/* Mobile Cards (2 per row) */}
-              <div className="grid grid-cols-2 gap-3 lg:hidden">
-                <MobileSummaryCard
-                  title="Total Votes"
-                  value={stats.totalVotes}
-                  icon={Vote}
-                  trend="+12%"
-                  delay={0}
-                  onClick={() => handleMetricsClick('total')}
-                />
-                <MobileSummaryCard
-                  title="Voters"
-                  value={stats.uniqueVoters}
-                  icon={Users}
-                  delay={100}
-                  onClick={() => handleMetricsClick('voters')}
-                />
-                <MobileSummaryCard
-                  title="Candidates"
-                  value={stats.uniqueCandidates}
-                  icon={Award}
-                  delay={200}
-                  onClick={() => handleMetricsClick('candidates')}
-                />
-                <MobileSummaryCard
-                  title="Last Vote"
-                  value={stats.latestVote ? new Date(stats.latestVote).getHours() : 0}
-                  icon={Clock}
-                  subtext={stats.latestVote ? format(parseISO(stats.latestVote), 'HH:mm') : 'No votes'}
-                  delay={300}
-                  onClick={() => handleMetricsClick('turnout')}
-                />
-                <div className="col-span-2">
-                  <InvalidVotesCard
-                    count={stats.invalidVotes}
-                    onClick={() => setInvalidVotesDialogOpen(true)}
-                    isAdmin={userRole === 'admin'}
-                  />
-                </div>
-              </div>
-            </section>
+          {/* Anomaly Alerts */}
+          {anomalies.length > 0 && (
+            <AnomalyAlerts anomalies={anomalies} onExport={handleExport} />
+          )}
 
-            {/* Leader Spotlight */}
-            {leadersData.length > 0 && (
-              <LeaderSpotlight leaders={leadersData} onVoteClick={handleLeaderVoteClick} />
-            )}
-
-            {/* Head-to-Head Battle */}
-            {battlesData.length > 0 && (
-              <HeadToHeadBattle battles={battlesData} onClick={handleHeadToHeadClick} />
-            )}
-
+          {/* Main Content */}
+          <section id="charts-section" aria-label="Charts and data visualization">
             {/* Mobile Chart Carousel */}
             <MobileChartCarousel slides={chartSlides} />
 
-            {/* Quick Stats */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Desktop Charts - Three Column Layout */}
+            <div className="hidden lg:grid grid-cols-[300px_1fr_350px] gap-6">
+              {/* Left Column - Live Feed */}
+              <LiveFeed votes={filteredVotes} userRole={userRole} />
+
+              {/* Center Column - Charts */}
+              <div className="space-y-6">
+                <VoteDistributionChart data={positionData} onPositionClick={handlePositionClick} />
+                <PositionBarChart data={positionData} onPositionClick={handlePositionClick} />
+                <CandidateGroupedChart data={candidateData} />
+                <TimelineChart 
+                  data={timelineData} 
+                  onTimeSlotClick={handleTimeSlotClick}
+                  isAdmin={userRole === 'admin'}
+                />
+              </div>
+
+              {/* Right Column - Turnout & Stats */}
+              <div className="space-y-6">
+                <TurnoutCard data={turnoutData} onClick={handleTurnoutClick} />
+                <div className="space-y-4">
+                  <QuickStatsCard
+                    icon="⏱️"
+                    value="2h 15m"
+                    label="Time Remaining"
+                  />
+                  <QuickStatsCard
+                    icon="📋"
+                    value={Array.from(new Set(filteredVotes.map(v => v.position))).length}
+                    label="Active Polls"
+                    onClick={() => handleQuickStatsClick("Active Polls")}
+                  />
+                  <QuickStatsCard
+                    icon="🔔"
+                    value={anomalies.length}
+                    label="Recent Alerts"
+                    onClick={() => handleQuickStatsClick("Recent Alerts")}
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Bottom Section - Table and Quick Stats */}
+          <section className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
+            <RecentVotesTable votes={filteredVotes} onVoteClick={handleVoteRowClick} userRole={userRole} />
+            
+            <div className="hidden lg:flex flex-col gap-4">
               <QuickStatsCard
                 icon="🏫"
                 value={stats.uniqueVoters * 1.3 | 0}
@@ -920,243 +922,97 @@ export default function ElectoralDashboard() {
                 onClick={() => handleQuickStatsClick("Yet to Vote")}
               />
             </div>
-          </TabsContent>
+          </section>
 
-          {/* Analytics Tab */}
-          <TabsContent value="analytics" className="space-y-6">
-            {/* Demographics Section */}
-            <section aria-label="Demographics breakdown">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <DemographicsCard
-                  title="👫 Gender Breakdown"
-                  type="gender"
-                  demographics={demographicsData.gender}
-                  onClick={handleDemographicsClick}
-                />
-                <DemographicsCard
-                  title="📚 Class Performance"
-                  type="class"
-                  demographics={demographicsData.classData}
-                  onClick={handleDemographicsClick}
-                />
-                <DemographicsCard
-                  title="📊 Stream Analysis"
-                  type="stream"
-                  demographics={demographicsData.streamData}
-                  onClick={handleDemographicsClick}
-                />
-              </div>
-            </section>
+          {/* Mobile Recent Votes */}
+          <section className="lg:hidden" aria-label="Recent votes">
+            <h2 className="text-lg font-semibold mb-3">Recent Votes</h2>
+            <MobileVotesList votes={filteredVotes} />
+          </section>
 
-            {/* Gender Support Chart */}
-            <GenderSupportChart data={genderSupportData} onClick={handleGenderSupportClick} />
-
-            {/* Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <VoteDistributionChart data={positionData} onPositionClick={handlePositionClick} />
-              <PositionBarChart data={positionData} onPositionClick={handlePositionClick} />
-            </div>
-
-            <CandidateGroupedChart data={candidateData} />
-
-            {/* Turnout Card */}
-            <TurnoutCard data={turnoutData} onClick={handleTurnoutClick} />
-          </TabsContent>
-
-          {/* Live Results Tab */}
-          <TabsContent value="live" className="space-y-6">
-            {/* Desktop: Three Column Layout */}
-            <div className="hidden lg:grid grid-cols-[300px_1fr_350px] gap-6">
-              {/* Left Column - Live Feed */}
-              <LiveFeed votes={filteredVotes} userRole={userRole} />
-
-              {/* Center Column - Charts */}
-              <div className="space-y-6">
-                <TimelineChart 
-                  data={timelineData} 
-                  onTimeSlotClick={handleTimeSlotClick}
-                  isAdmin={userRole === 'admin'}
-                />
-                <RecentVotesTable votes={filteredVotes} onVoteClick={handleVoteRowClick} userRole={userRole} />
-              </div>
-
-              {/* Right Column - Quick Stats */}
-              <div className="space-y-4">
-                <QuickStatsCard
-                  icon="⏱️"
-                  value="2h 15m"
-                  label="Time Remaining"
-                />
-                <QuickStatsCard
-                  icon="📋"
-                  value={Array.from(new Set(filteredVotes.map(v => v.position))).length}
-                  label="Active Polls"
-                  onClick={() => handleQuickStatsClick("Active Polls")}
-                />
-                <QuickStatsCard
-                  icon="🔔"
-                  value={anomalies.length}
-                  label="Recent Alerts"
-                  onClick={() => handleQuickStatsClick("Recent Alerts")}
-                />
-              </div>
-            </div>
-
-            {/* Mobile: Simplified Layout */}
-            <div className="lg:hidden space-y-6">
-              <TimelineChart 
-                data={timelineData} 
-                onTimeSlotClick={handleTimeSlotClick}
-                isAdmin={userRole === 'admin'}
-              />
-              
-              <section aria-label="Recent votes">
-                <h2 className="text-lg font-semibold mb-3">Recent Votes</h2>
-                <MobileVotesList votes={filteredVotes} />
-              </section>
-            </div>
-          </TabsContent>
-
-          {/* Candidates Tab */}
-          <TabsContent value="candidates" className="space-y-6">
-            {/* Applications Management Button */}
-            {userRole === 'admin' && (
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    <div>
-                      <h3 className="text-lg font-semibold mb-1">Electoral Applications</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Review and manage student leadership applications
-                      </p>
-                    </div>
-                    <Button 
-                      onClick={() => navigate('/admin/electoral/applications')}
-                      className="gap-2 w-full sm:w-auto"
-                    >
-                      <FileText className="h-4 w-4" />
-                      Manage Applications
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            <CandidatesSection 
-              userRole={userRole} 
-              votes={transformVotes(allVotes)}
-            />
-          </TabsContent>
-
-          {/* Monitoring Tab */}
-          <TabsContent value="monitoring" className="space-y-6">
-            {/* Anomaly Alerts */}
-            {anomalies.length > 0 && (
-              <AnomalyAlerts anomalies={anomalies} onExport={handleExport} />
-            )}
-
-            {/* Invalid Votes Summary */}
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold">Invalid Votes</h3>
-                  <Badge variant="destructive">{stats.invalidVotes}</Badge>
-                </div>
-                <Button 
-                  onClick={() => setInvalidVotesDialogOpen(true)}
-                  disabled={!userRole || userRole !== 'admin'}
-                  className="w-full"
-                >
-                  View Invalid Votes
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Heatmap */}
+          {/* Heatmap */}
+          <section aria-label="Voting heatmap">
             <VotingHeatmap 
               data={heatmapData} 
               onHourClick={handleHourClick}
               isAdmin={userRole === 'admin'}
             />
+          </section>
+        </main>
 
-            {/* Export Controls */}
-            <ExportControls onExport={handleExport} />
-          </TabsContent>
-        </Tabs>
+        {/* Mobile Filter Modal */}
+        <MobileFilterModal
+          isOpen={isMobileFilterOpen}
+          onClose={() => setIsMobileFilterOpen(false)}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          positionFilter={positionFilter === "all" ? null : positionFilter}
+          onPositionChange={(value) => setPositionFilter(value || "all")}
+          positions={Array.from(new Set(mockElectoralVotes.map(v => v.position)))}
+          onApply={applyMobileFilters}
+          onClear={clearFilter}
+        />
+
+        {/* Drilldown Panel */}
+        <DrilldownPanel
+          isOpen={isDrilldownOpen}
+          onClose={() => setIsDrilldownOpen(false)}
+          position={selectedPosition}
+          candidates={drilldownCandidates}
+          onExport={() => handleExport("pdf")}
+        />
+
+        {/* Voter Details Dialog */}
+        <VoterDetailsDialog
+          open={voterDialogOpen}
+          onOpenChange={setVoterDialogOpen}
+          votes={selectedVotes}
+          title={dialogTitle}
+          onStudentClick={handleStudentClick}
+        />
+
+        {/* Student Vote Detail Dialog */}
+        <StudentVoteDetailDialog
+          open={studentDetailOpen}
+          onOpenChange={setStudentDetailOpen}
+          votes={selectedStudentVotes}
+          studentName={selectedStudentVotes[0]?.voter_name || ""}
+        />
+
+        {/* Time Slot Voters Dialog */}
+        <TimeSlotVotersDialog
+          open={timeSlotDialogOpen}
+          onOpenChange={setTimeSlotDialogOpen}
+          votes={selectedVotes}
+          timeSlot={selectedTimeSlot}
+          onStudentClick={handleStudentClick}
+        />
+
+        {/* Candidate Voters Dialog */}
+        <CandidateVotersDialog
+          open={candidateDialogOpen}
+          onOpenChange={setCandidateDialogOpen}
+          votes={selectedVotes}
+          candidateName={selectedCandidate.name}
+          position={selectedCandidate.position}
+          isAdmin={userRole === 'admin'}
+          onStudentClick={handleStudentClick}
+        />
+
+        {/* Invalid Votes Dialog */}
+        <InvalidVotesDialog
+          open={invalidVotesDialogOpen}
+          onOpenChange={setInvalidVotesDialogOpen}
+          votes={invalidVotesData}
+        />
+
+        <ErrorModal
+          open={errorModalOpen}
+          onOpenChange={setErrorModalOpen}
+          title="Access Restricted"
+          description="Only administrators can view detailed voter information."
+        />
       </div>
-
-      {/* Mobile Filter Modal */}
-      <MobileFilterModal
-        isOpen={isMobileFilterOpen}
-        onClose={() => setIsMobileFilterOpen(false)}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        positionFilter={positionFilter === "all" ? null : positionFilter}
-        onPositionChange={(value) => setPositionFilter(value || "all")}
-        positions={Array.from(new Set(allVotes.map(v => v.position)))}
-        onApply={applyMobileFilters}
-        onClear={clearFilter}
-      />
-
-      {/* Drilldown Panel */}
-      <DrilldownPanel
-        isOpen={isDrilldownOpen}
-        onClose={() => setIsDrilldownOpen(false)}
-        position={selectedPosition}
-        candidates={drilldownCandidates}
-        onExport={() => handleExport("pdf")}
-      />
-
-      {/* Voter Details Dialog */}
-      <VoterDetailsDialog
-        open={voterDialogOpen}
-        onOpenChange={setVoterDialogOpen}
-        votes={selectedVotes}
-        title={dialogTitle}
-        onStudentClick={handleStudentClick}
-      />
-
-      {/* Student Vote Detail Dialog */}
-      <StudentVoteDetailDialog
-        open={studentDetailOpen}
-        onOpenChange={setStudentDetailOpen}
-        votes={selectedStudentVotes}
-        studentName={selectedStudentVotes[0]?.voter_name || ""}
-      />
-
-      {/* Time Slot Voters Dialog */}
-      <TimeSlotVotersDialog
-        open={timeSlotDialogOpen}
-        onOpenChange={setTimeSlotDialogOpen}
-        votes={selectedVotes}
-        timeSlot={selectedTimeSlot}
-        onStudentClick={handleStudentClick}
-      />
-
-      {/* Candidate Voters Dialog */}
-      <CandidateVotersDialog
-        open={candidateDialogOpen}
-        onOpenChange={setCandidateDialogOpen}
-        votes={selectedVotes}
-        candidateName={selectedCandidate.name}
-        position={selectedCandidate.position}
-        isAdmin={userRole === 'admin'}
-        onStudentClick={handleStudentClick}
-      />
-
-      {/* Invalid Votes Dialog */}
-      <InvalidVotesDialog
-        open={invalidVotesDialogOpen}
-        onOpenChange={setInvalidVotesDialogOpen}
-        votes={invalidVotesData}
-      />
-
-      <ErrorModal
-        open={errorModalOpen}
-        onOpenChange={setErrorModalOpen}
-        title="Access Restricted"
-        description="Only administrators can view detailed voter information."
-      />
     </DashboardLayout>
   );
 }

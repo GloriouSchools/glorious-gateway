@@ -21,10 +21,11 @@ import { CandidateCard } from "./CandidateCard";
 import { CandidateProfileDialog } from "./CandidateProfileDialog";
 import { useToast } from "@/hooks/use-toast";
 import { Search, Filter, Loader2, Users } from "lucide-react";
+import { dummyCandidates } from "@/data/dummyElectoralCandidates";
+import { mockElectoralVotes } from "@/data/mockElectoralVotes";
 import { VoterDetailsDialog } from "./VoterDetailsDialog";
 import { StudentVoteDetailDialog } from "./StudentVoteDetailDialog";
 import { ErrorModal } from "@/components/ui/error-modal";
-import { supabase } from "@/integrations/supabase/client";
 
 interface Vote {
   id: string;
@@ -68,7 +69,7 @@ interface CandidatesSectionProps {
 
 export function CandidatesSection({ userRole, votes: votesFromParent }: CandidatesSectionProps = {}) {
   const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterPosition, setFilterPosition] = useState("all");
   const [filterSex, setFilterSex] = useState("all");
@@ -85,162 +86,23 @@ export function CandidatesSection({ userRole, votes: votesFromParent }: Candidat
   const [studentDetailOpen, setStudentDetailOpen] = useState(false);
   const [selectedStudentVotes, setSelectedStudentVotes] = useState<Vote[]>([]);
   const [errorModalOpen, setErrorModalOpen] = useState(false);
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [votes, setVotes] = useState<Vote[]>([]);
 
-  // Load data from database
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        
-        // Fetch confirmed candidates
-        const { data: applicationsData, error: appsError } = await supabase
-          .from('electoral_applications')
-          .select('*')
-          .eq('status', 'confirmed');
-        
-        if (appsError) throw appsError;
-
-        // Fetch student data to get genders
-        const studentIds = applicationsData?.map(app => app.student_id).filter(Boolean) || [];
-        const { data: studentsData, error: studentsError } = await supabase
-          .from('students')
-          .select('id, gender')
-          .in('id', studentIds);
-        
-        if (studentsError) throw studentsError;
-
-        // Create a map of student genders
-        const studentGenderMap: Record<string, string> = {};
-        studentsData?.forEach(student => {
-          if (student.id) studentGenderMap[student.id] = student.gender || 'Unknown';
-        });
-
-        // Map applications with gender
-        const apps: Application[] = applicationsData?.map(app => ({
-          id: app.id!,
-          student_name: app.student_name!,
-          student_email: app.student_email!,
-          student_photo: app.student_photo,
-          position: app.position!,
-          class_name: app.class_name!,
-          stream_name: app.stream_name!,
-          sex: app.student_id ? studentGenderMap[app.student_id] : 'Unknown',
-          status: app.status!
-        })) || [];
-
-        setApplications(apps);
-
-        // Fetch votes if not provided from parent
-        if (!votesFromParent) {
-          const { data: votesData, error: votesError } = await supabase
-            .from('electoral_votes')
-            .select('*')
-            .eq('vote_status', 'valid');
-          
-          if (votesError) throw votesError;
-
-          // Fetch voter details
-          const voterIds = [...new Set(votesData?.map(v => v.voter_id) || [])];
-          const { data: votersData, error: votersError } = await supabase
-            .from('students')
-            .select('id, email, class_id, stream_id')
-            .in('id', voterIds);
-          
-          if (votersError) throw votersError;
-
-          // Fetch class and stream names
-          const classIds = [...new Set(votersData?.map(v => v.class_id).filter(Boolean) || [])];
-          const streamIds = [...new Set(votersData?.map(v => v.stream_id).filter(Boolean) || [])];
-          
-          const [classesResult, streamsResult] = await Promise.all([
-            supabase.from('classes').select('id, name').in('id', classIds),
-            supabase.from('streams').select('id, name').in('id', streamIds)
-          ]);
-
-          const classMap: Record<string, string> = {};
-          const streamMap: Record<string, string> = {};
-          
-          classesResult.data?.forEach(c => { if (c.id) classMap[c.id] = c.name || 'Unknown'; });
-          streamsResult.data?.forEach(s => { if (s.id) streamMap[s.id] = s.name || 'Unknown'; });
-
-          const voterMap: Record<string, any> = {};
-          votersData?.forEach(voter => {
-            if (voter.id) {
-              voterMap[voter.id] = {
-                email: voter.email || `${voter.id}@school.com`,
-                class: voter.class_id ? classMap[voter.class_id] : 'Unknown',
-                stream: voter.stream_id ? streamMap[voter.stream_id] : 'Unknown'
-              };
-            }
-          });
-
-          const formattedVotes: Vote[] = votesData?.map(v => ({
-            id: v.id,
-            voter_id: v.voter_id,
-            voter_name: v.voter_name,
-            voter_email: voterMap[v.voter_id]?.email || `${v.voter_id}@school.com`,
-            voter_class: voterMap[v.voter_id]?.class || 'Unknown',
-            voter_stream: voterMap[v.voter_id]?.stream || 'Unknown',
-            position_id: v.position,
-            position_title: v.position,
-            candidate_id: v.candidate_id,
-            candidate_name: v.candidate_name,
-            voted_at: v.voted_at || v.created_at || new Date().toISOString(),
-            vote_status: v.vote_status || 'valid',
-            ip_address: v.ip_address
-          })) || [];
-
-          setVotes(formattedVotes);
-        } else {
-          setVotes(votesFromParent);
-        }
-      } catch (error) {
-        console.error('Error loading electoral data:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load candidates data",
-          variant: "destructive"
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadData();
-
-    // Set up real-time subscription for new votes
-    const channel = supabase
-      .channel('electoral-updates')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'electoral_votes'
-        },
-        () => {
-          loadData(); // Reload data on any vote change
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'electoral_applications'
-        },
-        () => {
-          loadData(); // Reload data on any application change
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [votesFromParent, toast]);
+  // Use dummy data or parent data
+  const applications = dummyCandidates;
+  const votes = votesFromParent || mockElectoralVotes.map(v => ({
+    id: v.id,
+    voter_id: v.voter_id,
+    voter_name: v.voter_name,
+    voter_email: `${v.voter_id}@school.com`,
+    voter_class: "Form 4",
+    voter_stream: "Sciences",
+    position_id: v.position,
+    position_title: v.position,
+    candidate_id: v.candidate_id,
+    candidate_name: v.candidate_name,
+    voted_at: v.voted_at,
+    vote_status: "valid"
+  }));
 
   // Calculate candidates with votes and rankings
   const candidatesWithVotes = useMemo(() => {
@@ -280,7 +142,7 @@ export function CandidatesSection({ userRole, votes: votesFromParent }: Candidat
 
     // Flatten back to array
     return Object.values(candidatesByPosition).flat();
-  }, [applications, votes]);
+  }, []);
 
   // Get unique values for filters
   const positions = useMemo(() => 

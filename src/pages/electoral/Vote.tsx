@@ -19,6 +19,9 @@ interface Candidate {
   photo?: string | null;
   class: string;
   stream: string;
+  experience: string;
+  qualifications: string;
+  whyApply: string;
 }
 
 interface Position {
@@ -50,7 +53,6 @@ export default function Vote() {
     longitude: null as number | null,
     accuracy: null as number | null
   });
-  const [ipAddress, setIpAddress] = useState<string | null>(null);
   const [locationDenied, setLocationDenied] = useState(false);
   const [showLocationWarning, setShowLocationWarning] = useState(false);
   const [fingerprintInfo, setFingerprintInfo] = useState({
@@ -176,20 +178,6 @@ export default function Vote() {
     
     loadFingerprints();
     
-    // Fetch IP address
-    const fetchIpAddress = async () => {
-      try {
-        const response = await fetch('https://api.ipify.org?format=json');
-        const data = await response.json();
-        setIpAddress(data.ip);
-      } catch (error) {
-        console.log('Could not fetch IP address:', error);
-        setIpAddress(null);
-      }
-    };
-    
-    fetchIpAddress();
-    
     behaviorTrackerRef.current = new BehaviorTracker();
     behaviorTrackerRef.current.startTracking();
     
@@ -204,90 +192,146 @@ export default function Vote() {
     };
   }, []);
 
-  // Load candidates from database
+  // Load candidates and votes - Using dummy data for testing
   useEffect(() => {
-    const loadVotingData = async () => {
-      if (!user?.id) {
-        setLoading(false);
-        return;
-      }
-
+    const loadDummyData = async () => {
       try {
         setLoading(true);
         
-        // Fetch student data with joins
-        const { data: student, error: studentError } = await supabase
-          .from('students')
-          .select('id, name, email, class_id, stream_id')
-          .eq('id', user.id)
-          .single();
-
-        if (studentError) throw studentError;
-
-        // Fetch class and stream separately
-        const [classResult, streamResult] = await Promise.all([
-          supabase.from('classes').select('name').eq('id', student.class_id).single(),
-          supabase.from('streams').select('name').eq('id', student.stream_id).single()
-        ]);
-
+        // Mock student data
         setStudentData({
-          name: student.name,
-          email: student.email,
-          classes: { name: classResult.data?.name || 'Unknown' },
-          streams: { name: streamResult.data?.name || 'Unknown' }
+          name: "Test Student",
+          email: "student@glorious.edu.ug",
+          classes: { name: "P6" },
+          streams: { name: "Gold" }
         });
 
-        // Check if student has already voted
-        const { data: existingVotes, error: votesError } = await supabase
-          .from('electoral_votes')
-          .select('id')
-          .eq('voter_id', user.id)
-          .limit(1);
-
-        if (votesError) throw votesError;
-
-        if (existingVotes && existingVotes.length > 0) {
-          setHasAlreadyVoted(true);
-          setLoading(false);
-          return;
-        }
-
-        // Fetch active positions
-        const { data: positionsData, error: positionsError } = await supabase
-          .from('electoral_positions')
-          .select('*')
-          .eq('is_active', true)
-          .order('title');
-
-        if (positionsError) throw positionsError;
-
-        // Fetch confirmed candidates
-        const { data: candidatesData, error: candidatesError } = await supabase
-          .from('electoral_applications')
-          .select('*')
-          .eq('status', 'confirmed')
-          .order('student_name');
-
-        if (candidatesError) throw candidatesError;
-
-        // Group candidates by position - filter out candidates with NULL IDs
-        const positionsWithCandidates: Position[] = (positionsData || []).map(pos => ({
-          id: pos.id!,
-          title: pos.title!,
-          description: pos.description || '',
-          candidates: (candidatesData || [])
-            .filter(app => app.position === pos.id && app.id !== null && app.id !== undefined)
-            .map(app => ({
-              id: app.id!,
-              name: app.student_name!,
-              email: app.student_email!,
-              photo: app.student_photo,
-              class: app.class_name!,
-              stream: app.stream_name!
-            }))
-        })).filter(pos => pos.candidates.length > 0); // Only show positions with candidates
+        // Use dummy data from dummyElectoralData
+        const dummyPositions: Position[] = [
+          {
+            id: "head_prefect",
+            title: "Head Prefect",
+            description: "Overall leader of the school",
+            candidates: [
+              {
+                id: "dummy_head_prefect_1",
+                name: "NAKAYIZA MILKAH",
+                email: "nakayiza.milkah@gloriousschools.com",
+                photo: null,
+                class: "P5",
+                stream: "SKYHIGH",
+                experience: "I have served as class monitor for 2 years and head of the debate club.",
+                qualifications: "Strong leadership skills, excellent communication",
+                whyApply: "I want to bridge the gap between students and administration"
+              },
+              {
+                id: "dummy_head_prefect_2",
+                name: "MUKASA BRYTON",
+                email: "mukasa.bryton@gloriousschools.com",
+                photo: null,
+                class: "P5",
+                stream: "SUNRISE",
+                experience: "Captain of the school football team, former entertainment prefect",
+                qualifications: "Natural leader, team player, excellent public speaking",
+                whyApply: "I believe every student should have equal opportunities"
+              },
+              {
+                id: "dummy_head_prefect_3",
+                name: "NAMATOVU IMMACULATE",
+                email: "namatovu.immaculate@gloriousschools.com",
+                photo: null,
+                class: "P5",
+                stream: "SUNSET",
+                experience: "Head of the school choir, academic prefect assistant",
+                qualifications: "Excellent academic performance, strong organizational skills",
+                whyApply: "I want to focus on academic excellence while ensuring balanced school life"
+              }
+            ]
+          },
+          {
+            id: "academic_prefect",
+            title: "Academic Prefect",
+            description: "Oversee academic activities",
+            candidates: [
+              {
+                id: "dummy_academic_prefect_1",
+                name: "KIGGUNDU FAVOUR MARCUS",
+                email: "kiggundu.favour@gloriousschools.com",
+                photo: null,
+                class: "P5",
+                stream: "SKYHIGH",
+                experience: "Top 3 in class for the past 2 years, leader of mathematics club",
+                qualifications: "Excellent academic record, strong analytical skills",
+                whyApply: "I want to improve our school's academic standards"
+              },
+              {
+                id: "dummy_academic_prefect_2",
+                name: "NINSIIMA MARY SHALOM",
+                email: "ninsiima.mary@gloriousschools.com",
+                photo: null,
+                class: "P5",
+                stream: "SUNRISE",
+                experience: "Head of the science club, winner of multiple academic competitions",
+                qualifications: "Strong in STEM subjects, excellent research skills",
+                whyApply: "I believe every student can excel academically with the right support"
+              }
+            ]
+          },
+          {
+            id: "entertainment_prefect",
+            title: "Entertainment Prefect",
+            description: "Organize school entertainment events",
+            candidates: [
+              {
+                id: "dummy_entertainment_prefect_1",
+                name: "KAYEMBA SHAN",
+                email: "kayemba.shan@gloriousschools.com",
+                photo: null,
+                class: "P5",
+                stream: "SUNSET",
+                experience: "Lead dancer in school cultural performances, organized talent shows",
+                qualifications: "Creative thinking, event planning experience",
+                whyApply: "I want to make our school events more exciting and inclusive"
+              },
+              {
+                id: "dummy_entertainment_prefect_2",
+                name: "SSEMATIMBA MARK",
+                email: "ssematimba.mark@gloriousschools.com",
+                photo: null,
+                class: "P5",
+                stream: "SUNRISE",
+                experience: "School DJ for events, organizer of movie nights",
+                qualifications: "Technical skills with audio equipment, creative event planning",
+                whyApply: "I want to modernize our entertainment activities"
+              }
+            ]
+          },
+          {
+            id: "games_sports_prefect",
+            title: "Games & Sports Prefect",
+            description: "Manage sports activities",
+            candidates: [
+              {
+                id: "dummy_games_sports_prefect_1",
+                name: "TUSUBIRA ARTHUR",
+                email: "tusubira.arthur@gloriousschools.com",
+                photo: null,
+                class: "P5",
+                stream: "SKYHIGH",
+                experience: "Captain of the school basketball team, organized inter-class tournaments",
+                qualifications: "Excellent athletic ability, leadership in team sports",
+                whyApply: "I want to improve our sports facilities and ensure everyone can participate"
+              }
+            ]
+          }
+        ];
         
-        setPositions(positionsWithCandidates);
+        setPositions(dummyPositions);
+        
+        // Check if already voted
+        if (sessionStorage.getItem('voteSubmitted') === 'true') {
+          setHasAlreadyVoted(true);
+        }
         
       } catch (error) {
         console.error('Error loading voting data:', error);
@@ -301,8 +345,8 @@ export default function Vote() {
       }
     };
 
-    loadVotingData();
-  }, [user?.id, toast]);
+    loadDummyData();
+  }, [toast, navigate]);
 
   const handleVotePosition = async (positionId: string, candidateId: string) => {
     if (!user?.id || !studentData) {
@@ -326,19 +370,7 @@ export default function Vote() {
       behavior_signature: 'unavailable'
     };
     
-    // Determine vote status based on requirements:
-    // 1. Location must be available
-    // 2. Device must be Desktop
-    // 3. Browser must be Chrome
-    // 4. OS must be Windows
-    const hasLocation = !locationDenied && locationInfo.latitude !== null && locationInfo.longitude !== null;
-    const isValidDevice = deviceInfo.device === 'Desktop';
-    const isValidBrowser = deviceInfo.browser === 'Chrome';
-    const isValidOS = deviceInfo.os === 'Windows';
-    
-    const voteStatus = (hasLocation && isValidDevice && isValidBrowser && isValidOS) ? 'valid' : 'invalid';
-    
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('electoral_votes')
       .insert({
         voter_id: user.id,
@@ -346,36 +378,9 @@ export default function Vote() {
         candidate_id: candidateId,
         candidate_name: candidate.name,
         position: position.title,
-        vote_status: voteStatus,
-        device_type: deviceInfo.device,
-        browser: deviceInfo.browser,
-        os: deviceInfo.os,
-        screen_resolution: deviceInfo.screenResolution,
-        timezone: deviceInfo.timezone,
-        language: deviceInfo.language,
-        latitude: locationInfo.latitude,
-        longitude: locationInfo.longitude,
-        location_accuracy: locationInfo.accuracy,
-        canvas_fingerprint: fingerprintInfo.canvasFingerprint,
-        webgl_fingerprint: fingerprintInfo.webglFingerprint,
-        installed_fonts: fingerprintInfo.installedFonts.join(','),
-        battery_level: fingerprintInfo.batteryLevel,
-        battery_charging: fingerprintInfo.batteryCharging,
-        mouse_movement_count: behaviorAnalytics.mouse_movement_count,
-        average_mouse_speed: behaviorAnalytics.average_mouse_speed,
-        typing_speed: behaviorAnalytics.average_typing_speed,
-        click_count: behaviorAnalytics.click_count,
-        behavior_signature: behaviorAnalytics.behavior_signature,
-        ip_address: ipAddress,
-      })
-      .select();
+      });
     
-    if (error) {
-      console.error('Vote insertion error:', error);
-      throw new Error(`Failed to record vote: ${error.message}`);
-    }
-    
-    console.log('Vote successfully inserted:', data);
+    if (error) throw error;
     
     toast({
       title: "Vote Recorded",

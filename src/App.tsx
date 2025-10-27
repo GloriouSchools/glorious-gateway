@@ -28,7 +28,6 @@ import ClassesList from "./pages/admin/ClassesList";
 import StreamsList from "./pages/admin/StreamsList";
 import ElectoralApplications from "./pages/admin/ElectoralApplications";
 import ElectoralDashboard from "./pages/admin/ElectoralDashboard";
-import BallotGeneration from "./pages/admin/BallotGeneration";
 import AdminGallery from "./pages/admin/AdminGallery";
 import StockManagement from "./pages/admin/StockManagement";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
@@ -385,13 +384,6 @@ const App = () => (
                   </RoleBasedRoute>
                 </ProtectedRoute>
               } />
-              <Route path="/admin/ballot-generation" element={
-                <ProtectedRoute>
-                  <RoleBasedRoute allowedRoles={["admin"]}>
-                    <BallotGeneration />
-                  </RoleBasedRoute>
-                </ProtectedRoute>
-              } />
               <Route path="/admin/gallery" element={
                 <ProtectedRoute>
                   <RoleBasedRoute allowedRoles={["admin"]}>
@@ -497,14 +489,6 @@ const App = () => (
                   </RoleBasedRoute>
                 </ProtectedRoute>
               } />
-                
-                {/* Public/General Routes */}
-                <Route path="/about" element={<About />} />
-                <Route path="/cookies" element={<Cookies />} />
-                <Route path="/disclaimer" element={<Disclaimer />} />
-                <Route path="/legal" element={<Legal />} />
-                <Route path="/terms" element={<Terms />} />
-                <Route path="/privacy" element={<Privacy />} />
                 
                 <Route path="/404" element={<NotFound />} />
                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

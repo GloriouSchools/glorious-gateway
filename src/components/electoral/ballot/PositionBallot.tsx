@@ -8,6 +8,7 @@ interface Candidate {
   photo?: string | null;
   class: string;
   stream: string;
+  whyApply: string;
 }
 
 interface PositionBallotProps {
