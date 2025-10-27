@@ -244,16 +244,19 @@ export function CandidatesSection({ userRole, votes: votesFromParent }: Candidat
 
   // Calculate candidates with votes and rankings
   const candidatesWithVotes = useMemo(() => {
+    // Count votes by candidate name AND position to handle duplicate names across positions
     const voteCounts: Record<string, number> = {};
     votes.forEach(vote => {
-      voteCounts[vote.candidate_id] = (voteCounts[vote.candidate_id] || 0) + 1;
+      const key = `${vote.candidate_name}|${vote.position_id}`;
+      voteCounts[key] = (voteCounts[key] || 0) + 1;
     });
 
     // Group by position to calculate ranks
     const candidatesByPosition: Record<string, CandidateWithVotes[]> = {};
 
     applications.forEach(app => {
-      const voteCount = voteCounts[app.id] || 0;
+      const key = `${app.student_name}|${app.position}`;
+      const voteCount = voteCounts[key] || 0;
       const position = app.position;
 
       if (!candidatesByPosition[position]) {
@@ -268,13 +271,28 @@ export function CandidatesSection({ userRole, votes: votesFromParent }: Candidat
       });
     });
 
-    // Calculate ranks within each position
+    // Calculate ranks within each position - CRITICAL: Sort by votes DESC
     Object.keys(candidatesByPosition).forEach(position => {
       const candidates = candidatesByPosition[position];
-      candidates.sort((a, b) => b.votes - a.votes);
+      
+      // Sort by votes in descending order (highest votes first)
+      candidates.sort((a, b) => {
+        if (b.votes !== a.votes) {
+          return b.votes - a.votes; // Primary sort: by votes descending
+        }
+        return a.student_name.localeCompare(b.student_name); // Tiebreaker: alphabetical
+      });
+      
+      // Assign ranks - handle ties properly
+      let currentRank = 1;
+      let previousVotes = -1;
       candidates.forEach((candidate, index) => {
-        candidate.rank = index + 1;
+        if (candidate.votes !== previousVotes) {
+          currentRank = index + 1;
+        }
+        candidate.rank = currentRank;
         candidate.totalCandidates = candidates.length;
+        previousVotes = candidate.votes;
       });
     });
 

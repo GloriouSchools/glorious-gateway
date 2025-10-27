@@ -86,10 +86,6 @@ export default function ElectoralDashboard() {
   const [selectedCandidate, setSelectedCandidate] = useState({ name: "", position: "" });
   const [invalidVotesDialogOpen, setInvalidVotesDialogOpen] = useState(false);
 
-  useEffect(() => {
-    setTimeout(() => setIsLoading(false), 600);
-  }, []);
-
   const handleLogout = () => {
     navigate('/login');
   };
@@ -102,42 +98,48 @@ export default function ElectoralDashboard() {
   // Load votes from database
   useEffect(() => {
     const loadVotes = async () => {
-      const { data, error } = await supabase
-        .from('electoral_votes')
-        .select('*')
-        .order('voted_at', { ascending: false });
-      
-      if (!error && data) {
-        // Enrich with student data
-        const enrichedVotes = await Promise.all(
-          data.map(async (vote) => {
-            const { data: student } = await supabase
-              .from('students')
-              .select('email, class_id, stream_id')
-              .eq('id', vote.voter_id)
-              .single();
-              
-            if (student) {
-              const [classData, streamData] = await Promise.all([
-                supabase.from('classes').select('name').eq('id', student.class_id).single(),
-                supabase.from('streams').select('name').eq('id', student.stream_id).single()
-              ]);
-              
-              return {
-                ...vote,
-                voter: {
-                  email: student.email,
-                  classes: { name: classData.data?.name },
-                  streams: { name: streamData.data?.name }
-                }
-              };
-            }
-            return vote;
-          })
-        );
-        setAllVotes(enrichedVotes);
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('electoral_votes')
+          .select('*')
+          .order('voted_at', { ascending: false });
+        
+        if (!error && data) {
+          // Enrich with student data
+          const enrichedVotes = await Promise.all(
+            data.map(async (vote) => {
+              const { data: student } = await supabase
+                .from('students')
+                .select('email, class_id, stream_id')
+                .eq('id', vote.voter_id)
+                .single();
+                
+              if (student) {
+                const [classData, streamData] = await Promise.all([
+                  supabase.from('classes').select('name').eq('id', student.class_id).single(),
+                  supabase.from('streams').select('name').eq('id', student.stream_id).single()
+                ]);
+                
+                return {
+                  ...vote,
+                  voter: {
+                    email: student.email,
+                    classes: { name: classData.data?.name },
+                    streams: { name: streamData.data?.name }
+                  }
+                };
+              }
+              return vote;
+            })
+          );
+          setAllVotes(enrichedVotes);
+        }
+      } catch (error) {
+        console.error('Error loading votes:', error);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
     loadVotes();
     
@@ -207,9 +209,9 @@ export default function ElectoralDashboard() {
         id: v.id,
         voter_id: v.voter_id,
         voter_name: v.voter_name,
-        voter_email: `${v.voter_id}@school.com`,
-        voter_class: "Form 4",
-        voter_stream: "Sciences",
+        voter_email: v.voter?.email || `${v.voter_id}@school.com`,
+        voter_class: v.voter?.classes?.name || "Unknown",
+        voter_stream: v.voter?.streams?.name || "Unknown",
         position_title: v.position,
         candidate_name: v.candidate_name,
         voted_at: v.voted_at,
@@ -623,23 +625,52 @@ export default function ElectoralDashboard() {
           femalePercentage: Math.round((femaleVotes / total) * 100)
         };
       }),
-      classData: positions.map(position => ({
-        position,
-        data: [
-          { name: "Form 4", percentage: 42, color: "#3b82f6" },
-          { name: "Form 3", percentage: 28, color: "#10b981" },
-          { name: "Form 2", percentage: 20, color: "#f59e0b" },
-          { name: "Form 1", percentage: 10, color: "#ef4444" }
-        ]
-      })),
-      streamData: positions.map(position => ({
-        position,
-        data: [
-          { name: "Sciences", percentage: 45, color: "#3b82f6" },
-          { name: "Arts", percentage: 30, color: "#ec4899" },
-          { name: "Commerce", percentage: 25, color: "#10b981" }
-        ]
-      }))
+      classData: positions.map(position => {
+        const positionVotes = filteredVotes.filter(v => v.position === position);
+        const classCounts: Record<string, number> = {};
+        
+        positionVotes.forEach(vote => {
+          const className = vote.voter?.classes?.name || 'Unknown';
+          classCounts[className] = (classCounts[className] || 0) + 1;
+        });
+        
+        const total = positionVotes.length || 1;
+        const colors = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#ec4899", "#8b5cf6"];
+        
+        return {
+          position,
+          data: Object.entries(classCounts)
+            .sort(([, a], [, b]) => b - a) // Sort by count descending
+            .map(([name, count], index) => ({
+              name,
+              percentage: Math.round((count / total) * 100),
+              color: colors[index % colors.length]
+            }))
+        };
+      }),
+      streamData: positions.map(position => {
+        const positionVotes = filteredVotes.filter(v => v.position === position);
+        const streamCounts: Record<string, number> = {};
+        
+        positionVotes.forEach(vote => {
+          const streamName = vote.voter?.streams?.name || 'Unknown';
+          streamCounts[streamName] = (streamCounts[streamName] || 0) + 1;
+        });
+        
+        const total = positionVotes.length || 1;
+        const colors = ["#3b82f6", "#ec4899", "#10b981", "#f59e0b", "#8b5cf6"];
+        
+        return {
+          position,
+          data: Object.entries(streamCounts)
+            .sort(([, a], [, b]) => b - a) // Sort by count descending
+            .map(([name, count], index) => ({
+              name,
+              percentage: Math.round((count / total) * 100),
+              color: colors[index % colors.length]
+            }))
+        };
+      })
     };
   }, [filteredVotes]);
 
@@ -729,10 +760,76 @@ export default function ElectoralDashboard() {
         photoUrl={photoUrl} 
         onLogout={handleLogout}
       >
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="space-y-4 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto" />
-            <p className="text-muted-foreground">Loading dashboard...</p>
+        <div className="w-full min-w-0 space-y-4 sm:space-y-6 px-2 sm:px-4 lg:px-6">
+          {/* Header Skeleton */}
+          <div className="space-y-2">
+            <div className="h-8 w-64 bg-muted animate-pulse rounded" />
+            <div className="h-4 w-96 bg-muted animate-pulse rounded" />
+          </div>
+
+          {/* Summary Cards Skeleton */}
+          <div className="hidden lg:grid grid-cols-5 gap-6">
+            {[...Array(5)].map((_, i) => (
+              <Card key={i} className="animate-pulse">
+                <CardContent className="p-6 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="h-4 w-24 bg-muted rounded" />
+                    <div className="h-10 w-10 bg-muted rounded-full" />
+                  </div>
+                  <div className="h-8 w-16 bg-muted rounded" />
+                  <div className="h-3 w-20 bg-muted rounded" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Mobile Cards Skeleton */}
+          <div className="grid grid-cols-2 gap-3 lg:hidden">
+            {[...Array(4)].map((_, i) => (
+              <Card key={i} className="animate-pulse">
+                <CardContent className="p-4 space-y-3">
+                  <div className="h-3 w-16 bg-muted rounded" />
+                  <div className="h-6 w-12 bg-muted rounded" />
+                  <div className="h-2 w-20 bg-muted rounded" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Leader Spotlight Skeleton */}
+          <Card className="animate-pulse">
+            <CardContent className="p-6 space-y-6">
+              <div className="h-6 w-48 bg-muted rounded" />
+              <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-6">
+                <div className="space-y-4">
+                  <div className="h-28 w-28 bg-muted rounded-full mx-auto" />
+                  <div className="h-6 w-32 bg-muted rounded mx-auto" />
+                  <div className="h-4 w-24 bg-muted rounded mx-auto" />
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="h-24 bg-muted rounded" />
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Charts Skeleton */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {[...Array(2)].map((_, i) => (
+              <Card key={i} className="animate-pulse">
+                <CardContent className="p-6 space-y-4">
+                  <div className="h-5 w-40 bg-muted rounded" />
+                  <div className="h-64 bg-muted rounded" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <div className="flex items-center justify-center gap-2 text-muted-foreground py-8">
+            <Activity className="h-5 w-5 animate-pulse" />
+            <p className="text-sm">Loading electoral data...</p>
           </div>
         </div>
       </DashboardLayout>

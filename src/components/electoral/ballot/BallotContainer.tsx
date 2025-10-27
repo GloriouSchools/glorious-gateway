@@ -39,13 +39,24 @@ export function BallotContainer({
   const [isExiting, setIsExiting] = useState(false);
   const [showReview, setShowReview] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
   const totalPositions = positions.length;
   const currentPosition = positions[currentPositionIndex];
 
-  // Restore session if available
+  // Get user ID on mount for user-specific storage keys
   useEffect(() => {
-    const savedData = sessionStorage.getItem('ballotData');
+    const studentId = localStorage.getItem('studentId');
+    const teacherId = localStorage.getItem('teacherId');
+    const adminId = localStorage.getItem('adminId');
+    setUserId(studentId || teacherId || adminId);
+  }, []);
+
+  // Restore session if available (user-specific)
+  useEffect(() => {
+    if (!userId) return;
+    
+    const savedData = sessionStorage.getItem(`ballotData_${userId}`);
     if (savedData) {
       try {
         const data = JSON.parse(savedData);
@@ -62,12 +73,13 @@ export function BallotContainer({
         console.error('Failed to restore session:', e);
       }
     }
-  }, [positions]);
+  }, [positions, userId]);
 
-  // Save to session storage
+  // Save to session storage (user-specific)
   useEffect(() => {
-    sessionStorage.setItem('ballotData', JSON.stringify({ selections, locked }));
-  }, [selections, locked]);
+    if (!userId) return;
+    sessionStorage.setItem(`ballotData_${userId}`, JSON.stringify({ selections, locked }));
+  }, [selections, locked, userId]);
 
   const handleSelectCandidate = (candidateId: string) => {
     if (locked[currentPosition.id]) return;
@@ -115,7 +127,9 @@ export function BallotContainer({
     setShowSuccess(true);
     
     setTimeout(() => {
-      sessionStorage.setItem('voteSubmitted', 'true');
+      if (userId) {
+        sessionStorage.setItem(`voteSubmitted_${userId}`, 'true');
+      }
       onVoteComplete(selections);
     }, 2000);
   };

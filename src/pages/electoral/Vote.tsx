@@ -66,8 +66,10 @@ export default function Vote() {
   // Warn user before leaving if voting is incomplete
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      const ballotData = sessionStorage.getItem('ballotData');
-      const voteSubmitted = sessionStorage.getItem('voteSubmitted');
+      if (!user?.id) return;
+      
+      const ballotData = sessionStorage.getItem(`ballotData_${user.id}`);
+      const voteSubmitted = sessionStorage.getItem(`voteSubmitted_${user.id}`);
       
       // Only warn if they have started voting but haven't completed
       if (ballotData && voteSubmitted !== 'true') {
@@ -82,7 +84,7 @@ export default function Vote() {
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, []);
+  }, [user?.id]);
 
   // Gather device and location information
   useEffect(() => {

@@ -243,7 +243,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
-    // CRITICAL SECURITY FIX: Clear ALL localStorage first to prevent any session leakage
+    // CRITICAL SECURITY FIX: Clear ALL storage first to prevent any session leakage
     const keysToPreserve = ['cookieConsent']; // Preserve non-auth data
     const preservedData: Record<string, string> = {};
     
@@ -252,8 +252,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (value) preservedData[key] = value;
     });
     
-    // Clear everything
+    // Clear everything from localStorage
     localStorage.clear();
+    
+    // CRITICAL: Clear sessionStorage to prevent voting state leakage between users
+    sessionStorage.clear();
     
     // Restore preserved data
     Object.entries(preservedData).forEach(([key, value]) => {
