@@ -51,28 +51,6 @@ export function VoteDistributionChart({ data, onPositionClick }: VoteDistributio
     }
   }, [isInView]);
 
-  if (!data || data.length === 0) {
-    return (
-      <Card className="rounded-xl border-0 shadow-lg">
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <PieChartIcon className="w-5 h-5 text-primary" />
-            <CardTitle>Vote Distribution by Position</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center h-[320px] text-muted-foreground">
-            <div className="text-center space-y-2">
-              <PieChartIcon className="w-12 h-12 mx-auto opacity-50" />
-              <p>No voting data available</p>
-              <p className="text-sm">Distribution will appear once votes are cast</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
     <motion.div
       ref={ref}

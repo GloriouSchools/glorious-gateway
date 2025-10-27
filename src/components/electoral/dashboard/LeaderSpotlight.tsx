@@ -62,19 +62,7 @@ export const LeaderSpotlight = ({ leaders, onVoteClick }: LeaderSpotlightProps) 
     setIsPlaying(!isPlaying);
   };
 
-  if (!leaders || leaders.length === 0) {
-    return (
-      <Card className="p-6">
-        <div className="flex items-center justify-center py-12 text-muted-foreground">
-          <div className="text-center space-y-2">
-            <Crown className="w-12 h-12 mx-auto opacity-50" />
-            <p>No voting data available yet</p>
-            <p className="text-sm">Leaders will appear once voting begins</p>
-          </div>
-        </div>
-      </Card>
-    );
-  }
+  if (!leaders || leaders.length === 0) return null;
 
   return (
     <div className="relative">
