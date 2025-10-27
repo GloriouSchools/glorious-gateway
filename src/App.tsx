@@ -61,10 +61,6 @@ import MovieDetail from "./pages/MovieDetail";
 import StudentAttendanceView from "./pages/student/StudentAttendanceView";
 import AttendanceDetails from "./pages/admin/AttendanceDetails";
 import StudentAttendanceSummary from "./pages/admin/StudentAttendanceSummary";
-import Friends from "./pages/Friends";
-import FriendRequests from "./pages/FriendRequests";
-import Classmates from "./pages/Classmates";
-import Streammates from "./pages/Streammates";
 
 const queryClient = new QueryClient();
 
@@ -242,28 +238,6 @@ const App = () => (
               <Route path="/student/electoral/vote" element={
                 <ProtectedRoute>
                   <Vote />
-                </ProtectedRoute>
-              } />
-              
-              {/* Student Social Routes */}
-              <Route path="/friends" element={
-                <ProtectedRoute>
-                  <Friends />
-                </ProtectedRoute>
-              } />
-              <Route path="/friend-requests" element={
-                <ProtectedRoute>
-                  <FriendRequests />
-                </ProtectedRoute>
-              } />
-              <Route path="/classmates" element={
-                <ProtectedRoute>
-                  <Classmates />
-                </ProtectedRoute>
-              } />
-              <Route path="/streammates" element={
-                <ProtectedRoute>
-                  <Streammates />
                 </ProtectedRoute>
               } />
 

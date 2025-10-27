@@ -61,6 +61,7 @@ export default function StudentsList() {
   // Data
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
+  const [initialLoad, setInitialLoad] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -153,9 +154,11 @@ export default function StudentsList() {
 
   const fetchStudents = async () => {
     try {
-      if (!debouncedSearchTerm && filterClass === 'all' && filterStream === 'all' && filterVerified === 'all') {
+      // Only show full loading screen on initial load, not when searching/filtering
+      if (initialLoad) {
         setLoading(true);
       }
+      
       let query = supabase
         .from('students')
         .select('id, name, email, photo_url, class_id, stream_id, is_verified, created_at, default_password', { count: 'exact' })
@@ -191,6 +194,7 @@ export default function StudentsList() {
 
       setStudents(data || []);
       setTotalCount(count || 0);
+      setInitialLoad(false); // Mark initial load as complete
     } catch (error) {
       console.error('Error:', error);
       toast.error('Failed to fetch students');
@@ -262,7 +266,7 @@ export default function StudentsList() {
     return pages;
   }, [currentPage, totalPages]);
 
-  if (loading) {
+  if (loading && initialLoad) {
     return (
       <DashboardLayout userRole={userRole || "admin"} userName={userName} photoUrl={photoUrl} onLogout={handleLogout}>
         <div className="flex items-center justify-center min-h-96">

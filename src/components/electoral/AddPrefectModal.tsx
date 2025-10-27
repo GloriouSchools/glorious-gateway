@@ -92,12 +92,14 @@ export default function AddPrefectModal({ open, onOpenChange, onSuccess }: AddPr
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [students, setStudents] = useState<any[]>([]);
+  const [allStudents, setAllStudents] = useState<any[]>([]);
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
   const [streams, setStreams] = useState<{ id: string; name: string; class_id?: string }[]>([]);
   const [positions, setPositions] = useState<{ id: string; title: string; eligibleClasses: string[] }[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
   const [showResults, setShowResults] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const [formData, setFormData] = useState({
     student_id: "",
@@ -118,7 +120,7 @@ export default function AddPrefectModal({ open, onOpenChange, onSuccess }: AddPr
 
   useEffect(() => {
     if (open) {
-      fetchStudents();
+      fetchInitialData();
     }
   }, [open]);
 
@@ -133,33 +135,47 @@ export default function AddPrefectModal({ open, onOpenChange, onSuccess }: AddPr
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const fetchStudents = async () => {
+  // Debounce search and fetch students from database
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setStudents([]);
+      return;
+    }
+
+    setIsSearching(true);
+    const timer = setTimeout(() => {
+      searchStudentsInDatabase(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const fetchInitialData = async () => {
     try {
-      // Fetch students, classes, streams, and positions separately
+      // Fetch classes, streams, and positions (no students upfront)
       const [
-        { data: studentsData, error: studentsError },
         { data: classesData, error: classesError },
         { data: streamsData, error: streamsError },
         { data: positionsData, error: positionsError }
       ] = await Promise.all([
-        supabase.from('students').select('id, name, email, class_id, stream_id').order('name'),
         supabase.from('classes').select('id, name'),
         supabase.from('streams').select('id, name, class_id'),
         supabase.from('electoral_positions').select('id, title').eq('is_active', true)
       ]);
 
-      if (studentsError) throw studentsError;
       if (classesError) throw classesError;
       if (streamsError) throw streamsError;
       if (positionsError) throw positionsError;
 
-      setStudents(studentsData || []);
       setClasses(classesData || []);
       setStreams(streamsData || []);
       
-      // Map positions with their IDs and eligible classes
+      // Map positions - use exact title matching or fallback to predefined positions
       const mappedPositions = allPositions.map(pos => {
-        const dbPosition = positionsData?.find(p => p.title?.toLowerCase().includes(pos.label.toLowerCase().split(' ')[0]));
+        const dbPosition = positionsData?.find(p => 
+          p.title === pos.label || 
+          p.title?.toLowerCase() === pos.label.toLowerCase()
+        );
         return {
           id: dbPosition?.id || pos.value,
           title: pos.label,
@@ -169,12 +185,33 @@ export default function AddPrefectModal({ open, onOpenChange, onSuccess }: AddPr
       
       setPositions(mappedPositions);
     } catch (error) {
-      console.error('Error fetching students:', error);
+      console.error('Error fetching initial data:', error);
       toast({
         title: "Error",
-        description: "Failed to fetch students data.",
+        description: "Failed to fetch form data.",
         variant: "destructive"
       });
+    }
+  };
+
+  const searchStudentsInDatabase = async (query: string) => {
+    try {
+      // Search database directly using Supabase query (like StudentsList does)
+      const { data, error } = await supabase
+        .from('students')
+        .select('id, name, email, class_id, stream_id')
+        .or(`name.ilike.%${query}%,email.ilike.%${query}%,id.ilike.%${query}%`)
+        .order('name')
+        .limit(50); // Limit to 50 results for performance
+
+      if (error) throw error;
+      
+      setStudents(data || []);
+    } catch (error) {
+      console.error('Error searching students:', error);
+      setStudents([]);
+    } finally {
+      setIsSearching(false);
     }
   };
 
@@ -207,17 +244,26 @@ export default function AddPrefectModal({ open, onOpenChange, onSuccess }: AddPr
     }
   };
 
-  const filteredStudents = students.filter(student => {
-    const query = searchQuery.toLowerCase();
-    const matchesQuery = student.name.toLowerCase().includes(query) || 
-                        student.email.toLowerCase().includes(query);
-    
-    // Filter out P1 and P7 students (only P2-P6 can apply)
+  const filteredStudents = students;
+
+  // Check if a student is eligible (P2-P6 only, not P1 or P7)
+  const getIneligibilityReason = (student: any): string | null => {
     const studentClass = classes.find(c => c.id === student.class_id);
-    const isEligibleClass = studentClass && !['P1', 'P7'].includes(studentClass.name);
     
-    return matchesQuery && isEligibleClass;
-  });
+    if (!studentClass) {
+      return "Class information not found";
+    }
+    
+    if (studentClass.name === 'P1') {
+      return "P1 students are not eligible to apply for prefect positions";
+    }
+    
+    if (studentClass.name === 'P7') {
+      return "P7 students are not eligible to apply for prefect positions";
+    }
+    
+    return null;
+  };
 
   // Get available positions based on selected student's class
   const getAvailablePositions = () => {
@@ -350,17 +396,25 @@ export default function AddPrefectModal({ open, onOpenChange, onSuccess }: AddPr
               {searchQuery && showResults && (
                 <div className="relative">
                   <div className="absolute w-full bg-background border rounded-md shadow-lg max-h-60 overflow-y-auto z-50">
-                    {filteredStudents.length > 0 ? (
+                    {isSearching ? (
+                      <div className="px-4 py-3 text-sm text-muted-foreground flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Searching students...
+                      </div>
+                    ) : filteredStudents.length > 0 ? (
                       <div className="py-1">
                         {filteredStudents.map((student) => {
                           const studentClass = classes.find(c => c.id === student.class_id);
                           const studentStream = streams.find(s => s.id === student.stream_id);
+                          const ineligibilityReason = getIneligibilityReason(student);
+                          
                           return (
                             <button
                               key={student.id}
                               type="button"
                               onClick={() => handleStudentSelect(student.id, student.name)}
                               className="w-full px-4 py-3 text-left hover:bg-accent transition-colors flex items-start gap-2 border-b last:border-b-0"
+                              disabled={!!ineligibilityReason}
                             >
                               {selectedStudent === student.id && (
                                 <Check className="h-4 w-4 mt-1 text-primary flex-shrink-0" />
@@ -370,6 +424,11 @@ export default function AddPrefectModal({ open, onOpenChange, onSuccess }: AddPr
                                 <div className="text-xs text-muted-foreground truncate">
                                   {student.email} • {studentClass?.name || 'No class'} {studentStream?.name || ''}
                                 </div>
+                                {ineligibilityReason && (
+                                  <div className="text-xs text-red-500 italic mt-1">
+                                    {ineligibilityReason}
+                                  </div>
+                                )}
                               </div>
                             </button>
                           );
@@ -377,7 +436,9 @@ export default function AddPrefectModal({ open, onOpenChange, onSuccess }: AddPr
                       </div>
                     ) : (
                       <div className="px-4 py-3 text-sm text-muted-foreground">
-                        No student found.
+                        {searchQuery.trim().length < 2 
+                          ? "Type at least 2 characters to search..." 
+                          : "No student found. Try a different search term."}
                       </div>
                     )}
                   </div>
