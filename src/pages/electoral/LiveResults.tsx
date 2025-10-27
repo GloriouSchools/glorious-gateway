@@ -147,7 +147,8 @@ export default function LiveResults() {
       // Fetch actual votes from database
       const { data: votesData, error: votesError } = await supabase
         .from('electoral_votes')
-        .select('candidate_id, candidate_name, position, vote_status');
+        .select('candidate_id, candidate_name, position, vote_status')
+        .limit(100000); // Set high limit to fetch all votes
       
       if (votesError) throw votesError;
 

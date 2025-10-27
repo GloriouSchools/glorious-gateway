@@ -2,14 +2,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface InvalidVotesCardProps {
   count: number;
   onClick?: () => void;
   isAdmin: boolean;
+  isLoading?: boolean;
 }
 
-export function InvalidVotesCard({ count, onClick, isAdmin }: InvalidVotesCardProps) {
+export function InvalidVotesCard({ count, onClick, isAdmin, isLoading = false }: InvalidVotesCardProps) {
   const handleClick = () => {
     if (isAdmin && onClick) {
       onClick();
@@ -40,15 +42,19 @@ export function InvalidVotesCard({ count, onClick, isAdmin }: InvalidVotesCardPr
         </CardHeader>
         <CardContent>
           <div className="flex items-baseline justify-between">
-            <motion.div 
-              className="text-3xl font-bold text-red-800 dark:text-red-300"
-              initial={{ scale: 0.5 }}
-              whileInView={{ scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.2, type: "spring" }}
-            >
-              {count}
-            </motion.div>
+            {isLoading ? (
+              <Skeleton className="h-9 w-16" />
+            ) : (
+              <motion.div 
+                className="text-3xl font-bold text-red-800 dark:text-red-300"
+                initial={{ scale: 0.5 }}
+                whileInView={{ scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.2, type: "spring" }}
+              >
+                {count}
+              </motion.div>
+            )}
             <div className="text-xs text-red-600 dark:text-red-400">
               {count === 1 ? 'vote' : 'votes'}
             </div>

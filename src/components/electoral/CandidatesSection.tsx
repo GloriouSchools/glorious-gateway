@@ -137,7 +137,8 @@ export function CandidatesSection({ userRole, votes: votesFromParent }: Candidat
           const { data: votesData, error: votesError } = await supabase
             .from('electoral_votes')
             .select('*')
-            .eq('vote_status', 'valid');
+            .eq('vote_status', 'valid')
+            .limit(100000); // Set high limit to fetch all votes
           
           if (votesError) throw votesError;
 

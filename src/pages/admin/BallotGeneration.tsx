@@ -11,15 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Vote, Users, Loader2, Eye, Download } from "lucide-react";
 import { BallotContainer } from "@/components/electoral/ballot";
 import jsPDF from "jspdf";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
+import { generateBallotPDF } from "@/utils/pdfUtils";
 
 interface Candidate {
   id: string;
@@ -42,10 +34,9 @@ export default function BallotGeneration() {
   const { userName, photoUrl } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
+  const [generatingPDF, setGeneratingPDF] = useState(false);
   const [positions, setPositions] = useState<Position[]>([]);
   const [showBallotPreview, setShowBallotPreview] = useState(false);
-  const [showLayoutDialog, setShowLayoutDialog] = useState(false);
-  const [selectedLayout, setSelectedLayout] = useState<"2" | "3" | "4">("2");
 
   const handleLogout = () => {
     navigate('/login');
@@ -137,8 +128,7 @@ export default function BallotGeneration() {
 
   const generatePDFBallots = async () => {
     try {
-      const { generateBallotPDF } = await import('@/utils/pdfUtils');
-
+      setGeneratingPDF(true);
       const ballotPositions = positions
         .filter((p) => p.candidates.length > 0)
         .map((p) => ({
@@ -152,13 +142,13 @@ export default function BallotGeneration() {
           })),
         }));
 
-      const doc = await generateBallotPDF(ballotPositions, 'Official Ballot Paper', parseInt(selectedLayout));
+      const doc = await generateBallotPDF(ballotPositions, 'Official Ballot Paper', 3);
       doc.save(`ballots-${new Date().toISOString().split('T')[0]}.pdf`);
 
-      setShowLayoutDialog(false);
+      const totalBallots = ballotPositions.length * 3;
       toast({
         title: 'PDF Generated',
-        description: `Ballot PDF has been downloaded successfully (${selectedLayout} ballots per page)`,
+        description: `Generated ${ballotPositions.length} pages with ${totalBallots} ballots (3 per position)`,
       });
     } catch (error) {
       console.error('Error generating PDF:', error);
@@ -167,6 +157,8 @@ export default function BallotGeneration() {
         description: 'Failed to generate PDF ballots',
         variant: 'destructive',
       });
+    } finally {
+      setGeneratingPDF(false);
     }
   };
 
@@ -239,13 +231,22 @@ export default function BallotGeneration() {
                         Preview Ballot
                       </Button>
                       <Button
-                        onClick={() => setShowLayoutDialog(true)}
-                        disabled={totalCandidates === 0}
+                        onClick={generatePDFBallots}
+                        disabled={totalCandidates === 0 || generatingPDF}
                         size="lg"
                         className="gap-2"
                       >
-                        <Download className="h-5 w-5" />
-                        Generate PDF Ballots
+                        {generatingPDF ? (
+                          <>
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                            Generating Ballots...
+                          </>
+                        ) : (
+                          <>
+                            <Download className="h-5 w-5" />
+                            Generate PDF Ballots
+                          </>
+                        )}
                       </Button>
                     </div>
                   </div>
@@ -361,65 +362,6 @@ export default function BallotGeneration() {
         </div>
       </div>
 
-      {/* Layout Selection Dialog */}
-      <Dialog open={showLayoutDialog} onOpenChange={setShowLayoutDialog}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Select Ballot Layout</DialogTitle>
-            <DialogDescription>
-              Choose how many ballots to print per page. More ballots per page saves paper but may be smaller.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-6 py-4">
-            <RadioGroup value={selectedLayout} onValueChange={(value) => setSelectedLayout(value as "2" | "3" | "4")}>
-              <div className="space-y-4">
-                {/* Option 1: 2 per page */}
-                <div className="flex items-start space-x-3 p-4 border rounded-lg hover:bg-accent/50 transition-colors">
-                  <RadioGroupItem value="2" id="layout-2" className="mt-1" />
-                  <Label htmlFor="layout-2" className="flex-1 cursor-pointer">
-                    <div className="font-semibold mb-1">2 Ballots Per Page (Recommended)</div>
-                    <div className="text-sm text-muted-foreground">
-                      Side by side layout • 90mm × 270mm each • Clear and readable • Saves 50% paper
-                    </div>
-                  </Label>
-                </div>
-
-                {/* Option 2: 3 per page */}
-                <div className="flex items-start space-x-3 p-4 border rounded-lg hover:bg-accent/50 transition-colors">
-                  <RadioGroupItem value="3" id="layout-3" className="mt-1" />
-                  <Label htmlFor="layout-3" className="flex-1 cursor-pointer">
-                    <div className="font-semibold mb-1">3 Ballots Per Page</div>
-                    <div className="text-sm text-muted-foreground">
-                      Horizontal strips • 190mm × 90mm each • Compact • Saves 66% paper
-                    </div>
-                  </Label>
-                </div>
-
-                {/* Option 3: 4 per page */}
-                <div className="flex items-start space-x-3 p-4 border rounded-lg hover:bg-accent/50 transition-colors">
-                  <RadioGroupItem value="4" id="layout-4" className="mt-1" />
-                  <Label htmlFor="layout-4" className="flex-1 cursor-pointer">
-                    <div className="font-semibold mb-1">4 Ballots Per Page (Maximum Savings)</div>
-                    <div className="text-sm text-muted-foreground">
-                      2×2 grid layout • 90mm × 135mm each • More compact • Saves 75% paper
-                    </div>
-                  </Label>
-                </div>
-              </div>
-            </RadioGroup>
-
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setShowLayoutDialog(false)}>
-                Cancel
-              </Button>
-              <Button onClick={generatePDFBallots}>
-                <Download className="h-4 w-4 mr-2" />
-                Generate PDF
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </DashboardLayout>
   );
 }

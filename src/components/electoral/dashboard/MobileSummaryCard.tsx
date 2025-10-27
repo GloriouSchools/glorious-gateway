@@ -9,6 +9,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface MobileSummaryCardProps {
   title: string;
@@ -19,6 +20,7 @@ interface MobileSummaryCardProps {
   delay?: number;
   detailContent?: React.ReactNode;
   onClick?: () => void;
+  isLoading?: boolean;
 }
 
 export function MobileSummaryCard({ 
@@ -29,7 +31,8 @@ export function MobileSummaryCard({
   trend,
   delay = 0,
   detailContent,
-  onClick
+  onClick,
+  isLoading = false
 }: MobileSummaryCardProps) {
   const [displayValue, setDisplayValue] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
@@ -94,7 +97,7 @@ export function MobileSummaryCard({
               {title}
             </p>
             <p className="text-2xl font-bold bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
-              {displayValue.toLocaleString()}
+              {isLoading ? <Skeleton className="h-8 w-16" /> : displayValue.toLocaleString()}
             </p>
             {subtext && (
               <p className="text-xs text-muted-foreground mt-1 truncate">

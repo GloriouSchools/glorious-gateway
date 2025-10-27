@@ -28,9 +28,9 @@ export function Footer() {
   return (
     <footer className="w-full bg-gradient-dark border-t border-border">
       <div className="max-w-7xl mx-auto px-6 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
           {/* About Section */}
-          <div className="space-y-4">
+          <div className="space-y-4 flex flex-col items-center">
             <h3 className="text-lg font-semibold text-foreground">Glorious Schools</h3>
             <p className="text-sm text-muted-foreground">
               Empowering students with quality education and innovative learning experiences since 2010.
@@ -56,7 +56,7 @@ export function Footer() {
           </div>
 
           {/* Quick Links */}
-          <div className="space-y-4">
+          <div className="space-y-4 flex flex-col items-center">
             <h3 className="text-lg font-semibold text-foreground">Quick Links</h3>
             <ul className="space-y-2">
               <li>
@@ -93,9 +93,9 @@ export function Footer() {
           </div>
 
           {/* Contact Info */}
-          <div className="space-y-4">
+          <div className="space-y-4 flex flex-col items-center">
             <h3 className="text-lg font-semibold text-foreground">Contact Us</h3>
-            <ul className="space-y-2">
+            <ul className="space-y-2 text-left">
               <li className="flex items-start space-x-2">
                 <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
                 <span className="text-sm text-muted-foreground">
@@ -125,7 +125,7 @@ export function Footer() {
           </div>
 
           {/* Newsletter */}
-          <div className="space-y-4">
+          <div className="space-y-4 flex flex-col items-center">
             <h3 className="text-lg font-semibold text-foreground">Stay Connected</h3>
             <p className="text-sm text-muted-foreground">
               Subscribe to our newsletter for updates and educational resources.
@@ -153,7 +153,7 @@ export function Footer() {
         <div className="mt-8 pt-8 border-t border-border">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-2 md:space-y-0">
             <p className="text-sm text-muted-foreground">
-              © {currentYear} Glorious Schools. All rights reserved.
+              ©2025 Glorious Electoral Commission. All rights reserved.
             </p>
             <p className="text-sm text-muted-foreground flex items-center gap-1">
               Created with{" "}

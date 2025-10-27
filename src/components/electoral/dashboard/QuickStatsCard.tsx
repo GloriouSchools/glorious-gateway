@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { LucideIcon } from "lucide-react";
 import { motion } from "framer-motion";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface QuickStatsCardProps {
   icon: string;
@@ -8,6 +9,7 @@ interface QuickStatsCardProps {
   label: string;
   IconComponent?: LucideIcon;
   onClick?: () => void;
+  isLoading?: boolean;
 }
 
 export const QuickStatsCard = ({
@@ -15,7 +17,8 @@ export const QuickStatsCard = ({
   value,
   label,
   IconComponent,
-  onClick
+  onClick,
+  isLoading = false
 }: QuickStatsCardProps) => {
   return (
     <motion.div
@@ -40,7 +43,9 @@ export const QuickStatsCard = ({
         ) : (
           <div className="text-3xl mb-3">{icon}</div>
         )}
-        <div className="text-2xl font-bold text-foreground mb-1">{value}</div>
+        <div className="text-2xl font-bold text-foreground mb-1">
+          {isLoading ? <Skeleton className="h-8 w-16 mx-auto" /> : value}
+        </div>
         <div className="text-sm text-muted-foreground">{label}</div>
       </Card>
     </motion.div>

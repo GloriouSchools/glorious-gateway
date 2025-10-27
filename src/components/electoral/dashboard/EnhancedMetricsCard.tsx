@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { LucideIcon, TrendingUp } from "lucide-react";
+import { LucideIcon, TrendingUp, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface EnhancedMetricsCardProps {
@@ -11,6 +11,7 @@ interface EnhancedMetricsCardProps {
   iconBg: string;
   iconColor: string;
   onClick?: () => void;
+  isLoading?: boolean;
 }
 
 export const EnhancedMetricsCard = ({
@@ -21,7 +22,8 @@ export const EnhancedMetricsCard = ({
   subtext,
   iconBg,
   iconColor,
-  onClick
+  onClick,
+  isLoading = false
 }: EnhancedMetricsCardProps) => {
   return (
     <motion.div
@@ -43,7 +45,13 @@ export const EnhancedMetricsCard = ({
       >
         <div className="flex justify-between items-start">
         <div className="flex-1">
-          <div className="text-4xl font-bold text-foreground mb-1">{value}</div>
+          <div className="text-4xl font-bold text-foreground mb-1">
+            {isLoading ? (
+              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+            ) : (
+              value
+            )}
+          </div>
           <div className="text-sm text-muted-foreground mb-2">{title}</div>
           {trend && (
             <div className="flex items-center gap-1 text-sm text-green-600 dark:text-green-400">

@@ -89,7 +89,8 @@ export function VoteMonitoringTab() {
       const { data: votesData, error: votesError } = await supabase
         .from('electoral_votes')
         .select('*')
-        .order('voted_at', { ascending: false });
+        .order('voted_at', { ascending: false })
+        .limit(100000); // Set high limit to fetch all votes
 
       if (votesError) throw votesError;
 
@@ -228,7 +229,13 @@ export function VoteMonitoringTab() {
             </div>
           </CardHeader>
           <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold text-blue-600">{stats?.total_votes || 0}</div>
+            <div className="text-2xl font-bold text-blue-600">
+              {loading ? (
+                <Loader2 className="w-6 h-6 animate-spin" />
+              ) : (
+                stats?.total_votes || 0
+              )}
+            </div>
           </CardContent>
         </ProfessionalCard>
 
@@ -245,7 +252,13 @@ export function VoteMonitoringTab() {
             </div>
           </CardHeader>
           <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold text-purple-600">{stats?.unique_voters || 0}</div>
+            <div className="text-2xl font-bold text-purple-600">
+              {loading ? (
+                <Loader2 className="w-6 h-6 animate-spin" />
+              ) : (
+                stats?.unique_voters || 0
+              )}
+            </div>
           </CardContent>
         </ProfessionalCard>
 
@@ -262,7 +275,13 @@ export function VoteMonitoringTab() {
             </div>
           </CardHeader>
           <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold text-green-600">{stats?.valid_votes || 0}</div>
+            <div className="text-2xl font-bold text-green-600">
+              {loading ? (
+                <Loader2 className="w-6 h-6 animate-spin" />
+              ) : (
+                stats?.valid_votes || 0
+              )}
+            </div>
           </CardContent>
         </ProfessionalCard>
 
@@ -279,7 +298,13 @@ export function VoteMonitoringTab() {
             </div>
           </CardHeader>
           <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold text-red-600">{stats?.invalid_votes || 0}</div>
+            <div className="text-2xl font-bold text-red-600">
+              {loading ? (
+                <Loader2 className="w-6 h-6 animate-spin" />
+              ) : (
+                stats?.invalid_votes || 0
+              )}
+            </div>
           </CardContent>
         </ProfessionalCard>
 
@@ -296,7 +321,13 @@ export function VoteMonitoringTab() {
             </div>
           </CardHeader>
           <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold text-orange-600">{stats?.verified_votes || 0}</div>
+            <div className="text-2xl font-bold text-orange-600">
+              {loading ? (
+                <Loader2 className="w-6 h-6 animate-spin" />
+              ) : (
+                stats?.verified_votes || 0
+              )}
+            </div>
           </CardContent>
         </ProfessionalCard>
       </div>

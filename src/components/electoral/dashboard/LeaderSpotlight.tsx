@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 
 interface LeaderData {
   candidateName: string;
+  candidatePhoto?: string;
   position: string;
   totalVotes: number;
   voteShare: number;
@@ -112,8 +113,16 @@ export const LeaderSpotlight = ({ leaders, onVoteClick }: LeaderSpotlightProps) 
                   <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-6">
                     {/* Leader Profile */}
                     <div className="text-center">
-                      <div className="w-28 h-28 mx-auto mb-4 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center shadow-lg">
-                        <Crown className="w-16 h-16 text-white" />
+                      <div className="w-28 h-28 mx-auto mb-4 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center shadow-lg overflow-hidden">
+                        {leader.candidatePhoto ? (
+                          <img 
+                            src={leader.candidatePhoto} 
+                            alt={leader.candidateName}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <Crown className="w-16 h-16 text-white" />
+                        )}
                       </div>
                       <h3 className="text-2xl font-bold text-foreground mb-1">{leader.candidateName}</h3>
                       <p className="text-muted-foreground">{leader.position}</p>

@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 import { TrendingUp, Users, Clock } from "lucide-react";
 import { useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface TimelineData {
   time: string;
@@ -18,9 +19,10 @@ interface TimelineChartProps {
   data: TimelineData[];
   onTimeSlotClick?: (timeSlot: string, votes: number) => void;
   isAdmin?: boolean;
+  isLoading?: boolean;
 }
 
-export function TimelineChart({ data, onTimeSlotClick, isAdmin = false }: TimelineChartProps) {
+export function TimelineChart({ data, onTimeSlotClick, isAdmin = false, isLoading = false }: TimelineChartProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [clickedTime, setClickedTime] = useState<string | null>(null);
 
@@ -106,15 +108,21 @@ export function TimelineChart({ data, onTimeSlotClick, isAdmin = false }: Timeli
           <div className="grid grid-cols-3 gap-3 mt-4">
             <div className="bg-muted/50 rounded-lg p-3">
               <p className="text-xs text-muted-foreground">Total Votes</p>
-              <p className="text-lg font-bold text-primary">{totalVotes}</p>
+              <p className="text-lg font-bold text-primary">
+                {isLoading ? <Skeleton className="h-7 w-12" /> : totalVotes}
+              </p>
             </div>
             <div className="bg-muted/50 rounded-lg p-3">
               <p className="text-xs text-muted-foreground">Peak Time</p>
-              <p className="text-lg font-bold text-primary">{peakTime?.time || 'N/A'}</p>
+              <p className="text-lg font-bold text-primary">
+                {isLoading ? <Skeleton className="h-7 w-16" /> : (peakTime?.time || 'N/A')}
+              </p>
             </div>
             <div className="bg-muted/50 rounded-lg p-3">
               <p className="text-xs text-muted-foreground">Avg/Hour</p>
-              <p className="text-lg font-bold text-primary">{avgVotesPerSlot.toFixed(1)}</p>
+              <p className="text-lg font-bold text-primary">
+                {isLoading ? <Skeleton className="h-7 w-12" /> : avgVotesPerSlot.toFixed(1)}
+              </p>
             </div>
           </div>
         </CardHeader>

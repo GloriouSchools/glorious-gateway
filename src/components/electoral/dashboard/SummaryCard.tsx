@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface SummaryCardProps {
   title: string;
@@ -12,6 +13,7 @@ interface SummaryCardProps {
   trend?: string;
   delay?: number;
   className?: string;
+  isLoading?: boolean;
 }
 
 export function SummaryCard({ 
@@ -21,7 +23,8 @@ export function SummaryCard({
   subtext, 
   trend,
   delay = 0,
-  className 
+  className,
+  isLoading = false
 }: SummaryCardProps) {
   const [displayValue, setDisplayValue] = useState(0);
   const [lastUpdate, setLastUpdate] = useState(Date.now());
@@ -87,14 +90,16 @@ export function SummaryCard({
         <div>
           <p className="text-sm text-muted-foreground mb-2 font-medium">{title}</p>
           <p className="text-4xl font-bold bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
-            {displayValue.toLocaleString()}
+            {isLoading ? <Skeleton className="h-10 w-24" /> : displayValue.toLocaleString()}
           </p>
           {subtext && (
             <p className="text-xs text-muted-foreground mt-2 font-medium">{subtext}</p>
           )}
-          <p className="text-xs text-muted-foreground/60 mt-1">
-            Updated {secondsAgo}s ago
-          </p>
+          {!isLoading && (
+            <p className="text-xs text-muted-foreground/60 mt-1">
+              Updated {secondsAgo}s ago
+            </p>
+          )}
         </div>
       </div>
     </Card>

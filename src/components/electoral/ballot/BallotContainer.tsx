@@ -178,12 +178,29 @@ export function BallotContainer({
     <>
       <div className="min-h-screen bg-gradient-to-br from-[#667eea] to-[#764ba2] flex items-center justify-center p-5">
         <motion.div 
-          className="max-w-[800px] w-full bg-[#fdfcf8] border-[3px] border-[#2c3e50] shadow-[0_20px_60px_rgba(0,0,0,0.3),inset_0_0_50px_rgba(0,0,0,0.02)]"
+          className="max-w-[800px] w-full bg-[#fdfcf8] border-[3px] border-[#2c3e50] shadow-[0_20px_60px_rgba(0,0,0,0.3),inset_0_0_50px_rgba(0,0,0,0.02)] relative overflow-hidden"
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
         >
-          <BallotHeader />
+          {/* Watermark */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+            <div 
+              className="text-[180px] md:text-[240px] tracking-wider rotate-[-45deg]"
+              style={{ 
+                fontFamily: "'Courier New', Courier, monospace",
+                color: '#9ca3af',
+                opacity: 0.15,
+                fontWeight: 900,
+                WebkitTextStroke: '2px rgba(156, 163, 175, 0.2)'
+              }}
+            >
+              GEC
+            </div>
+          </div>
+          
+          <div className="relative z-10">
+            <BallotHeader />
           
           <div className="px-6 py-10 md:px-10 md:py-12 min-h-[500px] bg-[repeating-linear-gradient(0deg,transparent,transparent_30px,rgba(0,0,0,0.02)_30px,rgba(0,0,0,0.02)_31px)]">
             <AnimatePresence mode="wait">
@@ -216,12 +233,13 @@ export function BallotContainer({
             />
           </div>
 
-          <BallotFooter
-            totalPositions={totalPositions}
-            currentPosition={currentPositionIndex}
-            showSubmit={false}
-            onSubmit={handleFinalSubmit}
-          />
+            <BallotFooter
+              totalPositions={totalPositions}
+              currentPosition={currentPositionIndex}
+              showSubmit={false}
+              onSubmit={handleFinalSubmit}
+            />
+          </div>
         </motion.div>
       </div>
     </>
