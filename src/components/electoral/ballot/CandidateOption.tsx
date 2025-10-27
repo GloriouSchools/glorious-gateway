@@ -8,7 +8,6 @@ interface CandidateOptionProps {
     photo?: string | null;
     class: string;
     stream: string;
-    whyApply: string;
   };
   isSelected: boolean;
   isLocked: boolean;
@@ -70,11 +69,6 @@ export function CandidateOption({
         <div className="text-sm md:text-base text-[#4a4a4a] mb-2">
           {candidate.class} - {candidate.stream}
         </div>
-        {candidate.whyApply && (
-          <div className="text-xs md:text-sm text-[#7a7a7a] italic line-clamp-2">
-            "{candidate.whyApply}"
-          </div>
-        )}
       </div>
 
       <motion.div 

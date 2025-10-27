@@ -31,7 +31,8 @@ import {
   MessageSquare,
   Plus,
   Edit,
-  Trash2
+  Trash2,
+  Vote
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -73,9 +74,6 @@ interface ElectoralApplication {
   class_teacher_tel?: string;
   parent_name?: string;
   parent_tel?: number;
-  experience: string;
-  qualifications: string;
-  why_apply: string;
   status: 'pending' | 'confirmed' | 'rejected';
   created_at: string;
 }
@@ -706,7 +704,7 @@ export default function ElectoralApplications() {
                       </p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                     <ProfessionalButton 
                       onClick={() => setShowAddModal(true)}
                       size="sm"
@@ -740,6 +738,14 @@ export default function ElectoralApplications() {
                         <Download className="h-4 w-4" />
                       )}
                       <span className="truncate">{bulkDownloading ? 'Processing...' : 'Download Bulk Applications'}</span>
+                    </ProfessionalButton>
+                    <ProfessionalButton 
+                      onClick={() => navigate('/admin/ballot-generation')}
+                      size="sm"
+                      className="gap-2 bg-purple-600 hover:bg-purple-700"
+                    >
+                      <Vote className="h-4 w-4" />
+                      <span className="truncate">Generate Ballots</span>
                     </ProfessionalButton>
                   </div>
                 </div>

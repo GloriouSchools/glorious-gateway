@@ -13,9 +13,6 @@ interface Candidate {
   photo?: string | null;
   class: string;
   stream: string;
-  experience: string;
-  qualifications: string;
-  whyApply: string;
 }
 
 interface Position {
@@ -85,6 +82,10 @@ export function BallotContainer({
     // Vote in background (no await to block UI)
     onVotePosition(currentPosition.id, candidateId).catch(error => {
       console.error('Error voting:', error);
+      // Unlock position if vote fails
+      setLocked({ ...locked, [currentPosition.id]: false });
+      setSelections({ ...selections });
+      alert(`Failed to record vote: ${error.message || 'Unknown error'}. Please try again.`);
     });
 
     // Auto-advance after animation completes
