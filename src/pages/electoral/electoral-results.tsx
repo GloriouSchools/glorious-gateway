@@ -100,16 +100,33 @@ const ElectoralResults = () => {
 
     loadElectoralData();
 
-    // Set up real-time subscription
+    // Set up real-time subscription with proper status handling
     const channel = supabase
       .channel('electoral-results-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'electoral_votes' }, () => {
-        loadElectoralData();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'electoral_applications' }, () => {
-        loadElectoralData();
-      })
-      .subscribe();
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'electoral_votes' },
+        (payload) => {
+          console.log('Electoral votes changed:', payload);
+          loadElectoralData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'electoral_applications' },
+        (payload) => {
+          console.log('Electoral applications changed:', payload);
+          loadElectoralData();
+        }
+      )
+      .subscribe((status, err) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('✅ Real-time subscription active for electoral results');
+        }
+        if (err) {
+          console.error('❌ Subscription error:', err);
+        }
+      });
 
     return () => {
       supabase.removeChannel(channel);
