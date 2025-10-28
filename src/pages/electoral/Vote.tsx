@@ -52,7 +52,6 @@ export default function Vote() {
   });
   const [ipAddress, setIpAddress] = useState<string | null>(null);
   const [locationDenied, setLocationDenied] = useState(false);
-  const [showLocationWarning, setShowLocationWarning] = useState(false);
   const [fingerprintInfo, setFingerprintInfo] = useState({
     canvasFingerprint: '',
     webglFingerprint: '',
@@ -128,12 +127,10 @@ export default function Vote() {
             accuracy: position.coords.accuracy
           });
           setLocationDenied(false);
-          setShowLocationWarning(false);
         },
         (error) => {
           console.log('Location access denied or unavailable:', error);
           setLocationDenied(true);
-          setShowLocationWarning(true);
         }
       );
 
@@ -146,12 +143,10 @@ export default function Vote() {
             accuracy: position.coords.accuracy
           });
           setLocationDenied(false);
-          setShowLocationWarning(false);
         },
         (error) => {
           console.log('Location tracking error:', error);
           setLocationDenied(true);
-          setShowLocationWarning(true);
         },
         {
           enableHighAccuracy: true,
@@ -222,14 +217,17 @@ export default function Vote() {
           .from('students')
           .select('id, name, email, class_id, stream_id')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
         if (studentError) throw studentError;
+        if (!student) {
+          throw new Error('Student data not found');
+        }
 
         // Fetch class and stream separately
         const [classResult, streamResult] = await Promise.all([
-          supabase.from('classes').select('name').eq('id', student.class_id).single(),
-          supabase.from('streams').select('name').eq('id', student.stream_id).single()
+          supabase.from('classes').select('name').eq('id', student.class_id).maybeSingle(),
+          supabase.from('streams').select('name').eq('id', student.stream_id).maybeSingle()
         ]);
 
         setStudentData({
@@ -239,22 +237,7 @@ export default function Vote() {
           streams: { name: streamResult.data?.name || 'Unknown' }
         });
 
-        // Check if student has already voted
-        const { data: existingVotes, error: votesError } = await supabase
-          .from('electoral_votes')
-          .select('id')
-          .eq('voter_id', user.id)
-          .limit(1);
-
-        if (votesError) throw votesError;
-
-        if (existingVotes && existingVotes.length > 0) {
-          setHasAlreadyVoted(true);
-          setLoading(false);
-          return;
-        }
-
-        // Fetch active positions
+        // Fetch active positions first
         const { data: positionsData, error: positionsError } = await supabase
           .from('electoral_positions')
           .select('*')
@@ -262,6 +245,9 @@ export default function Vote() {
           .order('title');
 
         if (positionsError) throw positionsError;
+        if (!positionsData || positionsData.length === 0) {
+          throw new Error('No active positions found');
+        }
 
         // Fetch confirmed candidates
         const { data: candidatesData, error: candidatesError } = await supabase
@@ -272,30 +258,89 @@ export default function Vote() {
 
         if (candidatesError) throw candidatesError;
 
-        // Group candidates by position - filter out candidates with NULL IDs
-        const positionsWithCandidates: Position[] = (positionsData || []).map(pos => ({
+        // Get ALL positions the student has already voted for
+        const { data: existingVotes, error: votesError } = await supabase
+          .from('electoral_votes')
+          .select('position')
+          .eq('voter_id', user.id);
+
+        if (votesError) throw votesError;
+
+        // Create a set of position TITLES they've voted for (stored as titles in DB)
+        const votedPositionTitles = new Set(
+          (existingVotes || []).map(v => v.position)
+        );
+
+        console.log('Already voted for positions:', Array.from(votedPositionTitles));
+
+        // Filter out positions they've already voted for
+        const remainingPositions = positionsData.filter(pos => 
+          !votedPositionTitles.has(pos.title)
+        );
+
+        console.log('Remaining positions to vote:', remainingPositions.map(p => p.title));
+
+        // If no remaining positions, they've completed voting
+        if (remainingPositions.length === 0) {
+          console.log('All positions voted - marking as complete');
+          sessionStorage.setItem(`voteSubmitted_${user.id}`, 'true');
+          setHasAlreadyVoted(true);
+          setLoading(false);
+          return;
+        }
+
+        // Clear completion flag if they have remaining positions
+        sessionStorage.removeItem(`voteSubmitted_${user.id}`);
+
+        // Build ballot with ONLY remaining positions
+        const positionsWithCandidates: Position[] = remainingPositions.map(pos => ({
           id: pos.id!,
           title: pos.title!,
           description: pos.description || '',
           candidates: (candidatesData || [])
             .filter(app => app.position === pos.id && app.id !== null && app.id !== undefined)
-            .map(app => ({
-              id: app.id!,
-              name: app.student_name!,
-              email: app.student_email!,
-              photo: app.student_photo,
-              class: app.class_name!,
-              stream: app.stream_name!
-            }))
-        })).filter(pos => pos.candidates.length > 0); // Only show positions with candidates
-        
+            .map(app => {
+              // Manually set photos for specific candidates
+              let photo = app.student_photo;
+              const name = app.student_name?.toUpperCase() || '';
+              
+              if (name.includes('JANAT') || name.includes('KALIBBALA')) {
+                photo = '/janat.jpg';
+              } else if (name.includes('SHANNAH') || name.includes('NAKASUJJA')) {
+                photo = '/shannah.jpg';
+              }
+              
+              return {
+                id: app.id!,
+                name: app.student_name!,
+                email: app.student_email!,
+                photo: photo,
+                class: app.class_name!,
+                stream: app.stream_name!
+              };
+            })
+        })).filter(pos => pos.candidates.length > 0); // Only positions with candidates
+
+        if (positionsWithCandidates.length === 0) {
+          throw new Error('No candidates available for remaining positions');
+        }
+
+        console.log('Loading ballot with', positionsWithCandidates.length, 'remaining positions');
         setPositions(positionsWithCandidates);
+        
+        // Show informative toast if they're resuming
+        if (votedPositionTitles.size > 0) {
+          toast({
+            title: "Resuming Voting",
+            description: `You have already voted for ${votedPositionTitles.size} position(s). Continuing with remaining ${positionsWithCandidates.length} position(s).`,
+          });
+        }
         
       } catch (error) {
         console.error('Error loading voting data:', error);
         toast({
           title: "Error",
-          description: "Failed to load voting data. Please refresh the page.",
+          description: error.message || "Failed to load voting data. Please refresh the page.",
           variant: "destructive"
         });
       } finally {
@@ -452,44 +497,10 @@ export default function Vote() {
   }
 
   return (
-    <>
-      {showLocationWarning && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-300">
-          <div className="max-w-md w-full bg-white dark:bg-gray-800 border-[3px] border-red-500 shadow-[0_20px_60px_rgba(220,38,38,0.4)] p-8 rounded-lg animate-in zoom-in duration-300">
-            <div className="text-center space-y-4">
-              <div className="text-5xl animate-pulse">🚨</div>
-              <h2 className="text-2xl font-bold text-red-600 dark:text-red-400">Location Turned Off!</h2>
-              <p className="text-gray-700 dark:text-gray-300 font-semibold">
-                Your location has been disabled. Your votes will be marked as <span className="font-bold text-red-600">INVALID</span> without location verification.
-              </p>
-              <div className="bg-red-50 dark:bg-red-900/20 border-2 border-red-300 dark:border-red-700 p-4 rounded-lg">
-                <p className="text-sm text-red-800 dark:text-red-300 font-medium">
-                  ⚠️ Please turn on your device location to ensure your vote is counted as valid.
-                </p>
-              </div>
-              <div className="flex flex-col gap-3 pt-4">
-                <button
-                  onClick={() => setShowLocationWarning(false)}
-                  className="px-6 py-3 text-base font-bold uppercase tracking-wider bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
-                >
-                  Continue Without Location (Invalid Vote)
-                </button>
-                <button
-                  onClick={() => window.location.reload()}
-                  className="text-gray-600 dark:text-gray-400 hover:underline text-sm font-medium"
-                >
-                  Refresh to Enable Location
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-      <BallotContainer 
-        positions={positions}
-        onVotePosition={handleVotePosition}
-        onVoteComplete={handleVoteComplete}
-      />
-    </>
+    <BallotContainer 
+      positions={positions}
+      onVotePosition={handleVotePosition}
+      onVoteComplete={handleVoteComplete}
+    />
   );
 }

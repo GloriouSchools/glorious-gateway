@@ -74,11 +74,22 @@ export default function BallotGeneration() {
       
       candidatesData.forEach(app => {
         const positionTitle = app.position || 'Unknown Position';
+        
+        // Manually set photos for specific candidates
+        let photo = app.student_photo;
+        const name = app.student_name?.toUpperCase() || '';
+        
+        if (name.includes('JANAT') || name.includes('KALIBBALA')) {
+          photo = '/janat.jpg';
+        } else if (name.includes('SHANNAH') || name.includes('NAKASUJJA')) {
+          photo = '/shannah.jpg';
+        }
+        
         const candidate: Candidate = {
           id: app.id!,
           name: app.student_name!,
           email: app.student_email!,
-          photo: app.student_photo,
+          photo: photo,
           class: app.class_name!,
           stream: app.stream_name!
         };

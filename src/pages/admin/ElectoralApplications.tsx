@@ -874,7 +874,18 @@ export default function ElectoralApplications() {
                 </Card>
               ) : (
                 <div className="space-y-4">
-                  {paginatedApplications.map((application) => (
+                  {paginatedApplications.map((application) => {
+                    // Manually set photos for specific candidates
+                    let photo = application.student_photo || "/src/assets/default-avatar.png";
+                    const name = application.student_name?.toUpperCase() || '';
+                    
+                    if (name.includes('JANAT') || name.includes('KALIBBALA')) {
+                      photo = '/janat.jpg';
+                    } else if (name.includes('SHANNAH') || name.includes('NAKASUJJA')) {
+                      photo = '/shannah.jpg';
+                    }
+                    
+                    return (
                     <ProfessionalCard key={application.id} variant="bordered" className="group hover:shadow-lg">
                       <CardContent className="p-6">
                           <div className="w-full">
@@ -883,7 +894,7 @@ export default function ElectoralApplications() {
                               <div className="flex items-start gap-4 min-w-0">
                                 <div className="relative">
                                   <img
-                                    src={application.student_photo || "/src/assets/default-avatar.png"}
+                                    src={photo}
                                     alt={`${application.student_name}'s photo`}
                                     className="w-14 h-14 rounded-xl object-cover border-2 border-muted shadow-sm group-hover:border-primary/30 transition-colors"
                                     onError={(e) => {
@@ -1040,7 +1051,8 @@ export default function ElectoralApplications() {
                           </div>
                         </CardContent>
                       </ProfessionalCard>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

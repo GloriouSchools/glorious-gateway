@@ -109,17 +109,29 @@ export default function Candidates() {
         
         if (error) throw error;
         
-        const apps: Application[] = applicationsData?.map(app => ({
-          id: app.id,
-          student_name: app.student_name,
-          student_email: app.student_email,
-          student_photo: app.student_photo,
-          position: app.position,
-          class_name: app.class_name,
-          stream_name: app.stream_name,
-          status: app.status,
-          submitted_at: app.submitted_at
-        })) || [];
+        const apps: Application[] = applicationsData?.map(app => {
+          // Manually set photos for specific candidates
+          let photo = app.student_photo;
+          const name = app.student_name?.toUpperCase() || '';
+          
+          if (name.includes('JANAT') || name.includes('KALIBBALA')) {
+            photo = '/janat.jpg';
+          } else if (name.includes('SHANNAH') || name.includes('NAKASUJJA')) {
+            photo = '/shannah.jpg';
+          }
+          
+          return {
+            id: app.id,
+            student_name: app.student_name,
+            student_email: app.student_email,
+            student_photo: photo,
+            position: app.position,
+            class_name: app.class_name,
+            stream_name: app.stream_name,
+            status: app.status,
+            submitted_at: app.submitted_at
+          };
+        }) || [];
         
         setApplications(apps);
       } catch (error) {

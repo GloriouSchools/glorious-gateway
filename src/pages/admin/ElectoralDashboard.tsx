@@ -44,6 +44,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format, parseISO } from "date-fns";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip as RechartsTooltip } from "recharts";
 import { CandidatesSection } from "@/components/electoral/CandidatesSection";
+import ElectoralResults from "@/pages/electoral/electoral-results";
 
 interface Vote {
   id: string;
@@ -818,12 +819,13 @@ export default function ElectoralDashboard() {
 
         {/* Tabs for different views */}
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
+          <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="live">Live Results</TabsTrigger>
             <TabsTrigger value="candidates">Candidates</TabsTrigger>
             <TabsTrigger value="monitoring">Monitoring</TabsTrigger>
+            <TabsTrigger value="results">Results</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
@@ -1133,6 +1135,11 @@ export default function ElectoralDashboard() {
 
             {/* Export Controls */}
             <ExportControls onExport={handleExport} />
+          </TabsContent>
+
+          {/* Results Tab */}
+          <TabsContent value="results" className="space-y-6">
+            <ElectoralResults />
           </TabsContent>
         </Tabs>
       </div>
