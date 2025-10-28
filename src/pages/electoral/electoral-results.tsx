@@ -155,18 +155,6 @@ const ElectoralResults = () => {
     
     setIsTransitioning(true);
     
-    // Scroll to top smoothly
-    if (pageContainerRef.current) {
-      pageContainerRef.current.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
-    }
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
-    
     setCurrentPage(pageIndex);
     
     setTimeout(() => {

@@ -29,8 +29,10 @@ interface LiveResultsHeroGridProps {
 export function LiveResultsHeroGrid({ positions }: LiveResultsHeroGridProps) {
   const [currentPositionIndex, setCurrentPositionIndex] = useState(0);
   const [candidatesMap, setCandidatesMap] = useState<Map<string, Candidate[]>>(new Map());
+  const [animatingVotes, setAnimatingVotes] = useState<Set<string>>(new Set());
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const autoScrollTimerRef = useRef<NodeJS.Timeout>();
+  const previousVotesRef = useRef<Map<string, number>>(new Map());
 
   // Initialize candidates map
   useEffect(() => {
@@ -109,6 +111,7 @@ export function LiveResultsHeroGrid({ positions }: LiveResultsHeroGridProps) {
 
       // Update vote counts and re-sort
       const newMap = new Map(candidatesMap);
+      const changedCandidates = new Set<string>();
       
       positions.forEach(position => {
         const positionVotes = votesData?.filter(v => v.position === position.title) || [];
@@ -118,10 +121,22 @@ export function LiveResultsHeroGrid({ positions }: LiveResultsHeroGridProps) {
           voteCounts[vote.candidate_id] = (voteCounts[vote.candidate_id] || 0) + 1;
         });
 
-        const updatedCandidates = position.candidates.map(candidate => ({
-          ...candidate,
-          votes: voteCounts[candidate.id] || 0
-        })).sort((a, b) => b.votes - a.votes)
+        const updatedCandidates = position.candidates.map(candidate => {
+          const newVotes = voteCounts[candidate.id] || 0;
+          const oldVotes = previousVotesRef.current.get(candidate.id) || 0;
+          
+          // Track if votes changed
+          if (newVotes !== oldVotes) {
+            changedCandidates.add(candidate.id);
+          }
+          
+          previousVotesRef.current.set(candidate.id, newVotes);
+          
+          return {
+            ...candidate,
+            votes: newVotes
+          };
+        }).sort((a, b) => b.votes - a.votes)
           .map((candidate, index) => ({
             ...candidate,
             rank: index + 1
@@ -129,6 +144,12 @@ export function LiveResultsHeroGrid({ positions }: LiveResultsHeroGridProps) {
 
         newMap.set(position.id, updatedCandidates);
       });
+
+      // Trigger animation for changed candidates
+      if (changedCandidates.size > 0) {
+        setAnimatingVotes(changedCandidates);
+        setTimeout(() => setAnimatingVotes(new Set()), 1000);
+      }
 
       setCandidatesMap(newMap);
     } catch (error) {
@@ -246,17 +267,40 @@ export function LiveResultsHeroGrid({ positions }: LiveResultsHeroGridProps) {
                 key={candidate.id}
                 layout
                 initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
+                animate={{ 
+                  opacity: 1, 
+                  scale: 1,
+                  ...(animatingVotes.has(candidate.id) && {
+                    boxShadow: [
+                      '0 0 0px rgba(var(--primary-rgb), 0)',
+                      '0 0 20px rgba(var(--primary-rgb), 0.6)',
+                      '0 0 0px rgba(var(--primary-rgb), 0)'
+                    ]
+                  })
+                }}
                 transition={{
                   layout: { duration: 0.6, type: "spring", bounce: 0.3 },
                   opacity: { duration: 0.3 },
-                  scale: { duration: 0.3, delay: index * 0.05 }
+                  scale: { duration: 0.3, delay: index * 0.05 },
+                  boxShadow: { duration: 0.8 }
                 }}
                 className="relative"
               >
                 <motion.div
-                  className="h-full bg-gradient-to-br from-card to-card/80 rounded-lg border border-border p-6 hover:shadow-xl transition-shadow duration-300"
+                  className={`h-full bg-gradient-to-br from-card to-card/80 rounded-lg border p-6 hover:shadow-xl transition-shadow duration-300 ${
+                    animatingVotes.has(candidate.id) ? 'border-primary' : 'border-border'
+                  }`}
                   whileHover={{ scale: 1.02 }}
+                  animate={animatingVotes.has(candidate.id) ? {
+                    borderColor: [
+                      'hsl(var(--border))',
+                      'hsl(var(--primary))',
+                      'hsl(var(--border))'
+                    ]
+                  } : {}}
+                  transition={{
+                    borderColor: { duration: 0.8 }
+                  }}
                   style={{
                     willChange: 'transform',
                     backfaceVisibility: 'hidden'
@@ -289,15 +333,36 @@ export function LiveResultsHeroGrid({ positions }: LiveResultsHeroGridProps) {
                   {/* Votes Count */}
                   <motion.div 
                     className="flex items-center justify-center gap-2 pt-4 border-t border-border"
-                    initial={{ scale: 1 }}
-                    animate={{ scale: [1, 1.1, 1] }}
-                    transition={{ duration: 0.3 }}
-                    key={candidate.votes} // Re-animate when votes change
+                    animate={animatingVotes.has(candidate.id) ? {
+                      scale: [1, 1.15, 1],
+                      backgroundColor: [
+                        'hsl(var(--card))',
+                        'hsl(var(--primary) / 0.1)',
+                        'hsl(var(--card))'
+                      ]
+                    } : {}}
+                    transition={{ duration: 0.6, ease: "easeInOut" }}
                   >
-                    <TrendingUp className="h-5 w-5 text-primary" />
-                    <span className="text-3xl font-bold text-primary">
+                    <TrendingUp 
+                      className={`h-5 w-5 text-primary transition-all duration-300 ${
+                        animatingVotes.has(candidate.id) ? 'animate-pulse' : ''
+                      }`} 
+                    />
+                    <motion.span 
+                      className="text-3xl font-bold text-primary tabular-nums"
+                      animate={animatingVotes.has(candidate.id) ? {
+                        scale: [1, 1.3, 1],
+                        color: [
+                          'hsl(var(--primary))',
+                          'hsl(var(--primary) / 1.2)',
+                          'hsl(var(--primary))'
+                        ]
+                      } : {}}
+                      transition={{ duration: 0.6 }}
+                      key={candidate.votes}
+                    >
                       {candidate.votes}
-                    </span>
+                    </motion.span>
                     <span className="text-sm text-muted-foreground">
                       {candidate.votes === 1 ? 'vote' : 'votes'}
                     </span>
