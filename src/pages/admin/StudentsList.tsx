@@ -124,8 +124,8 @@ export default function StudentsList() {
   useEffect(() => {
     const loadRefData = async () => {
       const [{ data: classData, error: classError }, { data: streamData, error: streamError }] = await Promise.all([
-        supabase.from('classes').select('id, name'),
-        supabase.from('streams').select('id, name')
+        supabase.from('classes').select('id, name').order('name'),
+        supabase.from('streams').select('id, name, class_id').order('name')
       ]);
       if (classError) console.error('Error fetching classes:', classError);
       if (streamError) console.error('Error fetching streams:', streamError);
@@ -148,11 +148,7 @@ export default function StudentsList() {
     return () => clearTimeout(timer);
   }, [searchTerm, debouncedSearchTerm]);
 
-  useEffect(() => {
-    fetchStudents();
-  }, [currentPage, debouncedSearchTerm, filterClass, filterStream, filterVerified, sortBy, sortOrder, paramStream]);
-
-  const fetchStudents = async () => {
+  const fetchStudents = useCallback(async () => {
     try {
       // Only show full loading screen on initial load, not when searching/filtering
       if (initialLoad) {
@@ -161,27 +157,32 @@ export default function StudentsList() {
       
       let query = supabase
         .from('students')
-        .select('id, name, email, photo_url, class_id, stream_id, is_verified, created_at, default_password', { count: 'exact' })
-        .order(sortBy, { ascending: sortOrder === 'asc' });
+        .select('id, name, email, photo_url, class_id, stream_id, is_verified, created_at, default_password', { count: 'exact' });
 
-      // Filters
+      // Apply filters first (more selective)
+      if (filterClass && filterClass !== 'all') {
+        query = query.eq('class_id', filterClass);
+      }
+      
+      const streamId = (filterStream && filterStream !== 'all') ? filterStream : paramStream;
+      if (streamId) {
+        query = query.eq('stream_id', streamId);
+      }
+      
+      if (filterVerified && filterVerified !== 'all') {
+        query = query.eq('is_verified', filterVerified === 'verified');
+      }
+
+      // Apply search after filters (search on filtered set)
       if (debouncedSearchTerm) {
         query = query.or(
           `name.ilike.%${debouncedSearchTerm}%,email.ilike.%${debouncedSearchTerm}%,id.ilike.%${debouncedSearchTerm}%`
         );
       }
-      if (filterClass && filterClass !== 'all') {
-        query = query.eq('class_id', filterClass);
-      }
-      const streamId = (filterStream && filterStream !== 'all') ? filterStream : paramStream;
-      if (streamId) {
-        query = query.eq('stream_id', streamId);
-      }
-      if (filterVerified && filterVerified !== 'all') {
-        query = query.eq('is_verified', filterVerified === 'verified');
-      }
 
-      // Pagination
+      // Apply sorting and pagination last
+      query = query.order(sortBy, { ascending: sortOrder === 'asc' });
+      
       const from = (currentPage - 1) * pageSize;
       const to = from + pageSize - 1;
       const { data, error, count } = await query.range(from, to);
@@ -194,14 +195,18 @@ export default function StudentsList() {
 
       setStudents(data || []);
       setTotalCount(count || 0);
-      setInitialLoad(false); // Mark initial load as complete
+      setInitialLoad(false);
     } catch (error) {
       console.error('Error:', error);
       toast.error('Failed to fetch students');
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, debouncedSearchTerm, filterClass, filterStream, filterVerified, sortBy, sortOrder, paramStream, initialLoad, pageSize]);
+
+  useEffect(() => {
+    fetchStudents();
+  }, [fetchStudents]);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 

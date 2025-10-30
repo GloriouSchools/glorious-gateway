@@ -26,8 +26,6 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { format, addDays, parseISO } from "date-fns";
-import { parseStudentCSV, StudentCSVRow } from '@/utils/csvParser';
-import studentsCSV from '@/data/students.csv?raw';
 import AttendanceOverview from "./admin/AttendanceOverview";
 import { supabase } from "@/integrations/supabase/client";
 import { EmptyAttendanceState } from "@/components/attendance/EmptyAttendanceState";
@@ -55,49 +53,6 @@ interface ClassInfo {
   totalStudents: number;
 }
 
-const convertCSVToStudents = (): Student[] => {
-  const csvData = parseStudentCSV(studentsCSV);
-  
-  return csvData.map(row => ({
-    id: row.id,
-    name: row.name,
-    email: row.email,
-    class: row.class_id,
-    stream: row.stream_id,
-    photoUrl: row.photo_url
-  }));
-};
-
-const allStudents = convertCSVToStudents();
-
-const buildClassList = (): ClassInfo[] => {
-  const classStreamMap = new Map<string, Set<string>>();
-
-  allStudents.forEach(student => {
-    if (!classStreamMap.has(student.stream)) {
-      classStreamMap.set(student.stream, new Set());
-    }
-  });
-
-  const classList: ClassInfo[] = [];
-  
-  classStreamMap.forEach((_, streamId) => {
-    const studentsInStream = allStudents.filter(s => s.stream === streamId);
-    const className = streamId.split('-')[0];
-    
-    classList.push({
-      id: streamId,
-      name: streamId.replace('-', ' - '),
-      class_id: className,
-      totalStudents: studentsInStream.length
-    });
-  });
-
-  return classList.sort((a, b) => a.id.localeCompare(b.id));
-};
-
-const realClasses: ClassInfo[] = buildClassList();
-
 const AttendanceMarking = () => {
   const { userRole, userName, photoUrl, signOut } = useAuth();
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -110,11 +65,71 @@ const AttendanceMarking = () => {
   const [absentReason, setAbsentReason] = useState<string>("");
   const [customReason, setCustomReason] = useState<string>("");
   const [showReasonDialog, setShowReasonDialog] = useState(false);
+  const [allStudents, setAllStudents] = useState<Student[]>([]);
+  const [realClasses, setRealClasses] = useState<ClassInfo[]>([]);
+  const [isLoadingStudents, setIsLoadingStudents] = useState(true);
+  
+  // Load students from database
+  useEffect(() => {
+    loadStudents();
+  }, []);
   
   // Load existing attendance from database when date or class changes
   useEffect(() => {
-    loadAttendance();
+    if (selectedClass) {
+      loadAttendance();
+    }
   }, [selectedDate, selectedClass]);
+  
+  const loadStudents = async () => {
+    try {
+      setIsLoadingStudents(true);
+      const { data: students, error } = await supabase
+        .from('students')
+        .select('id, name, email, class_id, stream_id, photo_url')
+        .order('class_id')
+        .order('stream_id')
+        .order('name')
+        .limit(10000);
+      
+      if (error) throw error;
+      
+      const formattedStudents: Student[] = students?.map(s => ({
+        id: s.id,
+        name: s.name,
+        email: s.email,
+        class: s.class_id,
+        stream: s.stream_id,
+        photoUrl: s.photo_url
+      })) || [];
+      
+      setAllStudents(formattedStudents);
+      
+      // Build class list from database students
+      const classMap = new Map<string, number>();
+      formattedStudents.forEach(student => {
+        classMap.set(student.stream, (classMap.get(student.stream) || 0) + 1);
+      });
+      
+      const classList: ClassInfo[] = [];
+      classMap.forEach((count, streamId) => {
+        const className = streamId.split('-')[0];
+        classList.push({
+          id: streamId,
+          name: streamId.replace('-', ' - '),
+          class_id: className,
+          totalStudents: count
+        });
+      });
+      
+      setRealClasses(classList.sort((a, b) => a.id.localeCompare(b.id)));
+    } catch (error) {
+      console.error('Error loading students:', error);
+      toast.error('Failed to load students from database');
+    } finally {
+      setIsLoadingStudents(false);
+    }
+  };
   
   const loadAttendance = async () => {
     try {

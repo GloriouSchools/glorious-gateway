@@ -239,7 +239,7 @@ export default function Vote() {
 
         // Fetch active positions first
         const { data: positionsData, error: positionsError } = await supabase
-          .from('electoral_positions')
+          .from('electoral_rows')
           .select('*')
           .eq('is_active', true)
           .order('title');

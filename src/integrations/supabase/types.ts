@@ -173,7 +173,7 @@ export type Database = {
         }
         Relationships: []
       }
-      electoral_positions: {
+      electoral_rows: {
         Row: {
           created_at: string | null
           description: string | null
@@ -340,57 +340,24 @@ export type Database = {
       }
       streams: {
         Row: {
-          classesTaught: string | null
-          contactNumber: number | null
+          class_id: string | null
           created_at: string | null
-          default_password: number | null
-          email: string | null
           id: string | null
-          is_verified: boolean | null
           name: string | null
-          nationality: string | null
-          password_hash: string | null
-          personal_email: string | null
-          photo: string | null
-          photo_url: string | null
-          sex: string | null
-          subjectsTaught: string | null
           updated_at: string | null
         }
         Insert: {
-          classesTaught?: string | null
-          contactNumber?: number | null
+          class_id?: string | null
           created_at?: string | null
-          default_password?: number | null
-          email?: string | null
           id?: string | null
-          is_verified?: boolean | null
           name?: string | null
-          nationality?: string | null
-          password_hash?: string | null
-          personal_email?: string | null
-          photo?: string | null
-          photo_url?: string | null
-          sex?: string | null
-          subjectsTaught?: string | null
           updated_at?: string | null
         }
         Update: {
-          classesTaught?: string | null
-          contactNumber?: number | null
+          class_id?: string | null
           created_at?: string | null
-          default_password?: number | null
-          email?: string | null
           id?: string | null
-          is_verified?: boolean | null
           name?: string | null
-          nationality?: string | null
-          password_hash?: string | null
-          personal_email?: string | null
-          photo?: string | null
-          photo_url?: string | null
-          sex?: string | null
-          subjectsTaught?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -450,7 +417,7 @@ export type Database = {
           created_at: string | null
           default_password: number | null
           email: string | null
-          id: string | null
+          id: string
           is_verified: boolean | null
           name: string | null
           nationality: string | null
@@ -468,7 +435,7 @@ export type Database = {
           created_at?: string | null
           default_password?: number | null
           email?: string | null
-          id?: string | null
+          id: string
           is_verified?: boolean | null
           name?: string | null
           nationality?: string | null
@@ -486,7 +453,7 @@ export type Database = {
           created_at?: string | null
           default_password?: number | null
           email?: string | null
-          id?: string | null
+          id?: string
           is_verified?: boolean | null
           name?: string | null
           nationality?: string | null

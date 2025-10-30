@@ -160,7 +160,7 @@ export default function AddPrefectModal({ open, onOpenChange, onSuccess }: AddPr
       ] = await Promise.all([
         supabase.from('classes').select('id, name'),
         supabase.from('streams').select('id, name'),
-        supabase.from('electoral_positions').select('id, title').eq('is_active', true)
+        supabase.from('electoral_rows').select('id, title').eq('is_active', true)
       ]);
 
       if (classesError) throw classesError;
