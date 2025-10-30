@@ -1,0 +1,2496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Electoral Results</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        html {
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+            color: #fff;
+            overflow-x: hidden;
+            -webkit-text-size-adjust: 100%;
+            text-rendering: optimizeLegibility;
+        }
+
+        /* Modal Styles */
+        .fullscreen-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            animation: modalFadeIn 0.5s ease-in-out;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .fullscreen-modal.active {
+            display: flex;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes modalFadeOut {
+            from {
+                opacity: 1;
+                transform: scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.modal-header h2 {
+    font-size: 3rem;
+    color: #fff;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    margin-bottom: 5px;
+}
+
+.modal-header .position-title {
+    font-size: 1.5rem;
+    color: #ffd700;
+    margin-top: 5px;
+}
+
+        .modal-candidates {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .modal-candidate-section {
+            margin-top: 20px;
+        }
+
+        .modal-candidate-section.winner {
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 40px rgba(255, 215, 0, 0.8);
+            }
+        }
+
+        .modal-candidate-grid {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 40px;
+            align-items: start;
+        }
+
+        .modal-details {
+            color: white;
+        }
+
+        .modal-rank-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .modal-candidate-name {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: #ffd700;
+        }
+
+        .modal-vote-section {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-vote-section h4 {
+            color: #fff;
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .modal-vote-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .modal-vote-row.total {
+            background: rgba(255, 215, 0, 0.2);
+            border: 2px solid #ffd700;
+        }
+
+        .modal-vote-label {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .modal-vote-count {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .stream-votes-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .stream-votes-grid::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .stream-votes-grid::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .stream-votes-grid::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        .stream-vote {
+            font-size: 0.95rem;
+        }
+
+        .modal-photo-container-large {
+            width: 300px;
+            height: 300px;
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-photo-container-large img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .modal-photo-container-large .initials {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            font-weight: bold;
+            color: white;
+            z-index: 1;
+        }
+
+        .confetti {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    animation: confetti-fall linear forwards;
+    z-index: 10001;
+    pointer-events: none;
+}
+
+        @keyframes confetti-fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .modal-skip {
+            position: absolute;
+            top: 10px;
+            right: 70px;
+            padding: 10px 20px;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #667eea;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            z-index: 10;
+            transition: all 0.3s ease;
+        }
+
+        .modal-skip:hover {
+            background: #667eea;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .modal-countdown {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 50px;
+            height: 50px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #667eea;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+
+        /* Main Page Styles */
+        .header {
+            text-align: center;
+            margin-bottom: 15px;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        .header h1 {
+            font-size: clamp(1.3rem, 3.5vw, 2rem);
+            margin-bottom: 4px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header .post-name {
+            font-size: clamp(0.85rem, 2vw, 1rem);
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .results-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            padding: 10px;
+            padding-top: 10px;
+        }
+
+        .candidate-card {
+            background: rgba(255,255,255,0.98);
+            border-radius: 15px;
+            padding: 10px 12px;
+            padding-top: 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            transition: all 0.5s ease;
+            position: relative;
+            overflow: visible;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            justify-content: center;
+        }
+
+        .candidate-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            border-radius: 15px 15px 0 0;
+        }
+
+        .position-ribbon {
+            position: absolute;
+            top: 12px;
+            right: -8px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 6px 12px;
+            padding-right: 16px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            z-index: 20;
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+        }
+
+        .position-ribbon::before {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            right: 0;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 6px 8px 0 0;
+            border-color: rgba(0,0,0,0.3) transparent transparent transparent;
+        }
+
+        .candidate-card.position-1 .position-ribbon {
+            background: linear-gradient(135deg, #FFD700, #FF6B35);
+        }
+
+        .candidate-card.position-2 .position-ribbon {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+        }
+
+        .candidate-card.position-3 .position-ribbon {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+        }
+
+        .candidate-card.position-1::before {
+            background: linear-gradient(90deg, #FFD700, #FF6B35, #F7931E);
+            animation: shimmer 3s ease-in-out infinite;
+            background-size: 200% 100%;
+        }
+
+        .candidate-card.position-1 {
+            background: linear-gradient(135deg, rgba(255,215,0,0.25) 0%, rgba(255,107,53,0.15) 50%, rgba(255,255,255,0.98) 100%);
+            box-shadow: 0 10px 25px rgba(255,215,0,0.3), 0 0 15px rgba(255,107,53,0.2);
+        }
+
+        .candidate-card.position-2::before {
+            background: linear-gradient(90deg, #4facfe, #00f2fe, #43e97b);
+        }
+
+        .candidate-card.position-2 {
+            background: linear-gradient(135deg, rgba(79,172,254,0.25) 0%, rgba(0,242,254,0.15) 50%, rgba(255,255,255,0.98) 100%);
+            box-shadow: 0 10px 25px rgba(79,172,254,0.3), 0 0 15px rgba(0,242,254,0.2);
+        }
+
+        .candidate-card.position-3::before {
+            background: linear-gradient(90deg, #f093fb, #f5576c, #fa709a);
+        }
+
+        .candidate-card.position-3 {
+            background: linear-gradient(135deg, rgba(240,147,251,0.25) 0%, rgba(245,87,108,0.15) 50%, rgba(255,255,255,0.98) 100%);
+            box-shadow: 0 10px 25px rgba(240,147,251,0.3), 0 0 15px rgba(245,87,108,0.2);
+        }
+
+        .candidate-card.position-4::before,
+        .candidate-card.position-5::before,
+        .candidate-card.position-6::before {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .candidate-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.25);
+        }
+
+        .crown-emoji {
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2rem;
+            animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.2));
+            z-index: 10;
+        }
+
+        .photo-container {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid #667eea;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            margin-bottom: 4px;
+            transition: transform 0.3s ease;
+            position: relative;
+            flex-shrink: 0;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.6rem;
+            font-weight: bold;
+        }
+
+        .photo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+        }
+
+        .photo-container .initials {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1;
+            display: block;
+        }
+
+        .photo-container img.loaded {
+            z-index: 2;
+        }
+
+        .photo-container img[src]:not([src=""]) {
+            z-index: 2;
+        }
+
+        .photo-container:has(img:not([style*="display: none"])) .initials {
+            display: none;
+        }
+
+        .candidate-card.position-1 .photo-container {
+            border-color: #FFD700;
+            box-shadow: 0 6px 15px rgba(255,215,0,0.4), 0 0 12px rgba(255,107,53,0.2);
+        }
+
+        .candidate-card.position-2 .photo-container {
+            border-color: #4facfe;
+            box-shadow: 0 6px 15px rgba(79,172,254,0.4), 0 0 12px rgba(0,242,254,0.2);
+        }
+
+        .candidate-card.position-3 .photo-container {
+            border-color: #f093fb;
+            box-shadow: 0 6px 15px rgba(240,147,251,0.4), 0 0 12px rgba(245,87,108,0.2);
+        }
+
+        .candidate-card:hover .photo-container {
+            transform: scale(1.05);
+        }
+
+        .candidate-name {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 0;
+            padding: 6px 10px;
+            padding-bottom: 6px;
+            width: 100%;
+        }
+
+        .votes-display {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 6px 12px;
+            padding-bottom: 8px;
+            border-radius: 12px;
+            width: 100%;
+            margin-top: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .vote-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2px 0;
+        }
+
+        .vote-row.total {
+            border-top: 2px solid #e2e8f0;
+            padding-top: 5px;
+            margin-top: 2px;
+        }
+
+        .candidate-card.position-1 .votes-display {
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid rgba(255,215,0,0.5);
+        }
+
+        .candidate-card.position-2 .votes-display {
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid rgba(79,172,254,0.5);
+        }
+
+        .candidate-card.position-3 .votes-display {
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid rgba(240,147,251,0.5);
+        }
+
+        .votes-label {
+            font-size: 0.7rem;
+            color: #5a6370;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            font-weight: 600;
+        }
+
+        .votes-label.total-label {
+            font-size: 0.8rem;
+            color: #2d3748;
+            font-weight: 700;
+        }
+
+        .votes-count {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #2d3748;
+        }
+
+        .votes-count.total-count {
+            font-size: 1.5rem;
+            color: #1a202c;
+            font-weight: 800;
+        }
+
+        .candidate-card.position-1 .votes-count {
+            color: #2d3748;
+        }
+
+        .candidate-card.position-2 .votes-count {
+            color: #2d3748;
+        }
+
+        .candidate-card.position-3 .votes-count {
+            color: #2d3748;
+        }
+
+        .pagination {
+            display: flex;
+            gap: 12px;
+            background: rgba(255,255,255,0.15);
+            padding: 8px 15px;
+            border-radius: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            margin: 15px auto;
+            max-width: fit-content;
+        }
+
+        .page-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            border: 2px solid transparent;
+            color: #fff;
+            font-weight: bold;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .page-btn:hover {
+            background: rgba(255,255,255,0.5);
+            transform: scale(1.1);
+        }
+
+        .page-btn.active {
+            background: #fff;
+            color: #667eea;
+            border-color: #667eea;
+            box-shadow: 0 4px 15px rgba(255,255,255,0.4);
+            transform: scale(1.15);
+        }
+
+        .filter-section {
+            text-align: center;
+            margin: 10px auto;
+            max-width: 600px;
+            background: rgba(255,255,255,0.15);
+            padding: 12px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+
+        .filter-section h3 {
+            display: none;
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .position-select {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px 15px;
+            border-radius: 25px;
+            border: 2px solid rgba(255,255,255,0.5);
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .position-select:hover {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.7);
+        }
+
+        .position-select option {
+            background: #667eea;
+            color: white;
+        }
+
+        .show-all-btn {
+            padding: 10px 25px;
+            border-radius: 25px;
+            border: 2px solid rgba(255,255,255,0.5);
+            background: linear-gradient(135deg, #43e97b, #38f9d7);
+            color: white;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(67,233,123,0.3);
+        }
+
+        .show-all-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(67,233,123,0.5);
+        }
+
+        .carousel-container {
+            position: relative;
+            max-width: 1200px;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+
+        .carousel-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.3);
+            border: 2px solid rgba(255,255,255,0.5);
+            color: white;
+            font-size: 3rem;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .carousel-nav:hover {
+            background: rgba(255,255,255,0.5);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .carousel-nav.prev {
+            left: 20px;
+        }
+
+        .carousel-nav.next {
+            right: 20px;
+        }
+
+        #pagesContainer {
+            position: relative;
+            width: 100%;
+        }
+
+        .page-content {
+            display: none;
+            animation-duration: 0.8s;
+            animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            animation-fill-mode: both;
+        }
+
+        .page-content.active {
+            display: block;
+        }
+
+        /* Animations */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(-8px); }
+        }
+
+        @keyframes shimmer {
+            0%, 100% { 
+                background-position: 0% 50%;
+            }
+            50% { 
+                background-position: 100% 50%;
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideOutLeft {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(-100%);
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+        }
+
+        @keyframes zoomIn {
+            from {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes zoomOut {
+            from {
+                opacity: 1;
+                transform: scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+        }
+
+        @keyframes bounceIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.3) translateY(-50%);
+            }
+            50% {
+                opacity: 0.9;
+                transform: scale(1.05);
+            }
+            70% {
+                transform: scale(0.95);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes bounceOut {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            25% {
+                transform: scale(0.95);
+            }
+            50% {
+                opacity: 0.9;
+                transform: scale(1.05);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.3) translateY(50%);
+            }
+        }
+
+        @keyframes flipInY {
+            from {
+                opacity: 0;
+                transform: perspective(1000px) rotateY(90deg);
+            }
+            to {
+                opacity: 1;
+                transform: perspective(1000px) rotateY(0);
+            }
+        }
+
+        @keyframes flipOutY {
+            from {
+                opacity: 1;
+                transform: perspective(1000px) rotateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: perspective(1000px) rotateY(-90deg);
+            }
+        }
+
+        @keyframes flipInX {
+            from {
+                opacity: 0;
+                transform: perspective(1000px) rotateX(90deg);
+            }
+            to {
+                opacity: 1;
+                transform: perspective(1000px) rotateX(0);
+            }
+        }
+
+        @keyframes flipOutX {
+            from {
+                opacity: 1;
+                transform: perspective(1000px) rotateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: perspective(1000px) rotateX(-90deg);
+            }
+        }
+
+        @keyframes swipeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(100%) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes swipeOutDown {
+            from {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(100%) scale(0.9);
+            }
+        }
+
+        @keyframes morphIn {
+            0% {
+                opacity: 0;
+                transform: scale(0) rotate(-180deg);
+                border-radius: 50%;
+            }
+            50% {
+                transform: scale(1.1) rotate(-90deg);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) rotate(0);
+                border-radius: 0;
+            }
+        }
+
+        @keyframes morphOut {
+            0% {
+                opacity: 1;
+                transform: scale(1) rotate(0);
+                border-radius: 0;
+            }
+            50% {
+                transform: scale(1.1) rotate(90deg);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0) rotate(180deg);
+                border-radius: 50%;
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .modal-candidate-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+
+            .modal-photo-container-large {
+                width: 250px;
+                height: 250px;
+                margin: 0 auto;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .results-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .carousel-nav {
+                width: 50px;
+                height: 50px;
+                font-size: 2.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .modal-content {
+                padding: 20px;
+                max-width: 95%;
+            }
+
+            .modal-header h2 {
+                font-size: 2rem;
+            }
+
+            .modal-header .position-title {
+                font-size: 1.2rem;
+            }
+
+            .modal-candidate-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .modal-photo-container-large {
+                width: 200px;
+                height: 200px;
+            }
+
+            .modal-photo-container-large .initials {
+                font-size: 3rem;
+            }
+
+            .modal-candidate-name {
+                font-size: 1.5rem;
+            }
+
+            .modal-vote-section h4 {
+                font-size: 1rem;
+            }
+
+            .modal-vote-label {
+                font-size: 0.9rem;
+            }
+
+            .modal-vote-count {
+                font-size: 1rem;
+            }
+
+            .stream-votes-grid {
+                max-height: 200px;
+            }
+
+            .results-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 5px;
+            }
+
+            .modal-content {
+                padding: 15px;
+            }
+
+            .modal-header h2 {
+                font-size: 1.5rem;
+            }
+
+            .modal-header .position-title {
+                font-size: 1rem;
+            }
+
+            .modal-candidate-name {
+                font-size: 1.2rem;
+            }
+
+            .modal-photo-container-large {
+                width: 150px;
+                height: 150px;
+            }
+
+            .modal-photo-container-large .initials {
+                font-size: 2.5rem;
+            }
+
+            .modal-vote-row {
+                padding: 8px 10px;
+            }
+
+            .modal-vote-label {
+                font-size: 0.85rem;
+            }
+
+            .modal-vote-count {
+                font-size: 0.95rem;
+            }
+
+            .modal-skip {
+                right: 60px;
+                padding: 8px 15px;
+                font-size: 0.8rem;
+            }
+
+            .modal-countdown {
+                width: 40px;
+                height: 40px;
+                font-size: 1.1rem;
+            }
+
+            .page-btn {
+                width: 35px;
+                height: 35px;
+                font-size: 0.8rem;
+            }
+
+            .pagination {
+                gap: 8px;
+                padding: 10px 15px;
+            }
+            
+            .carousel-nav {
+                width: 45px;
+                height: 45px;
+                font-size: 2rem;
+            }
+
+            .carousel-nav.prev {
+                left: 10px;
+            }
+
+            .carousel-nav.next {
+                right: 10px;
+            }
+        }
+
+        /* Smart TV and Large Screen optimizations */
+        @media (min-width: 1920px) {
+            body {
+                padding: 40px;
+            }
+            
+            .header h1 {
+                font-size: 3.5rem;
+            }
+            
+            .header .post-name {
+                font-size: 1.8rem;
+            }
+            
+            .results-container {
+                max-width: 1400px;
+                gap: 25px;
+            }
+            
+            .candidate-card {
+                padding: 25px 20px;
+                padding-top: 35px;
+            }
+            
+            .photo-container {
+                width: 120px;
+                height: 120px;
+                font-size: 3rem;
+            }
+            
+            .candidate-name {
+                font-size: 1.4rem;
+                padding: 12px 16px;
+            }
+            
+            .votes-count {
+                font-size: 2rem;
+            }
+            
+            .votes-label {
+                font-size: 1rem;
+            }
+            
+            .crown-emoji {
+                font-size: 3rem;
+            }
+            
+            .carousel-nav {
+                width: 80px;
+                height: 80px;
+                font-size: 4rem;
+            }
+            
+            .page-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 1.1rem;
+            }
+            
+            .filter-section,
+            .position-select,
+            .show-all-btn {
+                font-size: 1.2rem;
+            }
+
+            .modal-content {
+                padding: 60px;
+                max-width: 1200px;
+            }
+
+            .modal-header h2 {
+                font-size: 4rem;
+            }
+
+            .modal-header .position-title {
+                font-size: 2rem;
+            }
+
+            .modal-candidate-name {
+                font-size: 2.5rem;
+            }
+
+            .modal-photo-container-large {
+                width: 400px;
+                height: 400px;
+            }
+
+            .modal-photo-container-large .initials {
+                font-size: 5rem;
+            }
+
+            .modal-vote-label {
+                font-size: 1.3rem;
+            }
+
+            .modal-vote-count {
+                font-size: 1.5rem;
+            }
+
+            .modal-vote-section h4 {
+                font-size: 1.4rem;
+            }
+        }
+
+        @media (min-width: 3840px) {
+            body {
+                padding: 60px;
+            }
+            
+            .header h1 {
+                font-size: 5rem;
+            }
+            
+            .header .post-name {
+                font-size: 2.5rem;
+            }
+            
+            .results-container {
+                max-width: 2000px;
+                gap: 35px;
+                grid-template-columns: repeat(4, 1fr);
+            }
+            
+            .candidate-card {
+                padding: 35px 30px;
+                padding-top: 50px;
+            }
+            
+            .photo-container {
+                width: 160px;
+                height: 160px;
+                font-size: 4rem;
+                border: 5px solid #667eea;
+            }
+            
+            .candidate-name {
+                font-size: 2rem;
+                margin-bottom: 10px;
+                padding: 15px 20px;
+            }
+            
+            .votes-count {
+                font-size: 2.8rem;
+            }
+            
+            .votes-label {
+                font-size: 1.3rem;
+            }
+            
+            .crown-emoji {
+                font-size: 4rem;
+                top: -15px;
+            }
+            
+            .carousel-nav {
+                width: 100px;
+                height: 100px;
+                font-size: 5rem;
+            }
+            
+            .page-btn {
+                width: 60px;
+                height: 60px;
+                font-size: 1.3rem;
+            }
+            
+            .filter-section h3 {
+                font-size: 2rem;
+                margin-bottom: 25px;
+            }
+            
+            .position-select,
+            .show-all-btn {
+                font-size: 1.5rem;
+                padding: 18px 40px;
+            }
+
+            .modal-content {
+                padding: 80px;
+                max-width: 1600px;
+            }
+
+            .modal-header h2 {
+                font-size: 5rem;
+            }
+
+            .modal-header .position-title {
+                font-size: 2.5rem;
+            }
+
+            .modal-candidate-name {
+                font-size: 3rem;
+            }
+
+            .modal-photo-container-large {
+                width: 500px;
+                height: 500px;
+            }
+
+            .modal-photo-container-large .initials {
+                font-size: 6rem;
+            }
+
+            .modal-vote-label {
+                font-size: 1.6rem;
+            }
+
+            .modal-vote-count {
+                font-size: 1.8rem;
+            }
+
+            .modal-vote-section h4 {
+                font-size: 1.8rem;
+            }
+
+            .modal-rank-badge {
+                font-size: 1.5rem;
+                padding: 15px 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Fullscreen Modal -->
+<div class="fullscreen-modal" id="fullscreenModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>🐐 THE G.O.A.T</h2>
+            <p style="font-size: 0.9rem; color: #999; margin: 5px 0;">Greatest of All Time</p>
+            <p class="position-title" id="modalPositionTitle"></p>
+        </div>
+        <div class="modal-candidates" id="modalCandidates">
+            <!-- Candidates will be injected here -->
+        </div>
+    </div>
+</div>
+    <div class="filter-section" id="filterSection">
+        <div class="filter-controls">
+            <select class="position-select" id="positionFilter">
+                <option value="">All Positions</option>
+            </select>
+            <button class="show-all-btn" onclick="showAllPositions()">
+                Show All
+            </button>
+        </div>
+    </div>
+
+    <div class="carousel-container" id="carouselContainer">
+        <button class="carousel-nav prev" onclick="previousPage()">‹</button>
+        <div id="pagesContainer"></div>
+        <button class="carousel-nav next" onclick="nextPage()">›</button>
+    </div>
+    
+    <div class="pagination" id="pagination"></div>
+
+    <script>
+        // Hardcoded electoral data
+        const ELECTORAL_DATA = {
+  "total_positions": 14,
+  "total_votes_across_all_positions": 0,
+  "positions": [
+    {
+      "position": "ACADEMIC PREFECT",
+      "total_votes_cast": 0,
+      "total_candidates": 4,
+      "candidates": [
+        {
+          "candidate_id": "12e2fdb3-c109-4b74-8036-044e4c641861",
+          "candidate_name": "MUGARURA PAXTON",
+          "total_votes": 0,
+          "online_votes": 220,
+          "physical_votes": 36
+        },
+        {
+          "candidate_id": "f6216054-9161-441c-a139-be2f39959428",
+          "candidate_name": "MIREMBE GIFT REBECCA",
+          "total_votes": 0,
+          "online_votes": 145,
+          "physical_votes": 66
+        },
+        {
+          "candidate_id": "037a1b56-8cf1-44d2-af2f-f7bd4bc99dfb",
+          "candidate_name": "NAYIGA SHUDAT ZAHARA",
+          "total_votes": 0,
+          "online_votes": 96,
+          "physical_votes": 75
+        },
+        {
+          "candidate_id": "7c859c8b-7f7c-478e-917c-915d0f805fa4",
+          "candidate_name": "NAMMANDA HAIFA",
+          "total_votes": 0,
+          "online_votes": 96,
+          "physical_votes": 70
+        }
+      ]
+    },
+    {
+      "position": "WELFARE PREFECT  MESS PREFECT ",
+      "total_votes_cast": 0,
+      "total_candidates": 4,
+      "candidates": [
+        {
+          "candidate_id": "11fe0e24-9857-4961-89f3-9eb6d69edf26",
+          "candidate_name": "SSEMOMBWE ANDERSON",
+          "total_votes": 0,
+          "online_votes": 204,
+          "physical_votes": 73
+        },
+        {
+          "candidate_id": "c07dc678-06ac-4529-b774-3a9f09e4db11",
+          "candidate_name": "KASULE ELSEN ZAWADI",
+          "total_votes": 0,
+          "online_votes": 128,
+          "physical_votes": 74
+        },
+        {
+          "candidate_id": "49e495b6-18ec-400a-94d5-f358cc460533",
+          "candidate_name": "NIMUKUNDA CYRUS",
+          "total_votes": 0,
+          "online_votes": 127,
+          "physical_votes": 63
+        },
+        {
+          "candidate_id": "a8adf432-418d-42c9-a819-e8f1f24f4f9d",
+          "candidate_name": "NAKALUNGI GABRIELLA IVANNAH",
+          "total_votes": 0,
+          "online_votes": 92,
+          "physical_votes": 103
+        }
+      ]
+    },
+    {
+      "position": "HEALTH   SANITATION",
+      "total_votes_cast": 0,
+      "total_candidates": 4,
+      "candidates": [
+        {
+          "candidate_id": "ec5958c5-5e1a-46bd-94b6-338dbf67f1ad",
+          "candidate_name": "AMODING DORCAS LAURETTA",
+          "total_votes": 0,
+          "online_votes": 265,
+          "physical_votes": 160
+        },
+        {
+          "candidate_id": "bc4e1485-57ea-457e-bf36-1563d2e1312a",
+          "candidate_name": "NAMUBIRU AFRICA RACHEAL",
+          "total_votes": 0,
+          "online_votes": 125,
+          "physical_votes": 32
+        },
+        {
+          "candidate_id": "77b6656e-2abd-4e44-978b-b229aad981e1",
+          "candidate_name": "INEZA PEACE DORIAN",
+          "total_votes": 0,
+          "online_votes": 111,
+          "physical_votes": 85
+        },
+        {
+          "candidate_id": "8a14d42f-5320-41b6-b859-d0d978267db9",
+          "candidate_name": "AYEBAREYESU EXCELLENT",
+          "total_votes": 0,
+          "online_votes": 57,
+          "physical_votes": 37
+        }
+      ]
+    },
+    {
+      "position": "GAMES AND SPORTS PREFECT",
+      "total_votes_cast": 0,
+      "total_candidates": 4,
+      "candidates": [
+        {
+          "candidate_id": "a4ee087d-37bf-4317-84c3-4a1a9f1827fb",
+          "candidate_name": "NAMPIIMA PAULINE",
+          "total_votes": 0,
+          "online_votes": 251,
+          "physical_votes": 111
+        },
+        {
+          "candidate_id": "7bd0e4ea-5928-49d7-b344-7959cbd53d87",
+          "candidate_name": "SSEKANDI RAMADHAN",
+          "total_votes": 0,
+          "online_votes": 148,
+          "physical_votes": 75
+        },
+        {
+          "candidate_id": "e721d219-fc28-4786-9169-cf80f99efb67",
+          "candidate_name": "KEMIGISHA ALEXANDRIA",
+          "total_votes": 0,
+          "online_votes": 114,
+          "physical_votes": 65
+        },
+        {
+          "candidate_id": "adf78342-fbe3-4bf7-a2cd-afea3f5618ec",
+          "candidate_name": "NVANUNGI SHANIEZ",
+          "total_votes": 0,
+          "online_votes": 42,
+          "physical_votes": 69
+        }
+      ]
+    },
+    {
+      "position": "PREFECT IN CHARGE OF DISCIPLINE",
+      "total_votes_cast": 0,
+      "total_candidates": 4,
+      "candidates": [
+        {
+          "candidate_id": "ec105766-e320-4321-af3e-3cd5028400e8",
+          "candidate_name": "ALIYAH ADAMS KYEYUNE",
+          "total_votes": 0,
+          "online_votes": 176,
+          "physical_votes": 104
+        },
+        {
+          "candidate_id": "288f0c93-ac55-4a91-abfe-ef088e214111",
+          "candidate_name": "AMPUMUZA ELIANAH",
+          "total_votes": 0,
+          "online_votes": 152,
+          "physical_votes": 23
+        },
+        {
+          "candidate_id": "397a55c3-db27-49f6-b432-c0f35e340927",
+          "candidate_name": "NAKAWEESI MICHELLE",
+          "total_votes": 0,
+          "online_votes": 141,
+          "physical_votes": 90
+        },
+        {
+          "candidate_id": "d6d3cf5a-0051-4bf5-91a3-63bb03456783",
+          "candidate_name": "NAKIREMBEKA RUTH TENDO ESTHER",
+          "total_votes": 0,
+          "online_votes": 87,
+          "physical_votes": 105
+        }
+      ]
+    },
+    {
+      "position": "HEAD MONITOR ES ",
+      "total_votes_cast": 0,
+      "total_candidates": 4,
+      "candidates": [
+        {
+          "candidate_id": "7399d5ba-188e-4ebb-b722-69078283a7b2",
+          "candidate_name": "NANUNGI DRUCILLA LUTEETE",
+          "total_votes": 0,
+          "online_votes": 198,
+          "physical_votes": 110
+        },
+        {
+          "candidate_id": "8f3b1b27-b571-4e90-908a-43b70108ebf7",
+          "candidate_name": "BESIGYE TRICIA",
+          "total_votes": 0,
+          "online_votes": 149,
+          "physical_votes": 63
+        },
+        {
+          "candidate_id": "2ed41268-bdef-42cc-8f2c-25806c93c03f",
+          "candidate_name": "NAMAZZI DESIRE HILDA",
+          "total_votes": 0,
+          "online_votes": 137,
+          "physical_votes": 51
+        },
+        {
+          "candidate_id": "74ac9c3d-b409-459f-a7c0-ac787640b4fd",
+          "candidate_name": "ALIMPA DESTINY ANGELLA",
+          "total_votes": 0,
+          "online_votes": 74,
+          "physical_votes": 94
+        }
+      ]
+    },
+    {
+      "position": "PREFECT FOR LOWER SECTION",
+      "total_votes_cast": 0,
+      "total_candidates": 4,
+      "candidates": [
+        {
+          "candidate_id": "867e02b5-5212-436e-a60b-00d92911e99f",
+          "candidate_name": "ATUKUNDA SALOME",
+          "total_votes": 0,
+          "online_votes": 287,
+          "physical_votes": 147
+        },
+        {
+          "candidate_id": "64dd7a65-0c02-4699-a361-b63df52d3589",
+          "candidate_name": "ALINDA TIFFANY",
+          "total_votes": 0,
+          "online_votes": 136,
+          "physical_votes": 91
+        },
+        {
+          "candidate_id": "63bbde7f-60f4-432b-8c61-e987c07124fe",
+          "candidate_name": "NAMPIJJA RAHUMAH",
+          "total_votes": 0,
+          "online_votes": 94,
+          "physical_votes": 30
+        },
+        {
+          "candidate_id": "70ebb200-3a75-494b-ae8e-f803b48222cf",
+          "candidate_name": "NANTIMBA JULIAN SEKATE",
+          "total_votes": 0,
+          "online_votes": 40,
+          "physical_votes": 55
+        }
+      ]
+    },
+    {
+      "position": "PREFECT FOR UPPER SECTION",
+      "total_votes_cast": 0,
+      "total_candidates": 3,
+      "candidates": [
+        {
+          "candidate_id": "77c65296-2605-4b9d-a48b-ac86c96f1b09",
+          "candidate_name": "ASHABA ELIZABETH",
+          "total_votes": 0,
+          "online_votes": 226,
+          "physical_votes": 127
+        },
+        {
+          "candidate_id": "5e7db028-8752-4ef6-b877-75b16f71c093",
+          "candidate_name": "KHARUNDA ESTHER",
+          "total_votes": 0,
+          "online_votes": 173,
+          "physical_votes": 18
+        },
+        {
+          "candidate_id": "f60ab5ee-28d3-42e6-bee9-d32bd500b45f",
+          "candidate_name": "ATAMBA CAROL JIREH",
+          "total_votes": 0,
+          "online_votes": 159,
+          "physical_votes": 13
+        }
+      ]
+    },
+    {
+      "position": "ENTERTAINMENT PREFECT",
+      "total_votes_cast": 0,
+      "total_candidates": 4,
+      "candidates": [
+        {
+          "candidate_id": "9b305326-35ab-440f-84de-f97ce4f6ebb3",
+          "candidate_name": "NAKITTO RHONEL RUTH",
+          "total_votes": 0,
+          "online_votes": 330,
+          "physical_votes": 69
+        },
+        {
+          "candidate_id": "cc1e41ad-90a8-4740-9dd6-ee2c21100a4d",
+          "candidate_name": "WASAJJA CHARLES DICKENS",
+          "total_votes": 0,
+          "online_votes": 112,
+          "physical_votes": 124
+        },
+        {
+          "candidate_id": "d4dc551e-2e31-4a4a-82b1-ca65ebe506fe",
+          "candidate_name": "KALIBBALA JANAT",
+          "total_votes": 0,
+          "online_votes": 58,
+          "physical_votes": 57
+        },
+        {
+          "candidate_id": "0721ccee-05b5-4909-b1cd-9a87194e5446",
+          "candidate_name": "NAKASUJJA SHANNAH",
+          "total_votes": 0,
+          "online_votes": 57,
+          "physical_votes": 55
+        }
+      ]
+    },
+    {
+      "position": "FURNITURE PREFECT S ",
+      "total_votes_cast": 0,
+      "total_candidates": 4,
+      "candidates": [
+        {
+          "candidate_id": "9df21105-7581-45ee-8ce4-fef62a9677b6",
+          "candidate_name": "MATENYITIA MERCY",
+          "total_votes": 0,
+          "online_votes": 178,
+          "physical_votes": 74
+        },
+        {
+          "candidate_id": "1128f604-473a-4c91-b063-9717a8bd2996",
+          "candidate_name": "BUYONDO ISRAEL",
+          "total_votes": 0,
+          "online_votes": 156,
+          "physical_votes": 121
+        },
+        {
+          "candidate_id": "4a6b9fc5-4619-4329-b17b-c36f409db58d",
+          "candidate_name": "NTAMBI REAGAN",
+          "total_votes": 0,
+          "online_votes": 153,
+          "physical_votes": 67
+        },
+        {
+          "candidate_id": "d0bfe2b8-1651-4229-8b66-77f8d15a6732",
+          "candidate_name": "KIMBUGWE MELVIN ELISHA",
+          "total_votes": 0,
+          "online_votes": 70,
+          "physical_votes": 65
+        }
+      ]
+    },
+    {
+      "position": "HEAD PREFECT",
+      "total_votes_cast": 0,
+      "total_candidates": 4,
+      "candidates": [
+        {
+          "candidate_id": "707be6be-9afb-4e3e-9eeb-9b14c43df9d6",
+          "candidate_name": "BALUKU ELEUTHERIUS BROGAN",
+          "total_votes": 0,
+          "online_votes": 231,
+          "physical_votes": 84
+        },
+        {
+          "candidate_id": "c52d4326-b329-471f-a973-a566f030d283",
+          "candidate_name": "NAMATA DIVINE HANNAH",
+          "total_votes": 0,
+          "online_votes": 216,
+          "physical_votes": 56
+        },
+        {
+          "candidate_id": "fddcd1af-3477-45b0-a0e5-c9f19a4345be",
+          "candidate_name": "NSUBUGA ERON",
+          "total_votes": 0,
+          "online_votes": 59,
+          "physical_votes": 128
+        },
+        {
+          "candidate_id": "e8629458-7717-4afc-8012-887c05763978",
+          "candidate_name": "KAJJUMBA BELLA",
+          "total_votes": 0,
+          "online_votes": 51,
+          "physical_votes": 46
+        }
+      ]
+    },
+    {
+      "position": "ICT PREFECT",
+      "total_votes_cast": 0,
+      "total_candidates": 4,
+      "candidates": [
+        {
+          "candidate_id": "d191dc3a-4e7f-4063-8310-2db636425562",
+          "candidate_name": "NANYUNJA RINAH NANA",
+          "total_votes": 0,
+          "online_votes": 193,
+          "physical_votes": 79
+        },
+        {
+          "candidate_id": "8ae99fc2-8ac3-4491-b372-195a862f9888",
+          "candidate_name": "HANNAH FRIEND KIZITO",
+          "total_votes": 0,
+          "online_votes": 142,
+          "physical_votes": 75
+        },
+        {
+          "candidate_id": "25ad3083-661d-498a-8a6d-1d1fabe18385",
+          "candidate_name": "OMODING ETHAN EYALAMA",
+          "total_votes": 0,
+          "online_votes": 121,
+          "physical_votes": 88
+        },
+        {
+          "candidate_id": "1712fe59-6b20-4157-81d6-bb66a3909afe",
+          "candidate_name": "AHUMUZA PRAISE ROBERT",
+          "total_votes": 0,
+          "online_votes": 104,
+          "physical_votes": 72
+        }
+      ]
+    },
+    {
+      "position": "TIME KEEPER",
+      "total_votes_cast": 0,
+      "total_candidates": 4,
+      "candidates": [
+        {
+          "candidate_id": "827613e8-3d87-4900-8cce-23a238ead93b",
+          "candidate_name": "NAMALA SALSABEL",
+          "total_votes": 0,
+          "online_votes": 259,
+          "physical_votes": 73
+        },
+        {
+          "candidate_id": "5bc8f386-b780-4955-9c68-672df6dfd73a",
+          "candidate_name": "ISINGOMA EDGAR",
+          "total_votes": 0,
+          "online_votes": 123,
+          "physical_votes": 68
+        },
+        {
+          "candidate_id": "942f7387-a7e7-4b0c-a9f5-04006ed29dd2",
+          "candidate_name": "NDAGIRE SARAH",
+          "total_votes": 0,
+          "online_votes": 124,
+          "physical_votes": 88
+        },
+        {
+          "candidate_id": "318e74da-7b00-4482-bf06-0189eef5a874",
+          "candidate_name": "CHOL GAI",
+          "total_votes": 0,
+          "online_votes": 78,
+          "physical_votes": 80
+        }
+      ]
+    },
+    {
+      "position": "UNIFORM   UNIFORMITY",
+      "total_votes_cast": 0,
+      "total_candidates": 6,
+      "candidates": [
+        {
+          "candidate_id": "c3107612-2b87-41d9-9e45-e497ffb588f3",
+          "candidate_name": "NAMBUUSI VERONICA NAKATO",
+          "total_votes": 0,
+          "online_votes": 217,
+          "physical_votes": 180
+        },
+        {
+          "candidate_id": "93f51074-0cd7-44a1-a361-da2280ac0963",
+          "candidate_name": "MPAIRWE SERENE LYTON",
+          "total_votes": 0,
+          "online_votes": 91,
+          "physical_votes": 33
+        },
+        {
+          "candidate_id": "e3a2723e-faa1-4382-8181-22de92cbbc4c",
+          "candidate_name": "NAMUJJUZI WINFRED",
+          "total_votes": 0,
+          "online_votes": 77,
+          "physical_votes": 20
+        },
+        {
+          "candidate_id": "1dd36e3b-24e0-4ee8-b289-fa915ee24eb6",
+          "candidate_name": "KAWEESA KIERAN",
+          "total_votes": 0,
+          "online_votes": 58,
+          "physical_votes": 25
+        },
+        {
+          "candidate_id": "46b426c3-bd68-4360-a2ac-16dbdb1cb4d6",
+          "candidate_name": "NAKASIISA SHEILLA KABOGGOZA",
+          "total_votes": 0,
+          "online_votes": 56,
+          "physical_votes": 20
+        },
+        {
+          "candidate_id": "26659747-902e-484f-a0c0-efa652c59d10",
+          "candidate_name": "AKAMUTUHA JANET",
+          "total_votes": 0,
+          "online_votes": 54,
+          "physical_votes": 47
+        }
+      ]
+    }
+  ]
+};
+
+        let pages = [];
+        let allPages = [];
+        let currentPage = 0;
+        let isTransitioning = false;
+        let autoScrollTimer;
+        let modalTimer;
+        let modalCountdownTimer;
+        let modalCountdown = 10;
+        let showingModal = false;
+
+        const transitions = [
+            { in: 'slideInRight', out: 'slideOutLeft' },
+            { in: 'slideInLeft', out: 'slideOutRight' },
+            { in: 'bounceIn', out: 'bounceOut' },
+            { in: 'flipInY', out: 'flipOutY' },
+            { in: 'flipInX', out: 'flipOutX' },
+            { in: 'zoomIn', out: 'zoomOut' },
+            { in: 'swipeInUp', out: 'swipeOutDown' },
+            { in: 'morphIn', out: 'morphOut' }
+        ];
+
+        function getInitials(name) {
+            return name.split(' ').map(word => word[0]).join('').substring(0, 2);
+        }
+
+        function getPositionLabel(position) {
+            const labels = {
+                1: '1st',
+                2: '2nd',
+                3: '3rd'
+            };
+            return labels[position] || `${position}th`;
+        }
+
+        function getCandidatePhotoUrl(candidateId, name) {
+            const specialCases = {
+                '1dd36e3b-24e0-4ee8-b289-fa915ee24eb6': 'https://fresh-teacher.github.io/gloriouschool/KAWEESA%20KEIRAN.JPG',
+                'e8629458-7717-4afc-8012-887c05763978': 'https://fresh-teacher.github.io/gloriouschool/KAJJUMBA%20BELLA%20COLYTE.JPG',
+                '49e495b6-18ec-400a-94d5-f358cc460533': 'https://fresh-teacher.github.io/gloriouschool/NIMUKUNDA%20CYRUS%20MURAMIRA.JPG',
+                '7399d5ba-188e-4ebb-b722-69078283a7b2': 'https://fresh-teacher.github.io/gloriouschool/NANUNGI%20DRUCILA%20LUTEETE.JPG',
+                '827613e8-3d87-4900-8cce-23a238ead93b': 'https://fresh-teacher.github.io/gloriouschool/NAMALA%20SALASBEL.JPG',
+                '318e74da-7b00-4482-bf06-0189eef5a874': 'https://fresh-teacher.github.io/gloriouschool/CHOL%20GAI%20ALIER%20NHIAL.JPG',
+                'd4dc551e-2e31-4a4a-82b1-ca65ebe506fe': 'https://niyikondibenoit-cpu.github.io/glorious-gateway-54305-90485-86962-1001-77825/janat.jpg',
+                '0721ccee-05b5-4909-b1cd-9a87194e5446': 'https://niyikondibenoit-cpu.github.io/glorious-gateway-54305-90485-86962-1001-77825/shannah.jpg',
+                'cc1e41ad-90a8-4740-9dd6-ee2c21100a4d': 'https://fresh-teacher.github.io/gloriouschool/WASSAJJA%20DICKENS%20CHARLES.JPG'
+            };
+             
+            if (candidateId && specialCases[candidateId]) {
+                return specialCases[candidateId];
+            }
+            
+            const baseUrl = 'https://fresh-teacher.github.io/gloriouschool';
+            const encodedName = encodeURIComponent(name);
+            return `${baseUrl}/${encodedName}.JPG`;
+        }
+
+        function createPageHTML(page, pageIndex) {
+            return `
+                <div class="page-content ${pageIndex === 0 ? 'active' : ''}" data-page="${pageIndex}">
+                    <div class="header">
+                        <h1>🗳️ Final Election Results</h1>
+                        <p class="post-name">${page.title}</p>
+                    </div>
+                    <div class="results-container" data-page-index="${pageIndex}">
+                        ${page.candidates.map((candidate, i) => `
+                            <div class="candidate-card position-${i + 1}" data-position="${i + 1}" data-votes="${candidate.votes}">
+                                ${i === 0 ? '<div class="crown-emoji">👑</div>' : ''}
+                                <div class="position-ribbon">${getPositionLabel(i + 1)}</div>
+                                <div class="photo-container">
+                                    <span class="initials">${candidate.initials}</span>
+                                    <img src="${candidate.photoUrl}" alt="${candidate.name}" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'">
+                                </div>
+                                <div class="votes-display">
+                                    <h3 class="candidate-name">${candidate.name}</h3>
+                                    <div class="vote-row">
+                                        <span class="votes-label">Online Votes:</span>
+                                        <span class="votes-count" data-target="${candidate.onlineVotes}">0</span>
+                                    </div>
+                                    <div class="vote-row">
+                                        <span class="votes-label">Physical Votes:</span>
+                                        <span class="votes-count" data-target="${candidate.physicalVotes}">0</span>
+                                    </div>
+                                    <div class="vote-row total">
+                                        <span class="votes-label total-label">Total Votes:</span>
+                                        <span class="votes-count total-count" data-target="${candidate.votes}">0</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function calculateTotalVotes(data) {
+            let overallTotal = 0;
+            
+            data.positions.forEach(position => {
+                let positionTotal = 0;
+                
+                position.candidates.forEach(candidate => {
+                    candidate.total_votes = candidate.online_votes + candidate.physical_votes;
+                    positionTotal += candidate.total_votes;
+                });
+                
+                // Sort candidates by total votes (highest to lowest)
+                position.candidates.sort((a, b) => b.total_votes - a.total_votes);
+                
+                position.total_votes_cast = positionTotal;
+                overallTotal += positionTotal;
+            });
+            
+            data.total_votes_across_all_positions = overallTotal;
+            
+            return data;
+        }
+
+        const updatedData = calculateTotalVotes(ELECTORAL_DATA);
+        console.log('Total votes calculated:', updatedData.total_votes_across_all_positions);
+
+        function animateCount(element, start, end, duration) {
+            const startTime = Date.now();
+            const range = end - start;
+            
+            function updateCount() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const easeOutQuad = progress * (2 - progress);
+                const current = Math.floor(start + (range * easeOutQuad));
+                
+                element.textContent = current.toLocaleString();
+                
+                if (progress < 1) {
+                    requestAnimationFrame(updateCount);
+                } else {
+                    element.textContent = end.toLocaleString();
+                }
+            }
+            
+            requestAnimationFrame(updateCount);
+        }
+
+        function animatePageCounts(pageIndex) {
+            const pageContent = document.querySelector(`.page-content[data-page="${pageIndex}"]`);
+            if (!pageContent) return;
+
+            const voteCountElements = pageContent.querySelectorAll('.votes-count');
+            
+            voteCountElements.forEach((element, index) => {
+                const targetVotes = parseInt(element.dataset.target);
+                setTimeout(() => {
+                    animateCount(element, 0, targetVotes, 1500);
+                }, index * 100);
+            });
+        }
+
+        function createConfetti() {
+    const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#ff69b4'];
+    const confettiCount = 150;
+    
+    for (let i = 0; i < confettiCount; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = Math.random() * 100 + 'vw';
+        confetti.style.top = '-10px';
+        confetti.style.animationDelay = Math.random() * 3 + 's';
+        confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        document.body.appendChild(confetti);
+        
+        // Remove confetti after animation completes
+        const duration = parseFloat(confetti.style.animationDuration) * 1000;
+        const delay = parseFloat(confetti.style.animationDelay) * 1000;
+        setTimeout(() => {
+            confetti.remove();
+        }, duration + delay);
+    }
+}
+
+// Add this function to animate modal vote counts:
+function animateModalVotes() {
+    const modal = document.getElementById('fullscreenModal');
+    const voteCountElements = modal.querySelectorAll('.modal-vote-count');
+    
+    voteCountElements.forEach((element, index) => {
+        const targetVotes = parseInt(element.textContent.replace(/,/g, ''));
+        element.textContent = '0';
+        
+        setTimeout(() => {
+            animateCount(element, 0, targetVotes, 1500);
+        }, index * 150);
+    });
+}
+
+// Update the showModal function to show candidates sequentially:
+let currentCandidateIndex = 0;
+
+function showModal(pageIndex) {
+    if (pages.length === 0 || pages[pageIndex].candidates.length === 0) return;
+    
+    showingModal = true;
+    currentCandidateIndex = 0;
+    const page = pages[pageIndex];
+    
+    showCandidateInModal(page, 0);
+}
+
+function showCandidateInModal(page, candidateIndex) {
+    const modal = document.getElementById('fullscreenModal');
+    const modalCandidates = document.getElementById('modalCandidates');
+    const modalPositionTitle = document.getElementById('modalPositionTitle');
+    
+    const candidate = page.candidates[candidateIndex];
+const isWinner = candidateIndex === 0;
+
+// Get rank badge based on position
+const rankBadges = {
+    0: '🥇 Winner',
+    1: '🥈 2nd Place',
+    2: '🥉 3rd Place'
+};
+const rankBadge = rankBadges[candidateIndex] || `${getPositionLabel(candidateIndex + 1)} Place`;
+
+// Update modal header based on whether it's the winner or not
+const modalHeader = document.querySelector('.modal-header h2');
+const goatSubtitle = document.querySelector('.modal-header p[style*="font-size: 0.9rem"]');
+if (isWinner) {
+    modalHeader.style.display = 'block';
+    goatSubtitle.style.display = 'block';
+} else {
+    modalHeader.style.display = 'none';
+    goatSubtitle.style.display = 'none';
+}
+
+modalPositionTitle.textContent = page.title;
+    
+    // Build votes breakdown HTML if data exists
+    let votesBreakdownHTML = '';
+    if (candidate.votesByGender) {
+        votesBreakdownHTML += `
+            <div class="modal-vote-section">
+                <h4>Votes by Gender</h4>
+                <div class="modal-vote-row">
+                    <span class="modal-vote-label">Male:</span>
+                    <span class="modal-vote-count">${candidate.votesByGender.male.toLocaleString()}</span>
+                </div>
+                <div class="modal-vote-row">
+                    <span class="modal-vote-label">Female:</span>
+                    <span class="modal-vote-count">${candidate.votesByGender.female.toLocaleString()}</span>
+                </div>
+            </div>
+        `;
+    }
+    
+    if (candidate.votesByStream) {
+        const streamEntries = Object.entries(candidate.votesByStream).sort((a, b) => b[1] - a[1]);
+        votesBreakdownHTML += `
+            <div class="modal-vote-section">
+                <h4>Votes by Stream</h4>
+                <div class="stream-votes-grid">
+                    ${streamEntries.map(([stream, votes]) => `
+                        <div class="modal-vote-row stream-vote">
+                            <span class="modal-vote-label">${stream}:</span>
+                            <span class="modal-vote-count">${votes.toLocaleString()}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    modalCandidates.innerHTML = `
+        <div class="modal-candidate-section ${isWinner ? 'winner' : ''}">
+            <div class="modal-candidate-grid">
+                <div class="modal-details">
+                    <div class="modal-rank-badge">${rankBadge}</div>
+                    <h3 class="modal-candidate-name">${candidate.name}</h3>
+                    <div class="modal-vote-section">
+                        <h4>Vote Summary</h4>
+                        <div class="modal-vote-row">
+                            <span class="modal-vote-label">Online Votes:</span>
+                            <span class="modal-vote-count">${candidate.onlineVotes.toLocaleString()}</span>
+                        </div>
+                        <div class="modal-vote-row">
+                            <span class="modal-vote-label">Physical Votes:</span>
+                            <span class="modal-vote-count">${candidate.physicalVotes.toLocaleString()}</span>
+                        </div>
+                        <div class="modal-vote-row total">
+                            <span class="modal-vote-label">Total Votes:</span>
+                            <span class="modal-vote-count">${candidate.votes.toLocaleString()}</span>
+                        </div>
+                    </div>
+                    ${votesBreakdownHTML}
+                </div>
+                <div class="modal-photo-container-large">
+                    <span class="initials">${candidate.initials}</span>
+                    <img src="${candidate.photoUrl}" alt="${candidate.name}" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'">
+                </div>
+            </div>
+        </div>
+    `;
+    
+    if (!modal.classList.contains('active')) {
+        modal.classList.add('active');
+    }
+    
+    // Create confetti only for winner
+    if (isWinner) {
+        setTimeout(() => {
+            createConfetti();
+        }, 100);
+    }
+    
+    // Animate vote counts in modal
+    setTimeout(() => {
+        animateModalVotes();
+    }, 300);
+    
+    clearTimeout(modalTimer);
+
+// Show this candidate for 10 seconds, then move to next
+modalTimer = setTimeout(() => {
+    if (candidateIndex < page.candidates.length - 1) {
+        // Slide out current candidate to the left
+        modalCandidates.style.animation = 'slideOutLeft 0.5s ease-in-out';
+        setTimeout(() => {
+            modalCandidates.style.animation = '';
+            showCandidateInModal(page, candidateIndex + 1);
+            // Slide in next candidate from the right
+            modalCandidates.style.animation = 'slideInRight 0.5s ease-in-out';
+            setTimeout(() => {
+                modalCandidates.style.animation = '';
+            }, 500);
+        }, 500);
+    } else {
+        // All candidates shown, hide modal
+        hideModal();
+    }
+}, 10000);
+}
+
+function hideModal() {
+    const modal = document.getElementById('fullscreenModal');
+    
+    // Clear any remaining confetti
+    const confettiElements = modal.querySelectorAll('.confetti');
+    confettiElements.forEach(c => c.remove());
+    
+    modal.style.animation = 'modalFadeOut 0.5s ease-in-out';
+    
+    setTimeout(() => {
+        modal.classList.remove('active');
+        modal.style.animation = '';
+        showingModal = false;
+        
+        // Move to next page after modal closes
+        setTimeout(() => {
+            nextPage();
+        }, 500);
+    }, 500);
+}
+
+        function initializePages() {
+            if (pages.length === 0) return;
+
+            const container = document.getElementById('pagesContainer');
+            const pagination = document.getElementById('pagination');
+            
+            container.innerHTML = pages.map((page, index) => createPageHTML(page, index)).join('');
+            
+            if (pages.length > 1) {
+                pagination.innerHTML = pages.map((_, index) => 
+                    `<button class="page-btn ${index === 0 ? 'active' : ''}" data-page="${index}">${index + 1}</button>`
+                ).join('');
+
+                document.querySelectorAll('.page-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        goToPage(parseInt(btn.dataset.page));
+                    });
+                });
+
+                startAutoScroll();
+            } else {
+                pagination.innerHTML = '';
+            }
+
+            setTimeout(() => {
+                animatePageCounts(0);
+                // Show modal for first page after 10 seconds
+                setTimeout(() => {
+                    showModal(0);
+                }, 10000);
+            }, 100);
+        }
+
+        function startAutoScroll() {
+            clearInterval(autoScrollTimer);
+            // No auto scroll - modal handles transitions
+        }
+
+        function nextPage() {
+            if (pages.length === 0 || showingModal) return;
+            const nextPageIndex = (currentPage + 1) % pages.length;
+            goToPage(nextPageIndex, true);
+        }
+
+        function previousPage() {
+            if (pages.length === 0 || showingModal) return;
+            const prevPageIndex = (currentPage - 1 + pages.length) % pages.length;
+            goToPage(prevPageIndex, false);
+        }
+
+        function goToPage(pageIndex, showModalAfter = true) {
+            if (isTransitioning || pageIndex === currentPage || pages.length === 0) return;
+            
+            isTransitioning = true;
+            const oldPage = currentPage;
+            const transition = transitions[Math.floor(Math.random() * transitions.length)];
+            
+            const oldContent = document.querySelector(`.page-content[data-page="${oldPage}"]`);
+            const newContent = document.querySelector(`.page-content[data-page="${pageIndex}"]`);
+            
+            const newVoteCounts = newContent.querySelectorAll('.votes-count');
+            newVoteCounts.forEach(count => {
+                count.textContent = '0';
+            });
+            
+            if (oldContent) {
+                oldContent.style.animationName = transition.out;
+                
+                setTimeout(() => {
+                    oldContent.classList.remove('active');
+                    oldContent.style.animationName = '';
+                }, 800);
+            }
+            
+            setTimeout(() => {
+                currentPage = pageIndex;
+                newContent.classList.add('active');
+                newContent.style.animationName = transition.in;
+                
+                setTimeout(() => {
+                    animatePageCounts(pageIndex);
+                }, 300);
+                
+                setTimeout(() => {
+                    newContent.style.animationName = '';
+                    isTransitioning = false;
+                }, 800);
+                
+                document.querySelectorAll('.page-btn').forEach((btn, index) => {
+                    btn.classList.toggle('active', index === pageIndex);
+                });
+                
+                // Show modal after 10 seconds on new page
+                if (showModalAfter) {
+                    setTimeout(() => {
+                        showModal(pageIndex);
+                    }, 10000);
+                }
+            }, 100);
+        }
+
+        function populateFilterDropdown() {
+            const select = document.getElementById('positionFilter');
+            select.innerHTML = '<option value="">All Positions</option>';
+            
+            ELECTORAL_DATA.positions.forEach(position => {
+                const option = document.createElement('option');
+                option.value = position.position;
+                option.textContent = `${position.position} (${position.total_votes_cast} votes)`;
+                select.appendChild(option);
+            });
+            
+            select.addEventListener('change', function() {
+                if (this.value) {
+                    filterByPosition(this.value);
+                } else {
+                    showAllPositions();
+                }
+            });
+        }
+
+        function filterByPosition(positionName) {
+            clearInterval(autoScrollTimer);
+            clearTimeout(modalTimer);
+            clearInterval(modalCountdownTimer);
+            pages = allPages.filter(page => page.title === positionName);
+            currentPage = 0;
+            initializePages();
+        }
+
+        function showAllPositions() {
+            document.getElementById('positionFilter').value = '';
+            clearTimeout(modalTimer);
+            clearInterval(modalCountdownTimer);
+            pages = [...allPages];
+            currentPage = 0;
+            initializePages();
+        }
+
+        function loadElectoralData() {
+            console.log('Loading hardcoded electoral data...');
+            
+            allPages = ELECTORAL_DATA.positions.map(position => {
+                const candidates = position.candidates.map(candidate => ({
+    name: candidate.candidate_name,
+    votes: candidate.total_votes,
+    onlineVotes: candidate.online_votes || 0,
+    physicalVotes: candidate.physical_votes || 0,
+    votesByGender: candidate.votes_by_gender || null,
+    votesByStream: candidate.votes_by_stream || null,
+    initials: getInitials(candidate.candidate_name),
+    photoUrl: getCandidatePhotoUrl(candidate.candidate_id, candidate.candidate_name)
+}));
+
+                return {
+                    title: position.position,
+                    candidates: candidates
+                };
+            });
+            
+            pages = [...allPages];
+            populateFilterDropdown();
+            initializePages();
+            
+            console.log(`Loaded ${ELECTORAL_DATA.total_positions} positions with ${ELECTORAL_DATA.total_votes_across_all_positions} total votes`);
+        }
+        function keepAwake() {
+            if ('wakeLock' in navigator) {
+                navigator.wakeLock.request('screen').catch(err => {
+                    console.log('Wake Lock error:', err);
+                });
+            }
+        }
+
+        function preloadImages() {
+            allPages.forEach(page => {
+                page.candidates.forEach(candidate => {
+                    const img = new Image();
+                    img.src = candidate.photoUrl;
+                });
+            });
+        }
+
+        window.addEventListener('load', () => {
+            loadElectoralData();
+            keepAwake();
+            setTimeout(preloadImages, 1000);
+        });
+
+        document.addEventListener('keydown', e => {
+            if (pages.length === 0 || showingModal) return;
+            if (e.key === 'ArrowLeft') previousPage();
+            if (e.key === 'ArrowRight') nextPage();
+        });
+
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        function handleSwipe() {
+            if (showingModal) return;
+            const swipeThreshold = 50;
+            if (touchEndX < touchStartX - swipeThreshold) {
+                nextPage();
+            } else if (touchEndX > touchStartX + swipeThreshold) {
+                previousPage();
+            }
+        }
+
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+    </script>
+</body>
+</html>

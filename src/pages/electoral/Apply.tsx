@@ -324,7 +324,7 @@ export default function Apply() {
         class_teacher_name: formData.class_teacher_name,
         class_teacher_tel: formData.class_teacher_tel,
         parent_name: formData.parent_name,
-        parent_tel: parseInt(formData.parent_tel) || 0,
+        parent_tel: formData.parent_tel || '',
         experience: formData.experience,
         qualifications: formData.qualifications,
         why_apply: formData.whyApply,

@@ -22,7 +22,7 @@ interface ElectoralApplication {
   class_teacher_name?: string;
   class_teacher_tel?: string;
   parent_name?: string;
-  parent_tel?: number;
+  parent_tel?: string;
   status: 'pending' | 'confirmed' | 'rejected';
 }
 
@@ -83,7 +83,7 @@ export default function EditPrefectModal({ open, onOpenChange, application, onSu
         updateManualApplication(application.id, {
           position: formData.position,
           class_teacher_tel: formData.class_teacher_tel || null,
-          parent_tel: formData.parent_tel ? parseInt(formData.parent_tel) : null,
+          parent_tel: formData.parent_tel || null,
           status: formData.status as 'pending' | 'confirmed' | 'rejected'
         });
       } else {
@@ -93,7 +93,7 @@ export default function EditPrefectModal({ open, onOpenChange, application, onSu
           .update({
             position: formData.position,
             class_teacher_tel: formData.class_teacher_tel || null,
-            parent_tel: formData.parent_tel ? parseInt(formData.parent_tel) : null,
+            parent_tel: formData.parent_tel || null,
             status: formData.status
           })
           .eq('id', application.id);

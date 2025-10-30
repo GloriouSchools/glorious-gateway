@@ -385,9 +385,9 @@ export default function Vote() {
     
     const voteStatus = (hasLocation && isValidDevice && isValidBrowser && isValidOS) ? 'valid' : 'invalid';
     
-    const { data, error } = await supabase
+    const { data, error} = await supabase
       .from('electoral_votes')
-      .insert({
+      .insert([{
         voter_id: user.id,
         voter_name: studentData.name,
         candidate_id: candidateId,
@@ -400,21 +400,21 @@ export default function Vote() {
         screen_resolution: deviceInfo.screenResolution,
         timezone: deviceInfo.timezone,
         language: deviceInfo.language,
-        latitude: locationInfo.latitude,
-        longitude: locationInfo.longitude,
-        location_accuracy: locationInfo.accuracy,
+        latitude: String(locationInfo.latitude) || null,
+        longitude: String(locationInfo.longitude) || null,
+        location_accuracy: String(locationInfo.accuracy) || null,
         canvas_fingerprint: fingerprintInfo.canvasFingerprint,
         webgl_fingerprint: fingerprintInfo.webglFingerprint,
         installed_fonts: fingerprintInfo.installedFonts.join(','),
-        battery_level: fingerprintInfo.batteryLevel,
-        battery_charging: fingerprintInfo.batteryCharging,
-        mouse_movement_count: behaviorAnalytics.mouse_movement_count,
-        average_mouse_speed: behaviorAnalytics.average_mouse_speed,
-        typing_speed: behaviorAnalytics.average_typing_speed,
-        click_count: behaviorAnalytics.click_count,
+        battery_level: fingerprintInfo.batteryLevel || null,
+        battery_charging: String(fingerprintInfo.batteryCharging) || null,
+        mouse_movement_count: behaviorAnalytics.mouse_movement_count || null,
+        average_mouse_speed: behaviorAnalytics.average_mouse_speed || null,
+        typing_speed: String(behaviorAnalytics.average_typing_speed) || null,
+        click_count: behaviorAnalytics.click_count || null,
         behavior_signature: behaviorAnalytics.behavior_signature,
         ip_address: ipAddress,
-      })
+      }])
       .select();
     
     if (error) {

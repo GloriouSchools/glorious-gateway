@@ -117,7 +117,7 @@ export default function StreamsList() {
             .select('id')
             .eq('stream_id', stream.id);
 
-          const className = classesData?.find(c => c.id === stream.class_id)?.name;
+          const className = classesData?.find(c => c.id === stream.id)?.name;
 
           return {
             ...stream,

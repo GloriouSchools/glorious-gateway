@@ -125,7 +125,7 @@ export default function StudentsList() {
     const loadRefData = async () => {
       const [{ data: classData, error: classError }, { data: streamData, error: streamError }] = await Promise.all([
         supabase.from('classes').select('id, name'),
-        supabase.from('streams').select('id, name, class_id')
+        supabase.from('streams').select('id, name')
       ]);
       if (classError) console.error('Error fetching classes:', classError);
       if (streamError) console.error('Error fetching streams:', streamError);

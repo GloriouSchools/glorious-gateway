@@ -20,7 +20,6 @@ export interface Student {
 export interface Stream {
   id: string;
   name: string;
-  class_id: string;
 }
 
 export interface AttendanceRecord {
@@ -85,8 +84,7 @@ export const useStreams = () => {
       // Map database streams to our Stream interface
       const streams: Stream[] = (data as DbStream[]).map(stream => ({
         id: stream.id || '',
-        name: stream.name || '',
-        class_id: stream.class_id || ''
+        name: stream.name || ''
       }));
 
       return streams;

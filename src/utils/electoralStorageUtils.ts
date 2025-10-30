@@ -13,7 +13,7 @@ export interface LocalElectoralApplication {
   class_teacher_name?: string | null;
   class_teacher_tel?: string | null;
   parent_name?: string | null;
-  parent_tel?: number | null;
+  parent_tel?: string | null;
   experience: string | null;
   qualifications: string | null;
   why_apply: string | null;

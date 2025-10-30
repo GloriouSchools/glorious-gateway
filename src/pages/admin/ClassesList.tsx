@@ -98,7 +98,6 @@ export default function ClassesList() {
             supabase
               .from('streams')
               .select('id')
-              .eq('class_id', classItem.id)
           ]);
 
           return {

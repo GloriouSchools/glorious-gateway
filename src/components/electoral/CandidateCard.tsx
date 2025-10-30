@@ -1,7 +1,11 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { PhotoDialog } from "@/components/ui/photo-dialog";
-import { Trophy, TrendingUp, Award } from "lucide-react";
+import { Trophy, TrendingUp, Award, Plus } from "lucide-react";
+import { useState } from "react";
+import { PhysicalVotesModal } from "./PhysicalVotesModal";
+import { useAuth } from "@/hooks/useAuth";
 
 interface CandidateCardProps {
   id: string;
@@ -16,6 +20,7 @@ interface CandidateCardProps {
 }
 
 export function CandidateCard({
+  id,
   name,
   photo,
   position,
@@ -25,6 +30,8 @@ export function CandidateCard({
   stream,
   onClick
 }: CandidateCardProps) {
+  const [showPhysicalVotes, setShowPhysicalVotes] = useState(false);
+  const { userRole } = useAuth();
   const getRankBadge = () => {
     if (rank === 1) {
       return (
@@ -97,8 +104,33 @@ export function CandidateCard({
             <span className="text-2xl font-bold text-primary">{votes}</span>
             <span className="text-sm text-muted-foreground">votes</span>
           </div>
+
+          {/* Add Physical Votes Button (Admin Only) */}
+          {userRole === 'admin' && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full mt-2"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowPhysicalVotes(true);
+              }}
+            >
+              <Plus className="h-3 w-3 mr-1" />
+              Add Physical Votes
+            </Button>
+          )}
         </div>
       </CardContent>
+
+      <PhysicalVotesModal
+        open={showPhysicalVotes}
+        onOpenChange={setShowPhysicalVotes}
+        candidateId={id}
+        candidateName={name}
+        position={position}
+        onSuccess={() => window.location.reload()}
+      />
     </Card>
   );
 }
