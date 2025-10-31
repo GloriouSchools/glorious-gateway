@@ -52,7 +52,7 @@ export type Database = {
           absent_reason: string | null
           created_at: string | null
           date: string | null
-          id: string | null
+          id: string
           marked_at: string | null
           marked_by: string | null
           status: string | null
@@ -64,7 +64,7 @@ export type Database = {
           absent_reason?: string | null
           created_at?: string | null
           date?: string | null
-          id?: string | null
+          id?: string
           marked_at?: string | null
           marked_by?: string | null
           status?: string | null
@@ -76,7 +76,7 @@ export type Database = {
           absent_reason?: string | null
           created_at?: string | null
           date?: string | null
-          id?: string | null
+          id?: string
           marked_at?: string | null
           marked_by?: string | null
           status?: string | null

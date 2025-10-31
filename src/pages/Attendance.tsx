@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense, useEffect } from "react";
+import { useState, lazy, Suspense, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -20,15 +20,21 @@ import {
   AlertCircle,
   Download,
   Upload,
-  BookOpen
+  BookOpen,
+  FileDown,
+  FileUp
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { format, addDays, parseISO } from "date-fns";
 import AttendanceOverview from "./admin/AttendanceOverview";
 import { supabase } from "@/integrations/supabase/client";
 import { EmptyAttendanceState } from "@/components/attendance/EmptyAttendanceState";
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 interface Student {
   id: string;
@@ -68,6 +74,7 @@ const AttendanceMarking = () => {
   const [allStudents, setAllStudents] = useState<Student[]>([]);
   const [realClasses, setRealClasses] = useState<ClassInfo[]>([]);
   const [isLoadingStudents, setIsLoadingStudents] = useState(true);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Load students from database
   useEffect(() => {
@@ -80,6 +87,14 @@ const AttendanceMarking = () => {
       loadAttendance();
     }
   }, [selectedDate, selectedClass]);
+
+  // Save to local storage whenever attendance records change
+  useEffect(() => {
+    if (selectedClass && Object.keys(attendanceRecords).length > 0) {
+      const storageKey = `attendance_${selectedClass}_${format(selectedDate, 'yyyy-MM-dd')}`;
+      localStorage.setItem(storageKey, JSON.stringify(attendanceRecords));
+    }
+  }, [attendanceRecords, selectedClass, selectedDate]);
   
   const loadStudents = async () => {
     try {
@@ -133,6 +148,10 @@ const AttendanceMarking = () => {
   
   const loadAttendance = async () => {
     try {
+      // First check local storage
+      const storageKey = `attendance_${selectedClass}_${format(selectedDate, 'yyyy-MM-dd')}`;
+      const cachedData = localStorage.getItem(storageKey);
+      
       const { data, error } = await (supabase as any)
         .from('attendance_records')
         .select('*')
@@ -141,7 +160,8 @@ const AttendanceMarking = () => {
       
       if (error) throw error;
       
-      if (data) {
+      if (data && data.length > 0) {
+        // Database data takes precedence
         const records: { [key: string]: AttendanceRecord } = {};
         data.forEach((record: any) => {
           records[record.student_id] = {
@@ -152,9 +172,22 @@ const AttendanceMarking = () => {
           };
         });
         setAttendanceRecords(records);
+      } else if (cachedData) {
+        // Use cached data if no database data
+        setAttendanceRecords(JSON.parse(cachedData));
+        toast.info('Loaded from local storage. Click "Update Attendance" to save to database.');
+      } else {
+        setAttendanceRecords({});
       }
     } catch (error) {
       console.error('Error loading attendance:', error);
+      // Try local storage as fallback
+      const storageKey = `attendance_${selectedClass}_${format(selectedDate, 'yyyy-MM-dd')}`;
+      const cachedData = localStorage.getItem(storageKey);
+      if (cachedData) {
+        setAttendanceRecords(JSON.parse(cachedData));
+        toast.info('Loaded from local storage');
+      }
     }
   };
 
@@ -244,6 +277,7 @@ const AttendanceMarking = () => {
         date: format(selectedDate, 'yyyy-MM-dd'),
         status: record.status,
         marked_by: user?.id || null,
+        marked_at: record.timeMarked,
         absent_reason: record.absentReason || null
       }));
       
@@ -256,13 +290,219 @@ const AttendanceMarking = () => {
       
       if (error) throw error;
       
+      // Clear local storage after successful save
+      const storageKey = `attendance_${selectedClass}_${format(selectedDate, 'yyyy-MM-dd')}`;
+      localStorage.removeItem(storageKey);
+      
       const stats = getAttendanceStats();
-      toast.success(`Attendance saved! ${stats.marked} of ${stats.total} students marked.`);
+      toast.success(`Attendance saved to database! ${stats.marked} of ${stats.total} students marked.`);
     } catch (error) {
       console.error('Error saving attendance:', error);
-      toast.error('Failed to save attendance. Please try again.');
+      toast.error('Failed to save attendance. Kept in local storage.');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const exportAsCSV = () => {
+    const csvContent = [
+      ['Name', 'Email', 'Class', 'Stream', 'Status', 'Time Marked', 'Absent Reason'].join(','),
+      ...filteredStudents.map(s => {
+        const record = attendanceRecords[s.id];
+        return [
+          s.name,
+          s.email,
+          s.class,
+          s.stream,
+          record?.status || 'unmarked',
+          record?.timeMarked ? format(new Date(record.timeMarked), 'HH:mm:ss') : '',
+          record?.absentReason || ''
+        ].join(',');
+      })
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `attendance-${currentClass?.name}-${format(selectedDate, 'yyyy-MM-dd')}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    toast.success('CSV exported successfully');
+  };
+
+  const exportAsJSON = () => {
+    const jsonData = filteredStudents.map(s => {
+      const record = attendanceRecords[s.id];
+      return {
+        studentId: s.id,
+        name: s.name,
+        email: s.email,
+        class: s.class,
+        stream: s.stream,
+        status: record?.status || 'unmarked',
+        timeMarked: record?.timeMarked || null,
+        absentReason: record?.absentReason || null
+      };
+    });
+    
+    const blob = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `attendance-${currentClass?.name}-${format(selectedDate, 'yyyy-MM-dd')}.json`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    toast.success('JSON exported successfully');
+  };
+
+  const exportAsExcel = () => {
+    const wsData = [
+      ['Name', 'Email', 'Class', 'Stream', 'Status', 'Time Marked', 'Absent Reason'],
+      ...filteredStudents.map(s => {
+        const record = attendanceRecords[s.id];
+        return [
+          s.name,
+          s.email,
+          s.class,
+          s.stream,
+          record?.status || 'unmarked',
+          record?.timeMarked ? format(new Date(record.timeMarked), 'HH:mm:ss') : '',
+          record?.absentReason || ''
+        ];
+      })
+    ];
+
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Attendance');
+    XLSX.writeFile(wb, `attendance-${currentClass?.name}-${format(selectedDate, 'yyyy-MM-dd')}.xlsx`);
+    toast.success('Excel file exported successfully');
+  };
+
+  const exportAsPDF = () => {
+    const doc = new jsPDF();
+    
+    // Add title
+    doc.setFontSize(16);
+    doc.text(`Attendance Report - ${currentClass?.name}`, 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Date: ${format(selectedDate, 'EEEE, MMM d, yyyy')}`, 14, 22);
+    
+    // Add summary stats
+    doc.text(`Total: ${stats.total} | Present: ${stats.present} | Absent: ${stats.absent}`, 14, 29);
+    
+    // Add table
+    const tableData = filteredStudents.map(s => {
+      const record = attendanceRecords[s.id];
+      return [
+        s.name,
+        s.stream,
+        record?.status || 'unmarked',
+        record?.timeMarked ? format(new Date(record.timeMarked), 'HH:mm') : '',
+        record?.absentReason || ''
+      ];
+    });
+    
+    (doc as any).autoTable({
+      head: [['Name', 'Stream', 'Status', 'Time', 'Reason']],
+      body: tableData,
+      startY: 35,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [59, 130, 246] }
+    });
+    
+    doc.save(`attendance-${currentClass?.name}-${format(selectedDate, 'yyyy-MM-dd')}.pdf`);
+    toast.success('PDF exported successfully');
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result;
+        
+        if (file.name.endsWith('.json')) {
+          const jsonData = JSON.parse(content as string);
+          processUploadedData(jsonData);
+        } else if (file.name.endsWith('.csv')) {
+          const csvData = parseCSV(content as string);
+          processUploadedData(csvData);
+        } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+          const workbook = XLSX.read(content, { type: 'binary' });
+          const sheetName = workbook.SheetNames[0];
+          const sheet = workbook.Sheets[sheetName];
+          const excelData = XLSX.utils.sheet_to_json(sheet);
+          processUploadedData(excelData);
+        } else {
+          toast.error('Unsupported file format. Please use JSON, CSV, or Excel.');
+        }
+      } catch (error) {
+        console.error('Error parsing file:', error);
+        toast.error('Failed to parse file. Please check the format.');
+      }
+    };
+
+    if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+      reader.readAsBinaryString(file);
+    } else {
+      reader.readAsText(file);
+    }
+    
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const parseCSV = (csv: string) => {
+    const lines = csv.split('\n');
+    const headers = lines[0].split(',').map(h => h.trim());
+    return lines.slice(1).map(line => {
+      const values = line.split(',').map(v => v.trim());
+      const obj: any = {};
+      headers.forEach((header, i) => {
+        obj[header] = values[i];
+      });
+      return obj;
+    });
+  };
+
+  const processUploadedData = (data: any[]) => {
+    const newRecords: { [key: string]: AttendanceRecord } = {};
+    let updated = 0;
+
+    data.forEach((row: any) => {
+      // Support multiple field name formats
+      const studentId = row.studentId || row.StudentId || row.student_id;
+      const status = (row.status || row.Status)?.toLowerCase();
+      
+      if (!studentId || !status) return;
+      
+      // Find student by ID
+      const student = allStudents.find(s => s.id === studentId);
+      if (!student || student.stream !== selectedClass) return;
+
+      if (status === 'present' || status === 'absent') {
+        newRecords[studentId] = {
+          studentId,
+          status: status as 'present' | 'absent',
+          timeMarked: row.timeMarked || row.TimeMarked || new Date().toISOString(),
+          absentReason: row.absentReason || row.AbsentReason || row.absent_reason
+        };
+        updated++;
+      }
+    });
+
+    if (updated > 0) {
+      setAttendanceRecords(prev => ({ ...prev, ...newRecords }));
+      toast.success(`Updated ${updated} attendance records from file`);
+    } else {
+      toast.error('No valid attendance records found in file');
     }
   };
 
@@ -512,28 +752,46 @@ const AttendanceMarking = () => {
                   >
                     Clear All
                   </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline">
+                        <FileDown className="h-4 w-4 mr-2" />
+                        Export
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onClick={exportAsCSV}>
+                        <Download className="h-4 w-4 mr-2" />
+                        Export as CSV
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={exportAsJSON}>
+                        <Download className="h-4 w-4 mr-2" />
+                        Export as JSON
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={exportAsExcel}>
+                        <Download className="h-4 w-4 mr-2" />
+                        Export as Excel
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={exportAsPDF}>
+                        <Download className="h-4 w-4 mr-2" />
+                        Export as PDF
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                   <Button 
                     variant="outline"
-                    onClick={() => {
-                      const csvContent = [
-                        ['Name', 'Email', 'Class', 'Stream', 'Status'].join(','),
-                        ...filteredStudents.map(s => {
-                          const record = attendanceRecords[s.id];
-                          return [s.name, s.email, s.class, s.stream, record?.status || 'not-marked'].join(',');
-                        })
-                      ].join('\n');
-                      const blob = new Blob([csvContent], { type: 'text/csv' });
-                      const url = window.URL.createObjectURL(blob);
-                      const a = document.createElement('a');
-                      a.href = url;
-                      a.download = `attendance-${currentClass?.name}-${format(selectedDate, 'yyyy-MM-dd')}.csv`;
-                      a.click();
-                      window.URL.revokeObjectURL(url);
-                    }}
+                    onClick={() => fileInputRef.current?.click()}
                   >
-                    <Download className="h-4 w-4 mr-2" />
-                    Export Report
+                    <FileUp className="h-4 w-4 mr-2" />
+                    Import from File
                   </Button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".json,.csv,.xlsx,.xls"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
                 </div>
               </CardContent>
             </Card>
