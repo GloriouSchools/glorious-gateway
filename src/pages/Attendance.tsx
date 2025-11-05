@@ -60,7 +60,7 @@ interface ClassInfo {
 }
 
 const AttendanceMarking = () => {
-  const { userRole, userName, photoUrl, signOut } = useAuth();
+  const { userRole, userName, photoUrl, userId, signOut } = useAuth();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedClass, setSelectedClass] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -71,10 +71,15 @@ const AttendanceMarking = () => {
   const [absentReason, setAbsentReason] = useState<string>("");
   const [customReason, setCustomReason] = useState<string>("");
   const [showReasonDialog, setShowReasonDialog] = useState(false);
+  const [showMarkAllAbsentDialog, setShowMarkAllAbsentDialog] = useState(false);
+  const [markAllAbsentReason, setMarkAllAbsentReason] = useState<string>("");
+  const [markAllAbsentCustomReason, setMarkAllAbsentCustomReason] = useState<string>("");
   const [allStudents, setAllStudents] = useState<Student[]>([]);
   const [realClasses, setRealClasses] = useState<ClassInfo[]>([]);
   const [isLoadingStudents, setIsLoadingStudents] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [hasUnsyncedRecords, setHasUnsyncedRecords] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   
   // Load students from database
   useEffect(() => {
@@ -88,13 +93,36 @@ const AttendanceMarking = () => {
     }
   }, [selectedDate, selectedClass]);
 
-  // Save to local storage whenever attendance records change
+  // Auto-sync on page load
   useEffect(() => {
-    if (selectedClass && Object.keys(attendanceRecords).length > 0) {
-      const storageKey = `attendance_${selectedClass}_${format(selectedDate, 'yyyy-MM-dd')}`;
-      localStorage.setItem(storageKey, JSON.stringify(attendanceRecords));
-    }
-  }, [attendanceRecords, selectedClass, selectedDate]);
+    const autoSync = async () => {
+      if (selectedClass) {
+        const localKey = `attendance_${selectedClass}_${format(selectedDate, 'yyyy-MM-dd')}`;
+        const localData = localStorage.getItem(localKey);
+        
+        if (localData) {
+          try {
+            const parsed = JSON.parse(localData);
+            const records = parsed.records || {};
+            const syncStatus = parsed.syncStatus || {};
+            
+            // Check if there are unsynced records
+            const unsyncedIds = Object.keys(syncStatus).filter(id => !syncStatus[id]);
+            
+            if (unsyncedIds.length > 0) {
+              console.log('Auto-syncing', unsyncedIds.length, 'unsynced records...');
+              await syncLocalToDatabase(records, syncStatus);
+            }
+          } catch (error) {
+            console.error('Error auto-syncing:', error);
+          }
+        }
+      }
+    };
+    
+    autoSync();
+  }, [selectedClass, selectedDate]);
+
   
   const loadStudents = async () => {
     try {
@@ -148,46 +176,62 @@ const AttendanceMarking = () => {
   
   const loadAttendance = async () => {
     try {
-      // First check local storage
-      const storageKey = `attendance_${selectedClass}_${format(selectedDate, 'yyyy-MM-dd')}`;
-      const cachedData = localStorage.getItem(storageKey);
+      const dateStr = format(selectedDate, 'yyyy-MM-dd');
       
-      const { data, error } = await (supabase as any)
+      // First try to load from database
+      const { data, error } = await supabase
         .from('attendance_records')
         .select('*')
-        .eq('date', format(selectedDate, 'yyyy-MM-dd'))
-        .eq('stream_id', selectedClass);
+        .eq('stream_id', selectedClass)
+        .eq('date', dateStr);
       
       if (error) throw error;
       
+      const records: { [key: string]: AttendanceRecord } = {};
+      const syncStatus: { [key: string]: boolean } = {};
+      
       if (data && data.length > 0) {
-        // Database data takes precedence
-        const records: { [key: string]: AttendanceRecord } = {};
         data.forEach((record: any) => {
           records[record.student_id] = {
             studentId: record.student_id,
-            status: record.status as 'present' | 'absent',
-            timeMarked: record.marked_at || record.created_at,
-            absentReason: record.absent_reason
+            status: record.status,
+            timeMarked: record.marked_at,
+            absentReason: record.absent_reason || undefined
           };
+          syncStatus[record.student_id] = true; // Database records are synced
         });
-        setAttendanceRecords(records);
-      } else if (cachedData) {
-        // Use cached data if no database data
-        setAttendanceRecords(JSON.parse(cachedData));
-        toast.info('Loaded from local storage. Click "Update Attendance" to save to database.');
-      } else {
-        setAttendanceRecords({});
       }
+      
+      // Check local storage for any additional/newer records
+      const localKey = `attendance_${selectedClass}_${dateStr}`;
+      const localData = localStorage.getItem(localKey);
+      
+      if (localData) {
+        try {
+          const parsed = JSON.parse(localData);
+          const localRecords = parsed.records || {};
+          const localSyncStatus = parsed.syncStatus || {};
+          
+          // Merge local records (local takes precedence if exists)
+          Object.keys(localRecords).forEach(studentId => {
+            records[studentId] = localRecords[studentId];
+            syncStatus[studentId] = localSyncStatus[studentId] || false;
+          });
+          
+          // Check if there are unsynced records
+          const hasUnsynced = Object.values(syncStatus).some(synced => !synced);
+          setHasUnsyncedRecords(hasUnsynced);
+        } catch (error) {
+          console.error('Error parsing local storage:', error);
+        }
+      } else {
+        setHasUnsyncedRecords(false);
+      }
+      
+      setAttendanceRecords(records);
     } catch (error) {
       console.error('Error loading attendance:', error);
-      // Try local storage as fallback
-      const storageKey = `attendance_${selectedClass}_${format(selectedDate, 'yyyy-MM-dd')}`;
-      const cachedData = localStorage.getItem(storageKey);
-      if (cachedData) {
-        setAttendanceRecords(JSON.parse(cachedData));
-        toast.info('Loaded from local storage');
-      }
+      toast.error('Failed to load attendance from database');
     }
   };
 
@@ -201,17 +245,140 @@ const AttendanceMarking = () => {
     student.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const markAttendance = (studentId: string, status: 'present' | 'absent', reason?: string) => {
+  const syncLocalToDatabase = async (records: { [key: string]: AttendanceRecord }, syncStatus: { [key: string]: boolean }) => {
+    const unsyncedIds = Object.keys(syncStatus).filter(id => !syncStatus[id]);
+    
+    if (unsyncedIds.length === 0) {
+      setHasUnsyncedRecords(false);
+      return;
+    }
+    
+    let successCount = 0;
+    const updatedSyncStatus = { ...syncStatus };
+    
+    for (const studentId of unsyncedIds) {
+      const record = records[studentId];
+      if (!record) continue;
+      
+      try {
+        const { error } = await (supabase as any).functions.invoke('attendance-save', {
+          body: {
+            student_id: studentId,
+            stream_id: selectedClass,
+            date: format(selectedDate, 'yyyy-MM-dd'),
+            status: record.status,
+            marked_by: userId,
+            marked_at: record.timeMarked,
+            absent_reason: record.absentReason || null
+          }
+        });
+        
+        if (error) throw error;
+        
+        updatedSyncStatus[studentId] = true;
+        successCount++;
+      } catch (error) {
+        console.error(`Failed to sync ${studentId}:`, error);
+      }
+    }
+    
+    // Update local storage with new sync status
+    const localKey = `attendance_${selectedClass}_${format(selectedDate, 'yyyy-MM-dd')}`;
+    localStorage.setItem(localKey, JSON.stringify({
+      records,
+      syncStatus: updatedSyncStatus
+    }));
+    
+    // Check if all are now synced
+    const stillUnsynced = Object.keys(updatedSyncStatus).filter(id => !updatedSyncStatus[id]);
+    setHasUnsyncedRecords(stillUnsynced.length > 0);
+    
+    if (successCount > 0) {
+      toast.success(`Synced ${successCount} record(s) to database`);
+    }
+    if (stillUnsynced.length > 0) {
+      toast.warning(`${stillUnsynced.length} record(s) still need syncing`);
+    }
+  };
+
+  const markAttendance = async (studentId: string, status: 'present' | 'absent', reason?: string) => {
+    const student = allStudents.find(s => s.id === studentId);
+    const studentName = student?.name || 'Student';
+    
+    const newRecord: AttendanceRecord = {
+      studentId,
+      status,
+      timeMarked: new Date().toISOString(),
+      absentReason: status === 'absent' ? reason : undefined
+    };
+    
+    // Update local state immediately
     setAttendanceRecords(prev => ({
       ...prev,
-      [studentId]: {
-        studentId,
-        status,
-        timeMarked: new Date().toISOString(),
-        absentReason: status === 'absent' ? reason : undefined
-      }
+      [studentId]: newRecord
     }));
-    toast.success(`Marked as ${status}`);
+    
+    // Save to local storage immediately
+    const localKey = `attendance_${selectedClass}_${format(selectedDate, 'yyyy-MM-dd')}`;
+    const existingData = localStorage.getItem(localKey);
+    let syncStatus: { [key: string]: boolean } = {};
+    
+    if (existingData) {
+      try {
+        const parsed = JSON.parse(existingData);
+        syncStatus = parsed.syncStatus || {};
+      } catch (error) {
+        console.error('Error parsing local storage:', error);
+      }
+    }
+    
+    // Mark as unsynced initially
+    syncStatus[studentId] = false;
+    
+    const updatedRecords = {
+      ...attendanceRecords,
+      [studentId]: newRecord
+    };
+    
+    localStorage.setItem(localKey, JSON.stringify({
+      records: updatedRecords,
+      syncStatus
+    }));
+    
+    setHasUnsyncedRecords(true);
+    
+    // Try to save to database immediately
+    try {
+      const { error } = await (supabase as any).functions.invoke('attendance-save', {
+        body: {
+          student_id: studentId,
+          stream_id: selectedClass,
+          date: format(selectedDate, 'yyyy-MM-dd'),
+          status,
+          marked_by: userId,
+          marked_at: newRecord.timeMarked,
+          absent_reason: newRecord.absentReason || null
+        }
+      });
+
+      if (error) throw error;
+
+      // Mark as synced in local storage
+      syncStatus[studentId] = true;
+      localStorage.setItem(localKey, JSON.stringify({
+        records: updatedRecords,
+        syncStatus
+      }));
+      
+      // Check if all records are now synced
+      const allSynced = Object.values(syncStatus).every(synced => synced);
+      setHasUnsyncedRecords(!allSynced);
+      
+      toast.success(`${studentName} marked as ${status}`);
+    } catch (error) {
+      console.error('Error saving attendance:', error);
+      toast.error(`${studentName} marked locally. Will sync when connection is restored.`);
+    }
   };
 
   const handleAbsentClick = (student: Student) => {
@@ -246,61 +413,31 @@ const AttendanceMarking = () => {
     return { present, absent, total, marked };
   };
 
-  const saveAttendance = async () => {
-    // Validate all students are marked
-    if (stats.marked !== stats.total) {
-      toast.error(`Please mark all students. ${stats.total - stats.marked} students remaining.`);
-      return;
-    }
-
-    // Validate date is not in the future
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const selected = new Date(selectedDate);
-    selected.setHours(0, 0, 0, 0);
+  const handleSyncAttendance = async () => {
+    if (!hasUnsyncedRecords) return;
     
-    if (selected > today) {
-      toast.error("Cannot mark attendance for future dates.");
-      return;
-    }
-
-    setIsSaving(true);
+    setIsSyncing(true);
     
     try {
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
+      const localKey = `attendance_${selectedClass}_${format(selectedDate, 'yyyy-MM-dd')}`;
+      const localData = localStorage.getItem(localKey);
       
-      // Prepare attendance records for database
-      const attendanceToSave = Object.values(attendanceRecords).map(record => ({
-        student_id: record.studentId,
-        stream_id: selectedClass,
-        date: format(selectedDate, 'yyyy-MM-dd'),
-        status: record.status,
-        marked_by: user?.id || null,
-        marked_at: record.timeMarked,
-        absent_reason: record.absentReason || null
-      }));
+      if (!localData) {
+        setHasUnsyncedRecords(false);
+        setIsSyncing(false);
+        return;
+      }
       
-      // Upsert attendance records (insert or update if exists)
-      const { error } = await (supabase as any)
-        .from('attendance_records')
-        .upsert(attendanceToSave, {
-          onConflict: 'student_id,date'
-        });
+      const parsed = JSON.parse(localData);
+      const records = parsed.records || {};
+      const syncStatus = parsed.syncStatus || {};
       
-      if (error) throw error;
-      
-      // Clear local storage after successful save
-      const storageKey = `attendance_${selectedClass}_${format(selectedDate, 'yyyy-MM-dd')}`;
-      localStorage.removeItem(storageKey);
-      
-      const stats = getAttendanceStats();
-      toast.success(`Attendance saved to database! ${stats.marked} of ${stats.total} students marked.`);
+      await syncLocalToDatabase(records, syncStatus);
     } catch (error) {
-      console.error('Error saving attendance:', error);
-      toast.error('Failed to save attendance. Kept in local storage.');
+      console.error('Error syncing attendance:', error);
+      toast.error('Failed to sync attendance');
     } finally {
-      setIsSaving(false);
+      setIsSyncing(false);
     }
   };
 
@@ -506,21 +643,33 @@ const AttendanceMarking = () => {
     }
   };
 
-  const markAllPresent = () => {
-    const newRecords: { [key: string]: AttendanceRecord } = {};
-    filteredStudents.forEach(student => {
-      newRecords[student.id] = {
-        studentId: student.id,
-        status: 'present',
-        timeMarked: new Date().toISOString()
-      };
-    });
-    setAttendanceRecords(prev => ({ ...prev, ...newRecords }));
-    toast.success("All students marked as present!");
+  const markAllPresent = async () => {
+    // Mark all students as present
+    for (const student of filteredStudents) {
+      await markAttendance(student.id, 'present');
+    }
   };
 
   const markAllAbsent = () => {
-    toast.info("Please mark students individually to provide absence reasons.");
+    setShowMarkAllAbsentDialog(true);
+    setMarkAllAbsentReason("");
+    setMarkAllAbsentCustomReason("");
+  };
+
+  const handleMarkAllAbsentSubmit = async () => {
+    const finalReason = markAllAbsentReason === "Other" ? markAllAbsentCustomReason : markAllAbsentReason;
+    
+    if (!finalReason) {
+      toast.error("Please select a reason for absence");
+      return;
+    }
+
+    setShowMarkAllAbsentDialog(false);
+    
+    // Mark all students as absent with the reason
+    for (const student of filteredStudents) {
+      await markAttendance(student.id, 'absent', finalReason);
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -602,18 +751,6 @@ const AttendanceMarking = () => {
               Roll call and attendance marking for your classes
             </p>
           </div>
-          {selectedClass && (
-            <div className="flex justify-center md:justify-end">
-              <Button 
-                onClick={saveAttendance} 
-                disabled={isSaving || stats.marked === 0}
-                className="bg-primary hover:bg-primary/90 w-full sm:w-auto"
-              >
-                <Save className="h-4 w-4 mr-2" />
-                {isSaving ? "Saving..." : "Update Attendance"}
-              </Button>
-            </div>
-          )}
         </div>
 
         {/* Class and Date Selection */}
@@ -747,10 +884,25 @@ const AttendanceMarking = () => {
                     Mark All Absent
                   </Button>
                   <Button 
-                    onClick={() => setAttendanceRecords({})}
+                    onClick={() => {
+                      setAttendanceRecords({});
+                      // Clear local storage too
+                      const localKey = `attendance_${selectedClass}_${format(selectedDate, 'yyyy-MM-dd')}`;
+                      localStorage.removeItem(localKey);
+                      setHasUnsyncedRecords(false);
+                    }}
                     variant="outline"
                   >
                     Clear All
+                  </Button>
+                  <Button 
+                    onClick={handleSyncAttendance}
+                    variant={hasUnsyncedRecords ? "default" : "outline"}
+                    disabled={!hasUnsyncedRecords || isSyncing}
+                    className={hasUnsyncedRecords ? "" : "opacity-50 cursor-not-allowed"}
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    {isSyncing ? "Syncing..." : hasUnsyncedRecords ? "Sync Attendance" : "All Synced"}
                   </Button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -1014,6 +1166,7 @@ const AttendanceMarking = () => {
                   <SelectContent className="bg-background border z-50">
                     <SelectItem value="Sick">Sick</SelectItem>
                     <SelectItem value="Sent back for school fees">Sent back for school fees</SelectItem>
+                    <SelectItem value="Public Holiday">Public Holiday</SelectItem>
                     <SelectItem value="Suspended">Suspended</SelectItem>
                     <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
@@ -1046,6 +1199,65 @@ const AttendanceMarking = () => {
                   disabled={!absentReason || (absentReason === "Other" && !customReason.trim())}
                 >
                   Mark as Absent
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Mark All Absent Reason Dialog */}
+        <Dialog open={showMarkAllAbsentDialog} onOpenChange={setShowMarkAllAbsentDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Mark All Students Absent</DialogTitle>
+              <DialogDescription>
+                Select a uniform reason for marking all students as absent
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Select Reason</label>
+                <Select value={markAllAbsentReason} onValueChange={setMarkAllAbsentReason}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose a reason..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border z-50">
+                    <SelectItem value="Sick">Sick</SelectItem>
+                    <SelectItem value="Sent back for school fees">Sent back for school fees</SelectItem>
+                    <SelectItem value="Public Holiday">Public Holiday</SelectItem>
+                    <SelectItem value="Suspended">Suspended</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {markAllAbsentReason === "Other" && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Specify Reason</label>
+                  <Input
+                    value={markAllAbsentCustomReason}
+                    onChange={(e) => setMarkAllAbsentCustomReason(e.target.value)}
+                    placeholder="Enter the reason..."
+                    className="w-full"
+                  />
+                </div>
+              )}
+
+              <div className="flex gap-2 pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowMarkAllAbsentDialog(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleMarkAllAbsentSubmit}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                  disabled={!markAllAbsentReason || (markAllAbsentReason === "Other" && !markAllAbsentCustomReason.trim())}
+                >
+                  Mark All Absent
                 </Button>
               </div>
             </div>

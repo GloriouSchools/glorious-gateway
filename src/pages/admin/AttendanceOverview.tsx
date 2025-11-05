@@ -175,26 +175,30 @@ const AttendanceOverview = () => {
     navigate(`/admin/attendance/details?class=${classId}`);
   };
 
-  // Calculate analytics data
+  // Calculate analytics data from real database
   const analyticsData = useMemo(() => {
-    // Gender data (mock - you'd need actual gender data in your database)
-    const maleCount = Math.round(presentCount * 0.52);
-    const femaleCount = presentCount - maleCount;
+    // Gender data from actual database
+    const maleStudents = allStudents.filter(s => s.gender?.toLowerCase() === 'male' || s.gender?.toLowerCase() === 'm');
+    const femaleStudents = allStudents.filter(s => s.gender?.toLowerCase() === 'female' || s.gender?.toLowerCase() === 'f');
+    const malePresent = maleStudents.filter(s => attendanceData[s.id]?.status === 'present').length;
+    const femalePresent = femaleStudents.filter(s => attendanceData[s.id]?.status === 'present').length;
     const genderData = [
-      { name: 'Male', value: maleCount, percentage: Math.round((maleCount / presentCount) * 100) || 50 },
-      { name: 'Female', value: femaleCount, percentage: Math.round((femaleCount / presentCount) * 100) || 50 }
+      { name: 'Male', value: malePresent, percentage: maleStudents.length > 0 ? Math.round((malePresent / maleStudents.length) * 100) : 50 },
+      { name: 'Female', value: femalePresent, percentage: femaleStudents.length > 0 ? Math.round((femalePresent / femaleStudents.length) * 100) : 50 }
     ];
 
-    // Day of week data (mock - you'd aggregate from actual data)
+    // Day of week data - current day only (real data)
+    const currentDay = format(selectedDate, 'EEE');
     const dayData = [
-      { day: 'Mon', present: Math.round(presentCount * 0.92), absent: Math.round(absentCount * 0.08), rate: 92 },
-      { day: 'Tue', present: Math.round(presentCount * 0.95), absent: Math.round(absentCount * 0.05), rate: 95 },
-      { day: 'Wed', present: Math.round(presentCount * 0.89), absent: Math.round(absentCount * 0.11), rate: 89 },
-      { day: 'Thu', present: Math.round(presentCount * 0.93), absent: Math.round(absentCount * 0.07), rate: 93 },
-      { day: 'Fri', present: Math.round(presentCount * 0.87), absent: Math.round(absentCount * 0.13), rate: 87 }
+      { 
+        day: currentDay, 
+        present: presentCount, 
+        absent: absentCount, 
+        rate: attendanceRate 
+      }
     ];
 
-    // Stream data
+    // Stream data (real data)
     const streamData = classData.map(cls => ({
       stream: cls.name,
       present: cls.present,
@@ -202,55 +206,56 @@ const AttendanceOverview = () => {
       rate: cls.attendanceRate
     }));
 
-    // Trend data (last 30 days mock)
-    const trendData = Array.from({ length: 30 }, (_, i) => {
-      const date = subDays(selectedDate, 29 - i);
-      const rate = 85 + Math.random() * 10;
-      return {
-        date: format(date, 'MM/dd'),
-        rate: Math.round(rate),
-        present: Math.round((totalStudentsCount * rate) / 100),
-        total: totalStudentsCount
-      };
-    });
+    // Trend data - using current day data
+    const trendData = [{
+      date: format(selectedDate, 'MM/dd'),
+      rate: attendanceRate,
+      present: presentCount,
+      total: totalStudentsCount
+    }];
 
-    // Heatmap data (mock)
+    // Heatmap data - simplified for current day
     const heatmapData = [];
-    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+    const days = [format(selectedDate, 'EEE')];
+    const currentHour = new Date().getHours();
     const hours = [8, 9, 10, 11, 12, 13, 14, 15, 16];
     for (const day of days) {
       for (const hour of hours) {
         heatmapData.push({
           day,
           hour,
-          attendance: 70 + Math.random() * 25,
+          attendance: hour <= currentHour ? attendanceRate : 0,
           color: ''
         });
       }
     }
 
-    // Monthly data (mock)
+    // Monthly data - using current month data
+    const currentMonth = format(selectedDate, 'MMM');
     const monthData = [
-      { month: 'Jan', avgRate: 88, present: Math.round(totalStudentsCount * 0.88), absent: Math.round(totalStudentsCount * 0.12) },
-      { month: 'Feb', avgRate: 91, present: Math.round(totalStudentsCount * 0.91), absent: Math.round(totalStudentsCount * 0.09) },
-      { month: 'Mar', avgRate: 86, present: Math.round(totalStudentsCount * 0.86), absent: Math.round(totalStudentsCount * 0.14) },
-      { month: 'Apr', avgRate: 93, present: Math.round(totalStudentsCount * 0.93), absent: Math.round(totalStudentsCount * 0.07) },
-      { month: 'May', avgRate: 89, present: Math.round(totalStudentsCount * 0.89), absent: Math.round(totalStudentsCount * 0.11) },
-      { month: 'Jun', avgRate: 90, present: Math.round(totalStudentsCount * 0.90), absent: Math.round(totalStudentsCount * 0.10) }
+      { 
+        month: currentMonth, 
+        avgRate: attendanceRate, 
+        present: presentCount, 
+        absent: absentCount 
+      }
     ];
 
-    // Top and bottom performers
+    // Top and bottom performers (real data)
     const sortedStreams = [...streamData].sort((a, b) => b.rate - a.rate);
     const bestStreams = sortedStreams.slice(0, 5).map(s => ({ stream: s.stream, rate: s.rate }));
     const worstStreams = sortedStreams.slice(-5).reverse().map(s => ({ stream: s.stream, rate: s.rate }));
 
-    // Perfect attendance students (mock)
-    const perfectAttendance = allStudents.slice(0, 6).map(s => ({
-      name: s.name,
-      stream: s.stream,
-      rate: 100,
-      photoUrl: s.photoUrl
-    }));
+    // Perfect attendance students (real data - students marked present)
+    const perfectAttendance = allStudents
+      .filter(s => attendanceData[s.id]?.status === 'present')
+      .slice(0, 6)
+      .map(s => ({
+        name: s.name,
+        stream: s.stream,
+        rate: 100,
+        photoUrl: s.photoUrl
+      }));
 
     return {
       genderData,
@@ -263,7 +268,7 @@ const AttendanceOverview = () => {
       worstStreams,
       perfectAttendance
     };
-  }, [classData, presentCount, absentCount, totalStudentsCount, allStudents, selectedDate]);
+  }, [classData, presentCount, absentCount, totalStudentsCount, allStudents, selectedDate, attendanceData, attendanceRate]);
 
   // Quick stats
   const quickStats = [

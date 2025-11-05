@@ -368,6 +368,9 @@ const AttendanceDetails = () => {
                       <h4 className="text-base font-semibold truncate hover:text-primary">{student.name}</h4>
                       <p className="text-sm text-muted-foreground truncate">{student.email}</p>
                       <p className="text-xs text-muted-foreground mt-1 truncate">{student.stream.replace('-', ' - ')}</p>
+                      {attendanceData[student.id]?.absentReason && student.status === 'absent' && (
+                        <p className="text-xs text-red-600 mt-1 truncate">Reason: {attendanceData[student.id].absentReason}</p>
+                      )}
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       {getStatusBadge(student.status)}
@@ -410,6 +413,9 @@ const AttendanceDetails = () => {
                           <h4 className="text-sm font-semibold truncate hover:text-primary">{student.name}</h4>
                           <p className="text-xs text-muted-foreground truncate">{student.email}</p>
                           <p className="text-xs text-muted-foreground mt-1 truncate">{student.stream.replace('-', ' - ')}</p>
+                          {attendanceData[student.id]?.absentReason && student.status === 'absent' && (
+                            <p className="text-xs text-red-600 mt-1 truncate">Reason: {attendanceData[student.id].absentReason}</p>
+                          )}
                         </div>
                         <div className="shrink-0">
                           {getStatusBadge(student.status)}
