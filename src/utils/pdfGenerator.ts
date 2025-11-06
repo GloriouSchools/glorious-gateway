@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 
 interface StudentAttendanceData {
   name: string;
-  email: string;
+  gender: string;
   stream: string;
   status: 'present' | 'absent' | 'not-marked';
   timeMarked?: string;
@@ -87,7 +87,7 @@ export const generateAttendancePDF = async (
     return [
       (index + 1).toString(),
       student.name,
-      student.email,
+      student.gender || 'N/A',
       student.stream,
       student.status === 'present' ? 'Present' : 
       student.status === 'absent' ? 'Absent' : 'Not Marked'
@@ -97,7 +97,7 @@ export const generateAttendancePDF = async (
   // Generate table with all borders
   autoTable(doc, {
     startY: 68,
-    head: [['No.', 'Name', 'Email', 'Class', 'Status']],
+    head: [['No.', 'Name', 'Sex', 'Class', 'Status']],
     body: tableData,
     theme: 'grid',
     headStyles: {
@@ -122,10 +122,10 @@ export const generateAttendancePDF = async (
     },
     columnStyles: {
       0: { cellWidth: 15, halign: 'center' },
-      1: { cellWidth: 50, halign: 'left' },
-      2: { cellWidth: 55, halign: 'left' },
-      3: { cellWidth: 30, halign: 'center' },
-      4: { cellWidth: 30, halign: 'center' }
+      1: { cellWidth: 60, halign: 'left' },
+      2: { cellWidth: 25, halign: 'center' },
+      3: { cellWidth: 40, halign: 'center' },
+      4: { cellWidth: 40, halign: 'center' }
     },
     didDrawCell: function(data) {
       // Color code the status column

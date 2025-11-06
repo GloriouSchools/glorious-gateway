@@ -75,7 +75,7 @@ const AttendanceOverview = () => {
       // Load student data for attendance tracking
       const { data: students, error } = await supabase
         .from('students')
-        .select('id, name, email, class_id, stream_id, photo_url')
+        .select('id, name, email, class_id, stream_id, photo_url, gender')
         .order('class_id')
         .order('stream_id')
         .order('name')
@@ -89,7 +89,8 @@ const AttendanceOverview = () => {
         email: s.email,
         class: s.class_id,
         stream: s.stream_id,
-        photoUrl: s.photo_url
+        photoUrl: s.photo_url,
+        gender: s.gender
       })) || [];
       
       setAllStudents(formattedStudents);

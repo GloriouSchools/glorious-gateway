@@ -52,7 +52,7 @@ const AttendanceDetails = () => {
       setIsLoading(true);
       const { data: students, error } = await supabase
         .from('students')
-        .select('id, name, email, class_id, stream_id, photo_url')
+        .select('id, name, email, class_id, stream_id, photo_url, gender')
         .order('class_id')
         .order('stream_id')
         .order('name')
@@ -66,7 +66,8 @@ const AttendanceDetails = () => {
         email: s.email,
         class: s.class_id,
         stream: s.stream_id,
-        photoUrl: s.photo_url
+        photoUrl: s.photo_url,
+        gender: s.gender
       })) || [];
       
       setAllStudents(formattedStudents);
@@ -199,7 +200,7 @@ const AttendanceDetails = () => {
     try {
       const pdfData = filteredStudents.map(student => ({
         name: student.name,
-        email: student.email,
+        gender: student.gender || 'N/A',
         stream: student.stream,
         status: attendanceData[student.id]?.status || 'not-marked',
         timeMarked: attendanceData[student.id]?.timeMarked,
@@ -228,7 +229,20 @@ const AttendanceDetails = () => {
     return <Badge variant="outline">Not Marked</Badge>;
   };
 
-  if (!userRole || isLoading) return null;
+  if (!userRole) return null;
+  
+  if (isLoading) {
+    return (
+      <DashboardLayout userRole={userRole} userName={userName || "Admin"} photoUrl={photoUrl} onLogout={handleLogout}>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center space-y-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="text-muted-foreground">Loading attendance data...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout userRole={userRole} userName={userName || "Admin"} photoUrl={photoUrl} onLogout={handleLogout}>

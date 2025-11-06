@@ -35,6 +35,7 @@ import { EmptyAttendanceState } from "@/components/attendance/EmptyAttendanceSta
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { generateAttendancePDF } from "@/utils/pdfGenerator";
 
 interface Student {
   id: string;
@@ -43,6 +44,7 @@ interface Student {
   class: string;
   stream: string;
   photoUrl?: string;
+  gender?: string;
 }
 
 interface AttendanceRecord {
@@ -80,6 +82,7 @@ const AttendanceMarking = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [hasUnsyncedRecords, setHasUnsyncedRecords] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   
   // Load students from database
   useEffect(() => {
@@ -129,7 +132,7 @@ const AttendanceMarking = () => {
       setIsLoadingStudents(true);
       const { data: students, error } = await supabase
         .from('students')
-        .select('id, name, email, class_id, stream_id, photo_url')
+        .select('id, name, email, class_id, stream_id, photo_url, gender')
         .order('class_id')
         .order('stream_id')
         .order('name')
@@ -143,7 +146,8 @@ const AttendanceMarking = () => {
         email: s.email,
         class: s.class_id,
         stream: s.stream_id,
-        photoUrl: s.photo_url
+        photoUrl: s.photo_url,
+        gender: s.gender
       })) || [];
       
       setAllStudents(formattedStudents);
@@ -301,7 +305,7 @@ const AttendanceMarking = () => {
     }
   };
 
-  const markAttendance = async (studentId: string, status: 'present' | 'absent', reason?: string) => {
+  const markAttendance = async (studentId: string, status: 'present' | 'absent', reason?: string, silent = false) => {
     const student = allStudents.find(s => s.id === studentId);
     const studentName = student?.name || 'Student';
     
@@ -374,10 +378,14 @@ const AttendanceMarking = () => {
       const allSynced = Object.values(syncStatus).every(synced => synced);
       setHasUnsyncedRecords(!allSynced);
       
-      toast.success(`${studentName} marked as ${status}`);
+      if (!silent) {
+        toast.success(`${studentName} marked as ${status}`);
+      }
     } catch (error) {
       console.error('Error saving attendance:', error);
-      toast.error(`${studentName} marked locally. Will sync when connection is restored.`);
+      if (!silent) {
+        toast.error(`${studentName} marked locally. Will sync when connection is restored.`);
+      }
     }
   };
 
@@ -517,40 +525,38 @@ const AttendanceMarking = () => {
     toast.success('Excel file exported successfully');
   };
 
-  const exportAsPDF = () => {
-    const doc = new jsPDF();
+  const exportAsPDF = async () => {
+    setIsDownloading(true);
+    const toastId = toast.loading("Processing...");
     
-    // Add title
-    doc.setFontSize(16);
-    doc.text(`Attendance Report - ${currentClass?.name}`, 14, 15);
-    doc.setFontSize(10);
-    doc.text(`Date: ${format(selectedDate, 'EEEE, MMM d, yyyy')}`, 14, 22);
-    
-    // Add summary stats
-    doc.text(`Total: ${stats.total} | Present: ${stats.present} | Absent: ${stats.absent}`, 14, 29);
-    
-    // Add table
-    const tableData = filteredStudents.map(s => {
-      const record = attendanceRecords[s.id];
-      return [
-        s.name,
-        s.stream,
-        record?.status || 'unmarked',
-        record?.timeMarked ? format(new Date(record.timeMarked), 'HH:mm') : '',
-        record?.absentReason || ''
-      ];
-    });
-    
-    (doc as any).autoTable({
-      head: [['Name', 'Stream', 'Status', 'Time', 'Reason']],
-      body: tableData,
-      startY: 35,
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [59, 130, 246] }
-    });
-    
-    doc.save(`attendance-${currentClass?.name}-${format(selectedDate, 'yyyy-MM-dd')}.pdf`);
-    toast.success('PDF exported successfully');
+    try {
+      const pdfData = filteredStudents.map(student => {
+        const record = attendanceRecords[student.id];
+        return {
+          name: student.name,
+          gender: student.gender || 'N/A',
+          stream: student.stream,
+          status: (record?.status || 'not-marked') as 'absent' | 'not-marked' | 'present',
+          timeMarked: record?.timeMarked,
+          photoUrl: student.photoUrl,
+          absentReason: record?.absentReason
+        };
+      });
+      
+      const pdf = await generateAttendancePDF(
+        pdfData,
+        `${currentClass?.name} - Attendance Report`,
+        (message) => toast.loading(message, { id: toastId })
+      );
+      
+      pdf.save(`attendance-${currentClass?.name}-${format(selectedDate, 'yyyy-MM-dd')}.pdf`);
+      toast.success("Download completed!", { id: toastId });
+    } catch (error) {
+      console.error("PDF generation error:", error);
+      toast.error("Failed to generate PDF", { id: toastId });
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -646,8 +652,9 @@ const AttendanceMarking = () => {
   const markAllPresent = async () => {
     // Mark all students as present
     for (const student of filteredStudents) {
-      await markAttendance(student.id, 'present');
+      await markAttendance(student.id, 'present', undefined, true);
     }
+    toast.success(`All ${filteredStudents.length} students marked as present`);
   };
 
   const markAllAbsent = () => {
@@ -668,8 +675,9 @@ const AttendanceMarking = () => {
     
     // Mark all students as absent with the reason
     for (const student of filteredStudents) {
-      await markAttendance(student.id, 'absent', finalReason);
+      await markAttendance(student.id, 'absent', finalReason, true);
     }
+    toast.success(`All ${filteredStudents.length} students marked as absent: ${finalReason}`);
   };
 
   const getStatusColor = (status: string) => {
@@ -924,9 +932,9 @@ const AttendanceMarking = () => {
                         <Download className="h-4 w-4 mr-2" />
                         Export as Excel
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={exportAsPDF}>
+                      <DropdownMenuItem onClick={exportAsPDF} disabled={isDownloading}>
                         <Download className="h-4 w-4 mr-2" />
-                        Export as PDF
+                        {isDownloading ? 'Processing...' : 'Export as PDF'}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
