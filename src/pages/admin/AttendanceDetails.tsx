@@ -50,17 +50,34 @@ const AttendanceDetails = () => {
   const loadStudents = async () => {
     try {
       setIsLoading(true);
-      const { data: students, error } = await supabase
-        .from('students')
-        .select('id, name, email, class_id, stream_id, photo_url, gender')
-        .order('class_id')
-        .order('stream_id')
-        .order('name')
-        .limit(10000);
       
-      if (error) throw error;
+      // Load students in batches to bypass 1000 row limit
+      let allStudentsData: any[] = [];
+      let from = 0;
+      const batchSize = 1000;
+      let hasMore = true;
       
-      const formattedStudents = students?.map(s => ({
+      while (hasMore) {
+        const { data: batch, error } = await supabase
+          .from('students')
+          .select('id, name, email, class_id, stream_id, photo_url, gender')
+          .order('class_id')
+          .order('stream_id')
+          .order('name')
+          .range(from, from + batchSize - 1);
+        
+        if (error) throw error;
+        
+        if (batch && batch.length > 0) {
+          allStudentsData = [...allStudentsData, ...batch];
+          from += batchSize;
+          hasMore = batch.length === batchSize;
+        } else {
+          hasMore = false;
+        }
+      }
+      
+      const formattedStudents = allStudentsData.map(s => ({
         id: s.id,
         name: s.name,
         email: s.email,
@@ -68,7 +85,7 @@ const AttendanceDetails = () => {
         stream: s.stream_id,
         photoUrl: s.photo_url,
         gender: s.gender
-      })) || [];
+      }));
       
       setAllStudents(formattedStudents);
       

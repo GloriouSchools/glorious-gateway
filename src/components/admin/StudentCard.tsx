@@ -42,14 +42,12 @@ export function StudentCard({ student, classNameById, streamNameById, searchTerm
               <h4 className="font-medium text-sm leading-tight mb-1 break-words">
                 <HighlightText text={student.name || 'No Name'} searchTerm={searchTerm} />
               </h4>
-              <p className="text-xs text-muted-foreground break-all">
+              <a
+                href={`mailto:${student.email}`}
+                className="text-xs text-muted-foreground break-all hover:text-primary hover:underline cursor-pointer"
+              >
                 <HighlightText text={student.email || ''} searchTerm={searchTerm} />
-              </p>
-              {student.id && (
-                <p className="text-[11px] text-muted-foreground mt-0.5 break-all">
-                  ID: {student.id}
-                </p>
-              )}
+              </a>
             </div>
           </div>
 
@@ -89,10 +87,12 @@ export function StudentCard({ student, classNameById, streamNameById, searchTerm
 
           {/* Action Buttons */}
           <div className="grid grid-cols-2 gap-2">
-            <Button size="sm" variant="outline" className="h-8 w-full">
-              <Mail className="h-3 w-3 mr-1" />
-              <span className="sr-only sm:not-sr-only sm:inline">Contact</span>
-            </Button>
+            <a href={`mailto:${student.email}`} className="w-full">
+              <Button size="sm" variant="outline" className="h-8 w-full">
+                <Mail className="h-3 w-3 mr-1" />
+                <span className="sr-only sm:not-sr-only sm:inline">Contact</span>
+              </Button>
+            </a>
             <Button size="sm" variant="outline" className="h-8 w-full">
               <Edit className="h-3 w-3 mr-1" />
               <span className="sr-only sm:not-sr-only sm:inline">Edit</span>

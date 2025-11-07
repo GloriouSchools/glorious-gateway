@@ -527,3 +527,283 @@ export const generateBallotPDF = async (
   
   return doc;
 };
+
+interface TeacherData {
+  name: string;
+  contactNumber?: number;
+  email: string;
+  default_password?: string;
+}
+
+export const generateTeachersListPDF = async (
+  teachers: TeacherData[],
+  title: string = 'STAFF DETAILS'
+) => {
+  const doc = new jsPDF('portrait', 'mm', 'a4');
+  
+  // Add school header image
+  const headerImg = new Image();
+  headerImg.src = 'https://raw.githubusercontent.com/Fresh-Teacher/glorious-gateway-65056-78561-35497/main/src/assets/header.png';
+  
+  // Add header image at the top
+  const imgWidth = 190;
+  const imgHeight = 30;
+  doc.addImage(headerImg, 'PNG', 10, 10, imgWidth, imgHeight);
+  
+  // Add title below header
+  doc.setFontSize(16);
+  doc.setTextColor(0, 0, 0);
+  doc.text(title, doc.internal.pageSize.getWidth() / 2, 48, { align: 'center' });
+  
+  // Add date
+  doc.setFontSize(10);
+  doc.setTextColor(100, 100, 100);
+  doc.text(
+    `Generated: ${format(new Date(), 'MMM dd, yyyy HH:mm')}`,
+    doc.internal.pageSize.getWidth() / 2,
+    55,
+    { align: 'center' }
+  );
+  
+  // Add summary
+  const totalCount = teachers.length;
+  
+  doc.setFontSize(9);
+  doc.text(`Total Staff: ${totalCount}`, 
+    doc.internal.pageSize.getWidth() / 2, 61, { align: 'center' });
+  
+  // Prepare table data with numbering
+  const tableData = teachers.map((teacher, index) => {
+    const formattedPhone = teacher.contactNumber 
+      ? `+256${teacher.contactNumber.toString()}` 
+      : 'N/A';
+    return [
+      (index + 1).toString(),
+      teacher.name,
+      formattedPhone,
+      teacher.email,
+      teacher.default_password || 'N/A'
+    ];
+  });
+  
+  // Generate table with all borders
+  autoTable(doc, {
+    startY: 68,
+    head: [['NO.', 'NAME', 'TEL.', 'E-MAIL', 'PASSWORD']],
+    body: tableData,
+    theme: 'grid',
+    headStyles: {
+      fillColor: [0, 0, 0],
+      textColor: [255, 255, 255],
+      fontSize: 10,
+      fontStyle: 'bold',
+      halign: 'center',
+      lineWidth: 0.5,
+      lineColor: [0, 0, 0],
+      minCellHeight: 12
+    },
+    bodyStyles: {
+      fontSize: 9,
+      textColor: [0, 0, 0],
+      lineWidth: 0.5,
+      lineColor: [0, 0, 0],
+      minCellHeight: 10
+    },
+    alternateRowStyles: {
+      fillColor: [245, 245, 245]
+    },
+    columnStyles: {
+      0: { cellWidth: 15, halign: 'center' },
+      1: { cellWidth: 48, halign: 'left' },
+      2: { cellWidth: 28, halign: 'center' },
+      3: { cellWidth: 52, halign: 'left' },
+      4: { cellWidth: 32, halign: 'center' }
+    },
+    margin: { left: 10, right: 10 }
+  });
+  
+  // Add footer
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text(
+      `Page ${i} of ${pageCount}`,
+      doc.internal.pageSize.getWidth() / 2,
+      doc.internal.pageSize.getHeight() - 10,
+      { align: 'center' }
+    );
+  }
+  
+  return doc;
+};
+
+interface StudentDataForPDF {
+  name: string;
+  gender?: string;
+  email: string;
+  stream_id?: string;
+  photo_url?: string;
+  default_password?: string;
+}
+
+export const generateStudentsListPDF = async (
+  students: StudentDataForPDF[],
+  streamNameById: Record<string, string>,
+  title: string = 'STUDENT DETAILS'
+) => {
+  const doc = new jsPDF('portrait', 'mm', 'a4');
+  
+  // Add school header image
+  const headerImg = new Image();
+  headerImg.src = 'https://raw.githubusercontent.com/Fresh-Teacher/glorious-gateway-65056-78561-35497/main/src/assets/header.png';
+  
+  // Add header image at the top
+  const imgWidth = 190;
+  const imgHeight = 30;
+  doc.addImage(headerImg, 'PNG', 10, 10, imgWidth, imgHeight);
+  
+  // Add title below header
+  doc.setFontSize(16);
+  doc.setTextColor(0, 0, 0);
+  doc.text(title, doc.internal.pageSize.getWidth() / 2, 48, { align: 'center' });
+  
+  // Add date
+  doc.setFontSize(10);
+  doc.setTextColor(100, 100, 100);
+  doc.text(
+    `Generated: ${format(new Date(), 'MMM dd, yyyy HH:mm')}`,
+    doc.internal.pageSize.getWidth() / 2,
+    55,
+    { align: 'center' }
+  );
+  
+  // Add summary
+  const totalCount = students.length;
+  
+  doc.setFontSize(9);
+  doc.text(`Total Students: ${totalCount}`, 
+    doc.internal.pageSize.getWidth() / 2, 61, { align: 'center' });
+  
+  // Load student photos
+  const studentPhotos = new Map<string, string>();
+  for (const student of students) {
+    if (student.photo_url) {
+      try {
+        const photoBase64 = await loadImageAsBase64(student.photo_url);
+        if (photoBase64) {
+          studentPhotos.set(student.email, photoBase64);
+        }
+      } catch (err) {
+        console.error(`Failed to load photo for ${student.name}:`, err);
+      }
+    }
+  }
+  
+  // Prepare table data with numbering
+  const tableData = students.map((student, index) => {
+    return [
+      (index + 1).toString(),
+      '', // Empty cell for photo (will be added in didDrawCell)
+      student.name,
+      student.gender || 'N/A',
+      student.email,
+      student.stream_id ? (streamNameById[student.stream_id] || student.stream_id) : 'N/A',
+      student.default_password || 'N/A'
+    ];
+  });
+  
+  // Generate table with all borders
+  autoTable(doc, {
+    startY: 68,
+    head: [['NO.', 'PHOTO', 'NAME', 'GENDER', 'EMAIL', 'STREAM', 'PASSWORD']],
+    body: tableData,
+    theme: 'grid',
+    headStyles: {
+      fillColor: [0, 0, 0],
+      textColor: [255, 255, 255],
+      fontSize: 9,
+      fontStyle: 'bold',
+      halign: 'center',
+      lineWidth: 0.5,
+      lineColor: [0, 0, 0],
+      minCellHeight: 12
+    },
+    bodyStyles: {
+      fontSize: 8,
+      textColor: [0, 0, 0],
+      lineWidth: 0.5,
+      lineColor: [0, 0, 0],
+      minCellHeight: 12
+    },
+    alternateRowStyles: {
+      fillColor: [245, 245, 245]
+    },
+    columnStyles: {
+      0: { cellWidth: 12, halign: 'center' },
+      1: { cellWidth: 15, halign: 'center' },
+      2: { cellWidth: 38, halign: 'left' },
+      3: { cellWidth: 18, halign: 'center' },
+      4: { cellWidth: 45, halign: 'left' },
+      5: { cellWidth: 20, halign: 'center' },
+      6: { cellWidth: 22, halign: 'center' }
+    },
+    didDrawCell: function(data) {
+      // Add photos to the PHOTO column
+      if (data.column.index === 1 && data.section === 'body') {
+        const studentIndex = data.row.index;
+        const student = students[studentIndex];
+        const photoData = studentPhotos.get(student.email);
+        
+        if (photoData) {
+          try {
+            const photoSize = 10;
+            const photoX = data.cell.x + (data.cell.width - photoSize) / 2;
+            const photoY = data.cell.y + (data.cell.height - photoSize) / 2;
+            doc.addImage(photoData, 'JPEG', photoX, photoY, photoSize, photoSize);
+          } catch (err) {
+            console.error('Error adding photo to PDF:', err);
+          }
+        } else {
+          // Add initials if no photo
+          const initials = student.name
+            .split(' ')
+            .map(n => n[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2);
+          
+          const circleSize = 5;
+          const circleX = data.cell.x + data.cell.width / 2;
+          const circleY = data.cell.y + data.cell.height / 2;
+          
+          doc.setFillColor(102, 126, 234);
+          doc.circle(circleX, circleY, circleSize, 'F');
+          doc.setTextColor(255, 255, 255);
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(7);
+          doc.text(initials, circleX, circleY + 1.5, { align: 'center' });
+          doc.setTextColor(0, 0, 0);
+        }
+      }
+    },
+    margin: { left: 8, right: 8 }
+  });
+  
+  // Add footer
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text(
+      `Page ${i} of ${pageCount}`,
+      doc.internal.pageSize.getWidth() / 2,
+      doc.internal.pageSize.getHeight() - 10,
+      { align: 'center' }
+    );
+  }
+  
+  return doc;
+};

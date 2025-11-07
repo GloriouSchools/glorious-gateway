@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, ChevronLeft, ChevronRight, Users, TrendingUp, BarChart3, Clock } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, Users, TrendingUp, BarChart3, Clock, AlertCircle } from "lucide-react";
 import { AttendanceStats } from "@/components/attendance/AttendanceStats";
 import { ClassAttendanceTable } from "@/components/attendance/ClassAttendanceTable";
 import { AttendanceByGenderChart } from "@/components/attendance/analytics/AttendanceByGenderChart";
@@ -22,7 +22,17 @@ import { supabase } from "@/integrations/supabase/client";
 const AttendanceOverview = () => {
   const { userRole, userName, photoUrl, signOut } = useAuth();
   const navigate = useNavigate();
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(() => {
+    // Initialize to most recent weekday (Monday-Friday)
+    let date = new Date();
+    const dayOfWeek = date.getDay();
+    if (dayOfWeek === 0) { // Sunday
+      date = addDays(date, -2); // Go back to Friday
+    } else if (dayOfWeek === 6) { // Saturday
+      date = addDays(date, -1); // Go back to Friday
+    }
+    return date;
+  });
   const [attendanceData, setAttendanceData] = useState<any>({});
   const [allStudents, setAllStudents] = useState<any[]>([]);
   const [classList, setClassList] = useState<any[]>([]);
@@ -65,25 +75,40 @@ const AttendanceOverview = () => {
     try {
       setIsLoading(true);
       
-      // Use count query to get total students (bypasses 1000 row limit)
+      // Use count query to get total students
       const { count: totalCount } = await supabase
         .from('students')
         .select('*', { count: 'exact', head: true });
       
       setTotalStudentsCount(totalCount || 0);
       
-      // Load student data for attendance tracking
-      const { data: students, error } = await supabase
-        .from('students')
-        .select('id, name, email, class_id, stream_id, photo_url, gender')
-        .order('class_id')
-        .order('stream_id')
-        .order('name')
-        .limit(10000);
+      // Load students in batches to bypass 1000 row limit
+      let allStudentsData: any[] = [];
+      let from = 0;
+      const batchSize = 1000;
+      let hasMore = true;
       
-      if (error) throw error;
+      while (hasMore) {
+        const { data: batch, error } = await supabase
+          .from('students')
+          .select('id, name, email, class_id, stream_id, photo_url, gender')
+          .order('class_id')
+          .order('stream_id')
+          .order('name')
+          .range(from, from + batchSize - 1);
+        
+        if (error) throw error;
+        
+        if (batch && batch.length > 0) {
+          allStudentsData = [...allStudentsData, ...batch];
+          from += batchSize;
+          hasMore = batch.length === batchSize;
+        } else {
+          hasMore = false;
+        }
+      }
       
-      const formattedStudents = students?.map(s => ({
+      const formattedStudents = allStudentsData.map(s => ({
         id: s.id,
         name: s.name,
         email: s.email,
@@ -91,7 +116,7 @@ const AttendanceOverview = () => {
         stream: s.stream_id,
         photoUrl: s.photo_url,
         gender: s.gender
-      })) || [];
+      }));
       
       setAllStudents(formattedStudents);
       
@@ -147,7 +172,17 @@ const AttendanceOverview = () => {
   };
 
   const navigateDate = (direction: 'prev' | 'next') => {
-    setSelectedDate(prev => addDays(prev, direction === 'next' ? 1 : -1));
+    let newDate = addDays(selectedDate, direction === 'next' ? 1 : -1);
+    
+    // Skip weekends - if landing on Saturday or Sunday, move to Friday or Monday
+    const dayOfWeek = newDate.getDay();
+    if (dayOfWeek === 0) { // Sunday
+      newDate = addDays(newDate, direction === 'next' ? 1 : -2); // Move to Monday or Friday
+    } else if (dayOfWeek === 6) { // Saturday
+      newDate = addDays(newDate, direction === 'next' ? 2 : -1); // Move to Monday or Friday
+    }
+    
+    setSelectedDate(newDate);
   };
 
   // Calculate overall statistics using the count from database
@@ -323,6 +358,20 @@ const AttendanceOverview = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Weekend Info Banner */}
+        {selectedDate.getDay() === 0 || selectedDate.getDay() === 6 ? (
+          <Card className="border-amber-200 bg-amber-50">
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 text-amber-800">
+                <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+                <p className="text-xs sm:text-sm font-medium">
+                  Weekend Day - Attendance is only tracked Monday through Friday
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        ) : null}
 
         {/* Tabs for different views */}
         <Tabs defaultValue="overview" className="w-full">

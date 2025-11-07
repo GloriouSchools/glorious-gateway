@@ -34,7 +34,10 @@ import { StudentActionsDropdown } from "@/components/admin/StudentActionsDropdow
 import { SuspendStudentModal } from "@/components/admin/SuspendStudentModal";
 import { ChangeClassModal } from "@/components/admin/ChangeClassModal";
 import { ConfirmActionModal } from "@/components/admin/ConfirmActionModal";
-import { UserPlus } from "lucide-react";
+import { UserPlus, FileText } from "lucide-react";
+import { generateStudentsListPDF } from "@/utils/pdfUtils";
+import { ProgressModal } from "@/components/ui/progress-modal";
+import { FileDown } from "lucide-react";
 
 interface Student {
   id: string;
@@ -43,6 +46,7 @@ interface Student {
   photo_url?: string;
   class_id?: string;
   stream_id?: string;
+  gender?: string;
   is_verified?: boolean;
   created_at?: string;
   default_password?: string;
@@ -80,6 +84,9 @@ export default function StudentsList() {
   const [expelModalOpen, setExpelModalOpen] = useState(false);
   const [archiveModalOpen, setArchiveModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [pdfProgress, setPdfProgress] = useState(0);
+  const [showPdfProgress, setShowPdfProgress] = useState(false);
+  const [pdfComplete, setPdfComplete] = useState(false);
 
   // Reference data maps
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
@@ -157,7 +164,7 @@ export default function StudentsList() {
       
       let query = supabase
         .from('students')
-        .select('id, name, email, photo_url, class_id, stream_id, is_verified, created_at, default_password', { count: 'exact' });
+        .select('id, name, email, photo_url, class_id, stream_id, gender, is_verified, created_at, default_password', { count: 'exact' });
 
       // Apply filters first (more selective)
       if (filterClass && filterClass !== 'all') {
@@ -245,6 +252,73 @@ export default function StudentsList() {
     }
   }, []);
 
+  const downloadPDF = async () => {
+    try {
+      setShowPdfProgress(true);
+      setPdfProgress(0);
+      setPdfComplete(false);
+
+      // Fetch ALL students with current filters (no pagination)
+      setPdfProgress(10);
+      let query = supabase
+        .from('students')
+        .select('id, name, email, photo_url, class_id, stream_id, gender, is_verified, created_at, default_password');
+
+      // Apply same filters as the main query
+      if (filterClass && filterClass !== 'all') {
+        query = query.eq('class_id', filterClass);
+      }
+      
+      const streamId = (filterStream && filterStream !== 'all') ? filterStream : paramStream;
+      if (streamId) {
+        query = query.eq('stream_id', streamId);
+      }
+      
+      if (filterVerified && filterVerified !== 'all') {
+        query = query.eq('is_verified', filterVerified === 'verified');
+      }
+
+      // Apply search
+      if (debouncedSearchTerm) {
+        query = query.or(
+          `name.ilike.%${debouncedSearchTerm}%,email.ilike.%${debouncedSearchTerm}%,id.ilike.%${debouncedSearchTerm}%`
+        );
+      }
+
+      // Apply sorting
+      query = query.order(sortBy, { ascending: sortOrder === 'asc' });
+      
+      setPdfProgress(30);
+      const { data: allStudents, error } = await query;
+
+      if (error) {
+        console.error('Error fetching students for PDF:', error);
+        toast.error('Failed to fetch students for PDF');
+        setShowPdfProgress(false);
+        return;
+      }
+
+      if (!allStudents || allStudents.length === 0) {
+        toast.error('No students to export');
+        setShowPdfProgress(false);
+        return;
+      }
+
+      setPdfProgress(60);
+      const doc = await generateStudentsListPDF(allStudents, streamNameById);
+      
+      setPdfProgress(90);
+      doc.save(`student-details-${new Date().toISOString().split('T')[0]}.pdf`);
+      
+      setPdfProgress(100);
+      setPdfComplete(true);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Failed to generate PDF');
+      setShowPdfProgress(false);
+    }
+  };
+
   const handlePageChange = (page: number) => {
     if (page < 1 || page > totalPages) return;
     setCurrentPage(page);
@@ -305,14 +379,20 @@ export default function StudentsList() {
           </Button>
         </div>
 
-        {/* Header */}
-        <StudentsActions 
-          totalCount={totalCount}
-          filteredCount={students.length}
-          onExportCSV={exportToCSV}
-          onPrint={handlePrint}
-          isPrinting={isPrinting}
-        />
+        {/* Header with PDF Button */}
+        <div className="flex items-center justify-between gap-4">
+          <StudentsActions 
+            totalCount={totalCount}
+            filteredCount={students.length}
+            onExportCSV={exportToCSV}
+            onPrint={handlePrint}
+            isPrinting={isPrinting}
+          />
+          <Button onClick={downloadPDF} variant="outline" size="sm">
+            <FileText className="h-4 w-4 mr-2" />
+            Generate PDF
+          </Button>
+        </div>
 
         {/* Filters */}
         <StudentsFilters 
@@ -403,9 +483,12 @@ export default function StudentsList() {
                     </div>
                   </TableCell>
                   <TableCell className="min-w-[200px]">
-                    <p className="text-sm truncate">
+                    <a
+                      href={`mailto:${student.email}`}
+                      className="text-sm truncate hover:text-primary hover:underline cursor-pointer block"
+                    >
                       <HighlightText text={student.email || ''} searchTerm={debouncedSearchTerm} />
-                    </p>
+                    </a>
                   </TableCell>
                   <TableCell className="min-w-[100px]">
                     <span className="truncate block">
@@ -564,6 +647,16 @@ export default function StudentsList() {
           </>
         )}
       </div>
+
+      <ProgressModal
+        isOpen={showPdfProgress}
+        onClose={() => setShowPdfProgress(false)}
+        progress={pdfProgress}
+        title="Generating PDF"
+        description="Please don't leave this page while generating is in progress"
+        isComplete={pdfComplete}
+        icon={<FileDown className="w-8 h-8 text-primary animate-pulse" />}
+      />
     </DashboardLayout>
   );
 }

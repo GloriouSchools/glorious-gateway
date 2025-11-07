@@ -33,8 +33,9 @@ import {
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import jsPDF from "jspdf";
-import "jspdf-autotable";
+import { generateTeachersListPDF } from "@/utils/pdfUtils";
+import { ProgressModal } from "@/components/ui/progress-modal";
+import { FileDown } from "lucide-react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { StudentsPagination } from "@/components/admin/StudentsPagination";
@@ -85,6 +86,9 @@ export default function TeachersList() {
   const [terminateModalOpen, setTerminateModalOpen] = useState(false);
   const [archiveModalOpen, setArchiveModalOpen] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
+  const [pdfProgress, setPdfProgress] = useState(0);
+  const [showPdfProgress, setShowPdfProgress] = useState(false);
+  const [pdfComplete, setPdfComplete] = useState(false);
 
   // Debounce search term
   useEffect(() => {
@@ -153,30 +157,25 @@ export default function TeachersList() {
     setFilteredTeachers(filtered);
   };
 
-  const downloadPDF = () => {
-    const doc = new jsPDF();
-    doc.setFontSize(20);
-    doc.text('Teachers Report', 20, 20);
-    doc.setFontSize(12);
-    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 30);
-    doc.text(`Total Teachers: ${filteredTeachers.length}`, 20, 40);
-
-    const tableData = filteredTeachers.map(teacher => [
-      teacher.photo_url ? 'Photo' : 'No Photo',
-      teacher.name || 'No Name',
-      teacher.email || 'No Email',
-      teacher.teacher_id || 'No ID'
-    ]);
-
-    (doc as any).autoTable({
-      head: [['Avatar', 'Name', 'Email', 'Teacher ID']],
-      body: tableData,
-      startY: 50,
-      styles: { fontSize: 10 },
-      headStyles: { fillColor: [59, 130, 246] },
-    });
-
-    doc.save('teachers-report.pdf');
+  const downloadPDF = async () => {
+    try {
+      setShowPdfProgress(true);
+      setPdfProgress(0);
+      setPdfComplete(false);
+      
+      setPdfProgress(30);
+      const doc = await generateTeachersListPDF(filteredTeachers);
+      
+      setPdfProgress(70);
+      doc.save(`staff-details-${new Date().toISOString().split('T')[0]}.pdf`);
+      
+      setPdfProgress(100);
+      setPdfComplete(true);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Failed to generate PDF');
+      setShowPdfProgress(false);
+    }
   };
 
   // Pagination
@@ -361,12 +360,20 @@ export default function TeachersList() {
                         </TableCell>
                         <TableCell className="p-4">
                           <div className="space-y-1">
-                            <p className="text-sm truncate max-w-[180px]">{teacher.email}</p>
+                            <a 
+                              href={`mailto:${teacher.email}`}
+                              className="text-sm truncate max-w-[180px] hover:text-primary hover:underline cursor-pointer block"
+                            >
+                              {teacher.email}
+                            </a>
                             {teacher.contactNumber && (
-                              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                              <a
+                                href={`tel:+256${teacher.contactNumber}`}
+                                className="text-xs text-muted-foreground flex items-center gap-1 hover:text-primary hover:underline cursor-pointer"
+                              >
                                 <Phone className="h-3 w-3 flex-shrink-0" />
-                                <span className="truncate">{teacher.contactNumber}</span>
-                              </p>
+                                <span className="truncate">+256{teacher.contactNumber}</span>
+                              </a>
                             )}
                           </div>
                         </TableCell>
@@ -462,9 +469,12 @@ export default function TeachersList() {
                         <h4 className="font-medium text-xs sm:text-sm leading-tight mb-1 break-words">
                           {teacher.name || 'No Name'}
                         </h4>
-                        <p className="text-xs text-muted-foreground truncate">
+                        <a
+                          href={`mailto:${teacher.email}`}
+                          className="text-xs text-muted-foreground truncate hover:text-primary hover:underline cursor-pointer block"
+                        >
                           {teacher.email}
-                        </p>
+                        </a>
                         {teacher.teacher_id && (
                           <p className="text-xs text-muted-foreground mt-0.5 truncate">
                             ID: {teacher.teacher_id}
@@ -512,10 +522,13 @@ export default function TeachersList() {
                     {/* Additional Info - Compact */}
                     <div className="space-y-1.5 mb-2 sm:mb-3 text-xs">
                       {teacher.contactNumber && (
-                        <div className="flex items-center gap-1.5">
+                        <a
+                          href={`tel:+256${teacher.contactNumber}`}
+                          className="flex items-center gap-1.5 hover:text-primary hover:underline cursor-pointer"
+                        >
                           <Phone className="h-3 w-3 shrink-0 text-muted-foreground" />
-                          <span className="truncate">{teacher.contactNumber}</span>
-                        </div>
+                          <span className="truncate">+256{teacher.contactNumber}</span>
+                        </a>
                       )}
                       
                       <div className="flex flex-wrap gap-1">
@@ -630,6 +643,16 @@ export default function TeachersList() {
         </>
       )}
       </div>
+
+      <ProgressModal
+        isOpen={showPdfProgress}
+        onClose={() => setShowPdfProgress(false)}
+        progress={pdfProgress}
+        title="Generating PDF"
+        description="Please don't leave this page while generating is in progress"
+        isComplete={pdfComplete}
+        icon={<FileDown className="w-8 h-8 text-primary animate-pulse" />}
+      />
     </DashboardLayout>
   );
 }

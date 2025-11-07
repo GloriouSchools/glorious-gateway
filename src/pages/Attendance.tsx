@@ -22,7 +22,8 @@ import {
   Upload,
   BookOpen,
   FileDown,
-  FileUp
+  FileUp,
+  FileText
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -36,6 +37,7 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { generateAttendancePDF } from "@/utils/pdfGenerator";
+import { ProgressModal } from "@/components/ui/progress-modal";
 
 interface Student {
   id: string;
@@ -63,7 +65,17 @@ interface ClassInfo {
 
 const AttendanceMarking = () => {
   const { userRole, userName, photoUrl, userId, signOut } = useAuth();
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(() => {
+    // Initialize to most recent weekday (Monday-Friday)
+    let date = new Date();
+    const dayOfWeek = date.getDay();
+    if (dayOfWeek === 0) { // Sunday
+      date = addDays(date, -2); // Go back to Friday
+    } else if (dayOfWeek === 6) { // Saturday
+      date = addDays(date, -1); // Go back to Friday
+    }
+    return date;
+  });
   const [selectedClass, setSelectedClass] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [attendanceRecords, setAttendanceRecords] = useState<{ [key: string]: AttendanceRecord }>({});
@@ -83,6 +95,9 @@ const AttendanceMarking = () => {
   const [hasUnsyncedRecords, setHasUnsyncedRecords] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [attendanceProgress, setAttendanceProgress] = useState(0);
+  const [showAttendanceProgress, setShowAttendanceProgress] = useState(false);
+  const [attendanceComplete, setAttendanceComplete] = useState(false);
   
   // Load students from database
   useEffect(() => {
@@ -130,17 +145,34 @@ const AttendanceMarking = () => {
   const loadStudents = async () => {
     try {
       setIsLoadingStudents(true);
-      const { data: students, error } = await supabase
-        .from('students')
-        .select('id, name, email, class_id, stream_id, photo_url, gender')
-        .order('class_id')
-        .order('stream_id')
-        .order('name')
-        .limit(10000);
       
-      if (error) throw error;
+      // Load students in batches to bypass 1000 row limit
+      let allStudentsData: any[] = [];
+      let from = 0;
+      const batchSize = 1000;
+      let hasMore = true;
       
-      const formattedStudents: Student[] = students?.map(s => ({
+      while (hasMore) {
+        const { data: batch, error } = await supabase
+          .from('students')
+          .select('id, name, email, class_id, stream_id, photo_url, gender')
+          .order('class_id')
+          .order('stream_id')
+          .order('name')
+          .range(from, from + batchSize - 1);
+        
+        if (error) throw error;
+        
+        if (batch && batch.length > 0) {
+          allStudentsData = [...allStudentsData, ...batch];
+          from += batchSize;
+          hasMore = batch.length === batchSize;
+        } else {
+          hasMore = false;
+        }
+      }
+      
+      const formattedStudents: Student[] = allStudentsData.map(s => ({
         id: s.id,
         name: s.name,
         email: s.email,
@@ -148,7 +180,7 @@ const AttendanceMarking = () => {
         stream: s.stream_id,
         photoUrl: s.photo_url,
         gender: s.gender
-      })) || [];
+      }));
       
       setAllStudents(formattedStudents);
       
@@ -306,6 +338,13 @@ const AttendanceMarking = () => {
   };
 
   const markAttendance = async (studentId: string, status: 'present' | 'absent', reason?: string, silent = false) => {
+    // Check if trying to mark attendance on weekend
+    const dayOfWeek = selectedDate.getDay();
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+      toast.error("Attendance cannot be marked on weekends (Saturday/Sunday)");
+      return;
+    }
+    
     const student = allStudents.find(s => s.id === studentId);
     const studentName = student?.name || 'Student';
     
@@ -446,6 +485,154 @@ const AttendanceMarking = () => {
       toast.error('Failed to sync attendance');
     } finally {
       setIsSyncing(false);
+    }
+  };
+
+  const generateAnalyticsReport = async () => {
+    if (!selectedClass) {
+      toast.error("Please select a class first");
+      return;
+    }
+
+    setIsDownloading(true);
+    const toastId = toast.loading("Generating analytics report...");
+
+    try {
+      const stats = getAttendanceStats();
+      const attendanceRate = stats.total > 0 ? Math.round((stats.present / stats.total) * 100) : 0;
+      
+      // Calculate additional analytics
+      const presentStudents = filteredStudents.filter(s => attendanceRecords[s.id]?.status === 'present');
+      const absentStudents = filteredStudents.filter(s => attendanceRecords[s.id]?.status === 'absent');
+      const unmarkedStudents = filteredStudents.filter(s => !attendanceRecords[s.id]);
+
+      // Gender breakdown
+      const malePresent = presentStudents.filter(s => s.gender?.toLowerCase() === 'male' || s.gender?.toLowerCase() === 'm').length;
+      const femalePresent = presentStudents.filter(s => s.gender?.toLowerCase() === 'female' || s.gender?.toLowerCase() === 'f').length;
+      const maleAbsent = absentStudents.filter(s => s.gender?.toLowerCase() === 'male' || s.gender?.toLowerCase() === 'm').length;
+      const femaleAbsent = absentStudents.filter(s => s.gender?.toLowerCase() === 'female' || s.gender?.toLowerCase() === 'f').length;
+
+      const pdf = new jsPDF();
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      let yPos = 20;
+
+      // Header
+      pdf.setFontSize(20);
+      pdf.setTextColor(59, 130, 246);
+      pdf.text("Attendance Analytics Report", pageWidth / 2, yPos, { align: 'center' });
+      
+      yPos += 10;
+      pdf.setFontSize(12);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text(currentClass?.name || selectedClass, pageWidth / 2, yPos, { align: 'center' });
+      
+      yPos += 5;
+      pdf.setFontSize(10);
+      pdf.text(format(selectedDate, 'EEEE, MMMM d, yyyy'), pageWidth / 2, yPos, { align: 'center' });
+      
+      yPos += 15;
+
+      // Summary Statistics
+      pdf.setFontSize(14);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text("Summary Statistics", 14, yPos);
+      yPos += 10;
+
+      const summaryData = [
+        ['Total Students', stats.total.toString()],
+        ['Students Marked', stats.marked.toString()],
+        ['Present', stats.present.toString()],
+        ['Absent', stats.absent.toString()],
+        ['Unmarked', unmarkedStudents.length.toString()],
+        ['Attendance Rate', `${attendanceRate}%`]
+      ];
+
+      (pdf as any).autoTable({
+        startY: yPos,
+        head: [['Metric', 'Value']],
+        body: summaryData,
+        theme: 'grid',
+        headStyles: { fillColor: [59, 130, 246] },
+        margin: { left: 14, right: 14 }
+      });
+
+      yPos = (pdf as any).lastAutoTable.finalY + 15;
+
+      // Gender Breakdown
+      if (yPos > 250) {
+        pdf.addPage();
+        yPos = 20;
+      }
+      
+      pdf.setFontSize(14);
+      pdf.text("Gender Breakdown", 14, yPos);
+      yPos += 10;
+
+      const genderData = [
+        ['Male Present', malePresent.toString()],
+        ['Female Present', femalePresent.toString()],
+        ['Male Absent', maleAbsent.toString()],
+        ['Female Absent', femaleAbsent.toString()]
+      ];
+
+      (pdf as any).autoTable({
+        startY: yPos,
+        head: [['Category', 'Count']],
+        body: genderData,
+        theme: 'grid',
+        headStyles: { fillColor: [59, 130, 246] },
+        margin: { left: 14, right: 14 }
+      });
+
+      yPos = (pdf as any).lastAutoTable.finalY + 15;
+
+      // Absent Students with Reasons
+      if (absentStudents.length > 0) {
+        if (yPos > 250) {
+          pdf.addPage();
+          yPos = 20;
+        }
+        
+        pdf.setFontSize(14);
+        pdf.text("Absent Students", 14, yPos);
+        yPos += 10;
+
+        const absentData = absentStudents.map(s => [
+          s.name,
+          attendanceRecords[s.id]?.absentReason || 'No reason provided'
+        ]);
+
+        (pdf as any).autoTable({
+          startY: yPos,
+          head: [['Student Name', 'Reason']],
+          body: absentData,
+          theme: 'grid',
+          headStyles: { fillColor: [239, 68, 68] },
+          margin: { left: 14, right: 14 }
+        });
+      }
+
+      // Footer
+      const pageCount = (pdf as any).internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(8);
+        pdf.setTextColor(150, 150, 150);
+        pdf.text(
+          `Generated on ${format(new Date(), 'PPpp')} | Page ${i} of ${pageCount}`,
+          pageWidth / 2,
+          pdf.internal.pageSize.getHeight() - 10,
+          { align: 'center' }
+        );
+      }
+
+      pdf.save(`attendance-analytics-${selectedClass}-${format(selectedDate, 'yyyy-MM-dd')}.pdf`);
+      toast.success("Analytics report generated successfully!", { id: toastId });
+    } catch (error) {
+      console.error("Failed to generate report:", error);
+      toast.error("Failed to generate analytics report", { id: toastId });
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -650,10 +837,19 @@ const AttendanceMarking = () => {
   };
 
   const markAllPresent = async () => {
+    setShowAttendanceProgress(true);
+    setAttendanceProgress(0);
+    setAttendanceComplete(false);
+
+    const total = filteredStudents.length;
+    
     // Mark all students as present
-    for (const student of filteredStudents) {
-      await markAttendance(student.id, 'present', undefined, true);
+    for (let i = 0; i < filteredStudents.length; i++) {
+      await markAttendance(filteredStudents[i].id, 'present', undefined, true);
+      setAttendanceProgress(((i + 1) / total) * 100);
     }
+    
+    setAttendanceComplete(true);
     toast.success(`All ${filteredStudents.length} students marked as present`);
   };
 
@@ -672,11 +868,19 @@ const AttendanceMarking = () => {
     }
 
     setShowMarkAllAbsentDialog(false);
+    setShowAttendanceProgress(true);
+    setAttendanceProgress(0);
+    setAttendanceComplete(false);
+
+    const total = filteredStudents.length;
     
     // Mark all students as absent with the reason
-    for (const student of filteredStudents) {
-      await markAttendance(student.id, 'absent', finalReason, true);
+    for (let i = 0; i < filteredStudents.length; i++) {
+      await markAttendance(filteredStudents[i].id, 'absent', finalReason, true);
+      setAttendanceProgress(((i + 1) / total) * 100);
     }
+    
+    setAttendanceComplete(true);
     toast.success(`All ${filteredStudents.length} students marked as absent: ${finalReason}`);
   };
 
@@ -705,7 +909,15 @@ const AttendanceMarking = () => {
   };
 
   const navigateDate = (direction: 'prev' | 'next') => {
-    const newDate = addDays(selectedDate, direction === 'next' ? 1 : -1);
+    let newDate = addDays(selectedDate, direction === 'next' ? 1 : -1);
+    
+    // Skip weekends - if landing on Saturday or Sunday, move to Friday or Monday
+    const dayOfWeek = newDate.getDay();
+    if (dayOfWeek === 0) { // Sunday
+      newDate = addDays(newDate, direction === 'next' ? 1 : -2); // Move to Monday or Friday
+    } else if (dayOfWeek === 6) { // Saturday
+      newDate = addDays(newDate, direction === 'next' ? 2 : -1); // Move to Monday or Friday
+    }
     
     // Prevent navigation to future dates
     const today = new Date();
@@ -821,6 +1033,20 @@ const AttendanceMarking = () => {
           </CardContent>
         </Card>
 
+        {/* Weekend Warning */}
+        {selectedDate.getDay() === 0 || selectedDate.getDay() === 6 ? (
+          <Card className="border-amber-200 bg-amber-50">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 text-amber-800">
+                <AlertCircle className="h-5 w-5" />
+                <p className="text-sm font-medium">
+                  Weekend Day - Attendance marking is only available Monday through Friday
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        ) : null}
+
         {/* Empty State or Attendance Content */}
         {!selectedClass ? (
           <EmptyAttendanceState />
@@ -911,6 +1137,15 @@ const AttendanceMarking = () => {
                   >
                     <Save className="h-4 w-4 mr-2" />
                     {isSyncing ? "Syncing..." : hasUnsyncedRecords ? "Sync Attendance" : "All Synced"}
+                  </Button>
+                  <Button 
+                    onClick={generateAnalyticsReport}
+                    variant="outline"
+                    disabled={isDownloading || !selectedClass}
+                    className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    {isDownloading ? "Generating..." : "Generate Analytics Report"}
                   </Button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -1271,6 +1506,16 @@ const AttendanceMarking = () => {
             </div>
           </DialogContent>
         </Dialog>
+
+        <ProgressModal
+          isOpen={showAttendanceProgress}
+          onClose={() => setShowAttendanceProgress(false)}
+          progress={attendanceProgress}
+          title="Updating Attendance"
+          description="Please don't leave this page while updating is in progress"
+          isComplete={attendanceComplete}
+          icon={<UserCheck className="w-8 h-8 text-primary animate-pulse" />}
+        />
       </div>
     </DashboardLayout>
   );
