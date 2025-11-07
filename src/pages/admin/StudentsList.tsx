@@ -87,6 +87,7 @@ export default function StudentsList() {
   const [pdfProgress, setPdfProgress] = useState(0);
   const [showPdfProgress, setShowPdfProgress] = useState(false);
   const [pdfComplete, setPdfComplete] = useState(false);
+  const [pdfStatusMessage, setPdfStatusMessage] = useState<string>('');
 
   // Reference data maps
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
@@ -257,9 +258,12 @@ export default function StudentsList() {
       setShowPdfProgress(true);
       setPdfProgress(0);
       setPdfComplete(false);
+      setPdfStatusMessage('Initializing...');
 
       // Fetch ALL students with current filters (no pagination)
       setPdfProgress(10);
+      setPdfStatusMessage('Fetching student data...');
+      
       let query = supabase
         .from('students')
         .select('id, name, email, photo_url, class_id, stream_id, gender, is_verified, created_at, default_password');
@@ -289,6 +293,8 @@ export default function StudentsList() {
       query = query.order(sortBy, { ascending: sortOrder === 'asc' });
       
       setPdfProgress(30);
+      setPdfStatusMessage('Preparing student records...');
+      
       const { data: allStudents, error } = await query;
 
       if (error) {
@@ -305,17 +311,31 @@ export default function StudentsList() {
       }
 
       setPdfProgress(60);
-      const doc = await generateStudentsListPDF(allStudents, streamNameById);
+      setPdfStatusMessage(`Processing ${allStudents.length} students...`);
+      
+      const doc = await generateStudentsListPDF(
+        allStudents, 
+        streamNameById, 
+        'STUDENT DETAILS',
+        (progress, message) => {
+          setPdfProgress(progress);
+          setPdfStatusMessage(message);
+        }
+      );
       
       setPdfProgress(90);
+      setPdfStatusMessage('Finalizing PDF...');
+      
       doc.save(`student-details-${new Date().toISOString().split('T')[0]}.pdf`);
       
       setPdfProgress(100);
+      setPdfStatusMessage('Complete!');
       setPdfComplete(true);
     } catch (error) {
       console.error('Error generating PDF:', error);
       toast.error('Failed to generate PDF');
       setShowPdfProgress(false);
+      setPdfStatusMessage('');
     }
   };
 
@@ -656,6 +676,7 @@ export default function StudentsList() {
         description="Please don't leave this page while generating is in progress"
         isComplete={pdfComplete}
         icon={<FileDown className="w-8 h-8 text-primary animate-pulse" />}
+        statusMessage={pdfStatusMessage}
       />
     </DashboardLayout>
   );

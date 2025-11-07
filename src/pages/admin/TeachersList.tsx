@@ -89,6 +89,7 @@ export default function TeachersList() {
   const [pdfProgress, setPdfProgress] = useState(0);
   const [showPdfProgress, setShowPdfProgress] = useState(false);
   const [pdfComplete, setPdfComplete] = useState(false);
+  const [pdfStatusMessage, setPdfStatusMessage] = useState<string>('');
 
   // Debounce search term
   useEffect(() => {
@@ -162,19 +163,26 @@ export default function TeachersList() {
       setShowPdfProgress(true);
       setPdfProgress(0);
       setPdfComplete(false);
+      setPdfStatusMessage('Initializing...');
       
       setPdfProgress(30);
+      setPdfStatusMessage(`Preparing ${filteredTeachers.length} teacher records...`);
+      
       const doc = await generateTeachersListPDF(filteredTeachers);
       
       setPdfProgress(70);
+      setPdfStatusMessage('Finalizing PDF...');
+      
       doc.save(`staff-details-${new Date().toISOString().split('T')[0]}.pdf`);
       
       setPdfProgress(100);
+      setPdfStatusMessage('Complete!');
       setPdfComplete(true);
     } catch (error) {
       console.error('Error generating PDF:', error);
       toast.error('Failed to generate PDF');
       setShowPdfProgress(false);
+      setPdfStatusMessage('');
     }
   };
 
@@ -652,6 +660,7 @@ export default function TeachersList() {
         description="Please don't leave this page while generating is in progress"
         isComplete={pdfComplete}
         icon={<FileDown className="w-8 h-8 text-primary animate-pulse" />}
+        statusMessage={pdfStatusMessage}
       />
     </DashboardLayout>
   );

@@ -4,7 +4,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, ChevronLeft, ChevronRight, Users, TrendingUp, BarChart3, Clock, AlertCircle } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, Users, TrendingUp, BarChart3, Clock, AlertCircle, Download } from "lucide-react";
+import { ProgressModal } from "@/components/ui/progress-modal";
+import { generateAttendancePDF } from '@/utils/pdfGenerator';
+import { toast } from "sonner";
 import { AttendanceStats } from "@/components/attendance/AttendanceStats";
 import { ClassAttendanceTable } from "@/components/attendance/ClassAttendanceTable";
 import { AttendanceByGenderChart } from "@/components/attendance/analytics/AttendanceByGenderChart";
@@ -38,6 +41,9 @@ const AttendanceOverview = () => {
   const [classList, setClassList] = useState<any[]>([]);
   const [totalStudentsCount, setTotalStudentsCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [pdfProgress, setPdfProgress] = useState(0);
+  const [pdfStatusMessage, setPdfStatusMessage] = useState("");
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   
   // Load students from database
   useEffect(() => {
@@ -211,6 +217,87 @@ const AttendanceOverview = () => {
     navigate(`/admin/attendance/details?class=${classId}`);
   };
 
+  const handleGenerateReport = async () => {
+    try {
+      setIsGeneratingPdf(true);
+      setPdfProgress(0);
+      setPdfStatusMessage("Fetching all student records...");
+      
+      // Fetch ALL students using batching to bypass 1000 limit
+      let allStudentsForReport: any[] = [];
+      let from = 0;
+      const batchSize = 1000;
+      let hasMore = true;
+      
+      while (hasMore) {
+        const { data: batch, error } = await supabase
+          .from('students')
+          .select('id, name, email, class_id, stream_id, photo_url, gender')
+          .order('class_id')
+          .order('stream_id')
+          .order('name')
+          .range(from, from + batchSize - 1);
+        
+        if (error) throw error;
+        
+        if (batch && batch.length > 0) {
+          allStudentsForReport = [...allStudentsForReport, ...batch];
+          from += batchSize;
+          hasMore = batch.length === batchSize;
+          setPdfProgress(Math.min(20, Math.floor((from / 5000) * 20)));
+          setPdfStatusMessage(`Loading students... (${allStudentsForReport.length} loaded)`);
+        } else {
+          hasMore = false;
+        }
+      }
+      
+      setPdfProgress(30);
+      setPdfStatusMessage("Preparing attendance data...");
+      
+      await new Promise(resolve => setTimeout(resolve, 300));
+      setPdfProgress(40);
+
+      // Prepare students data with attendance status
+      setPdfStatusMessage("Compiling student records...");
+      const studentsWithAttendance = allStudentsForReport.map(student => ({
+        name: student.name,
+        gender: student.gender || 'N/A',
+        stream: student.stream_id,
+        status: attendanceData[student.id]?.status || 'not-marked',
+        timeMarked: attendanceData[student.id]?.timeMarked,
+        photoUrl: student.photo_url
+      }));
+
+      setPdfProgress(60);
+      setPdfStatusMessage("Generating PDF document...");
+      
+      const pdf = await generateAttendancePDF(
+        studentsWithAttendance,
+        selectedDate
+      );
+      
+      setPdfProgress(90);
+      setPdfStatusMessage("Finalizing PDF...");
+      
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      pdf.save(`attendance-report-${format(selectedDate, 'yyyy-MM-dd')}.pdf`);
+      
+      setPdfProgress(100);
+      setPdfStatusMessage("PDF generated successfully!");
+      
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      toast.success(`Attendance report downloaded successfully! (${studentsWithAttendance.length} students included)`);
+      
+    } catch (error) {
+      console.error("Failed to generate PDF:", error);
+      toast.error("Failed to generate PDF. Please try again.");
+    } finally {
+      setIsGeneratingPdf(false);
+      setPdfProgress(0);
+    }
+  };
+
   // Calculate analytics data from real database
   const analyticsData = useMemo(() => {
     // Gender data from actual database
@@ -336,23 +423,31 @@ const AttendanceOverview = () => {
           </div>
         </div>
 
-        {/* Date Selection */}
+        {/* Date Selection and Report Button */}
         <Card>
           <CardContent className="p-3 sm:p-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-              <div className="flex items-center gap-2 shrink-0">
-                <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
-                <span className="text-xs sm:text-sm font-medium text-muted-foreground whitespace-nowrap">Viewing Date:</span>
+            <div className="flex flex-col gap-3 sm:gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                <div className="flex items-center gap-2 shrink-0">
+                  <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
+                  <span className="text-xs sm:text-sm font-medium text-muted-foreground whitespace-nowrap">Viewing Date:</span>
+                </div>
+                <div className="flex items-center gap-2 min-w-0">
+                  <Button variant="outline" size="sm" onClick={() => navigateDate('prev')} className="shrink-0">
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <span className="font-semibold text-xs sm:text-sm text-center min-w-0 truncate sm:whitespace-nowrap px-2">
+                    {format(selectedDate, 'EEE, MMM d, yyyy')}
+                  </span>
+                  <Button variant="outline" size="sm" onClick={() => navigateDate('next')} className="shrink-0">
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-              <div className="flex items-center gap-2 min-w-0">
-                <Button variant="outline" size="sm" onClick={() => navigateDate('prev')} className="shrink-0">
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <span className="font-semibold text-xs sm:text-sm text-center min-w-0 truncate sm:whitespace-nowrap px-2">
-                  {format(selectedDate, 'EEE, MMM d, yyyy')}
-                </span>
-                <Button variant="outline" size="sm" onClick={() => navigateDate('next')} className="shrink-0">
-                  <ChevronRight className="h-4 w-4" />
+              <div className="flex justify-end">
+                <Button onClick={handleGenerateReport} size="sm">
+                  <Download className="h-4 w-4 mr-2" />
+                  Attendance Report
                 </Button>
               </div>
             </div>
@@ -456,6 +551,16 @@ const AttendanceOverview = () => {
             <AttendanceByDayChart data={analyticsData.dayData} />
           </TabsContent>
         </Tabs>
+
+        {/* Progress Modal */}
+        <ProgressModal
+          isOpen={isGeneratingPdf}
+          onClose={() => setIsGeneratingPdf(false)}
+          progress={pdfProgress}
+          title="Generating Attendance Report"
+          description={pdfStatusMessage}
+          isComplete={pdfProgress === 100}
+        />
       </div>
     </DashboardLayout>
   );

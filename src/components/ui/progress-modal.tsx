@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, CheckCircle } from "lucide-react";
+import { Loader2, CheckCircle, FileText, Users } from "lucide-react";
 
 interface ProgressModalProps {
   isOpen: boolean;
@@ -11,6 +11,7 @@ interface ProgressModalProps {
   description?: string;
   isComplete: boolean;
   icon?: React.ReactNode;
+  statusMessage?: string;
 }
 
 export function ProgressModal({
@@ -20,7 +21,8 @@ export function ProgressModal({
   title,
   description,
   isComplete,
-  icon
+  icon,
+  statusMessage
 }: ProgressModalProps) {
   // Auto close after completion
   useEffect(() => {
@@ -33,7 +35,7 @@ export function ProgressModal({
   }, [isComplete, onClose]);
 
   return (
-    <Dialog open={isOpen} onOpenChange={isComplete ? onClose : undefined}>
+    <Dialog open={isOpen} onOpenChange={undefined} modal={true}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader className="text-center space-y-4">
           <div className="flex justify-center">
@@ -65,13 +67,23 @@ export function ProgressModal({
                   </p>
                 )}
                 
+                {statusMessage && (
+                  <p className="text-sm text-primary font-medium animate-pulse">
+                    {statusMessage}
+                  </p>
+                )}
+                
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
                     <span>Progress</span>
-                    <span>{Math.round(progress)}%</span>
+                    <span className="font-semibold">{Math.round(progress)}%</span>
                   </div>
                   <Progress value={progress} className="w-full h-3" />
                 </div>
+                
+                <p className="text-xs text-muted-foreground italic">
+                  Please don't close this page...
+                </p>
               </>
             )}
           </DialogDescription>

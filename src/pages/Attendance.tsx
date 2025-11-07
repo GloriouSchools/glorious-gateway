@@ -98,6 +98,7 @@ const AttendanceMarking = () => {
   const [attendanceProgress, setAttendanceProgress] = useState(0);
   const [showAttendanceProgress, setShowAttendanceProgress] = useState(false);
   const [attendanceComplete, setAttendanceComplete] = useState(false);
+  const [attendanceStatusMessage, setAttendanceStatusMessage] = useState<string>('');
   
   // Load students from database
   useEffect(() => {
@@ -732,7 +733,7 @@ const AttendanceMarking = () => {
       
       const pdf = await generateAttendancePDF(
         pdfData,
-        `${currentClass?.name} - Attendance Report`,
+        selectedDate,
         (message) => toast.loading(message, { id: toastId })
       );
       
@@ -840,15 +841,19 @@ const AttendanceMarking = () => {
     setShowAttendanceProgress(true);
     setAttendanceProgress(0);
     setAttendanceComplete(false);
+    setAttendanceStatusMessage('Initializing...');
 
     const total = filteredStudents.length;
     
     // Mark all students as present
     for (let i = 0; i < filteredStudents.length; i++) {
       await markAttendance(filteredStudents[i].id, 'present', undefined, true);
-      setAttendanceProgress(((i + 1) / total) * 100);
+      const progress = ((i + 1) / total) * 100;
+      setAttendanceProgress(progress);
+      setAttendanceStatusMessage(`Marking students present... ${i + 1}/${total}`);
     }
     
+    setAttendanceStatusMessage('Complete!');
     setAttendanceComplete(true);
     toast.success(`All ${filteredStudents.length} students marked as present`);
   };
@@ -871,15 +876,19 @@ const AttendanceMarking = () => {
     setShowAttendanceProgress(true);
     setAttendanceProgress(0);
     setAttendanceComplete(false);
+    setAttendanceStatusMessage('Initializing...');
 
     const total = filteredStudents.length;
     
     // Mark all students as absent with the reason
     for (let i = 0; i < filteredStudents.length; i++) {
       await markAttendance(filteredStudents[i].id, 'absent', finalReason, true);
-      setAttendanceProgress(((i + 1) / total) * 100);
+      const progress = ((i + 1) / total) * 100;
+      setAttendanceProgress(progress);
+      setAttendanceStatusMessage(`Marking students absent... ${i + 1}/${total}`);
     }
     
+    setAttendanceStatusMessage('Complete!');
     setAttendanceComplete(true);
     toast.success(`All ${filteredStudents.length} students marked as absent: ${finalReason}`);
   };
@@ -1515,6 +1524,7 @@ const AttendanceMarking = () => {
           description="Please don't leave this page while updating is in progress"
           isComplete={attendanceComplete}
           icon={<UserCheck className="w-8 h-8 text-primary animate-pulse" />}
+          statusMessage={attendanceStatusMessage}
         />
       </div>
     </DashboardLayout>

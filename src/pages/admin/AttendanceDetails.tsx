@@ -226,7 +226,7 @@ const AttendanceDetails = () => {
       
       const pdf = await generateAttendancePDF(
         pdfData,
-        `${className} - Attendance Report`,
+        new Date(),
         (message) => toast.loading(message, { id: toastId })
       );
       

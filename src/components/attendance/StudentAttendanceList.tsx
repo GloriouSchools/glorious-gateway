@@ -113,7 +113,7 @@ export const StudentAttendanceList = ({ students }: StudentAttendanceListProps) 
       
       const pdf = await generateAttendancePDF(
         studentsForPDF,
-        'Student Attendance Report'
+        new Date()
       );
       
       pdf.save(`student-attendance-${format(new Date(), 'yyyy-MM-dd')}.pdf`);

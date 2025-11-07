@@ -651,7 +651,8 @@ interface StudentDataForPDF {
 export const generateStudentsListPDF = async (
   students: StudentDataForPDF[],
   streamNameById: Record<string, string>,
-  title: string = 'STUDENT DETAILS'
+  title: string = 'STUDENT DETAILS',
+  onProgress?: (progress: number, message: string) => void
 ) => {
   const doc = new jsPDF('portrait', 'mm', 'a4');
   
@@ -686,8 +687,11 @@ export const generateStudentsListPDF = async (
   doc.text(`Total Students: ${totalCount}`, 
     doc.internal.pageSize.getWidth() / 2, 61, { align: 'center' });
   
-  // Load student photos
+  // Load student photos with progress reporting
   const studentPhotos = new Map<string, string>();
+  const totalStudents = students.length;
+  let loadedCount = 0;
+  
   for (const student of students) {
     if (student.photo_url) {
       try {
@@ -699,6 +703,11 @@ export const generateStudentsListPDF = async (
         console.error(`Failed to load photo for ${student.name}:`, err);
       }
     }
+    
+    loadedCount++;
+    // Report progress during photo loading (60-85% of total progress)
+    const photoProgress = 60 + (loadedCount / totalStudents) * 25;
+    onProgress?.(photoProgress, `Loading student photos... ${loadedCount}/${totalStudents}`);
   }
   
   // Prepare table data with numbering
