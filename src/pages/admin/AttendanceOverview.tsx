@@ -65,6 +65,18 @@ const AttendanceOverview = () => {
     try {
       setIsLoading(true);
       
+      // First, get the actual count using the count query
+      const { count: actualCount, error: countError } = await supabase
+        .from('students')
+        .select('*', { count: 'exact', head: true });
+      
+      if (countError) {
+        console.error('Error getting student count:', countError);
+      } else {
+        console.info('Total students in database:', actualCount);
+        setTotalStudentsCount(actualCount || 0);
+      }
+      
       // Fetch ALL students using batch approach to bypass 1000-row limit
       const batchSize = 1000;
       let allStudentsData: any[] = [];
@@ -80,10 +92,14 @@ const AttendanceOverview = () => {
           .order('name')
           .range(from, from + batchSize - 1);
         
-        if (batchError) throw batchError;
+        if (batchError) {
+          console.error('Error fetching batch:', batchError);
+          throw batchError;
+        }
         
         if (batch && batch.length > 0) {
           allStudentsData = [...allStudentsData, ...batch];
+          console.info(`Fetched batch ${Math.floor(from / batchSize) + 1}: ${batch.length} students (total so far: ${allStudentsData.length})`);
           from += batchSize;
           hasMore = batch.length === batchSize;
         } else {
@@ -91,7 +107,11 @@ const AttendanceOverview = () => {
         }
       }
       
-      setTotalStudentsCount(allStudentsData.length);
+      console.info('Total students fetched:', allStudentsData.length);
+      // Use the actual fetched count if the count query failed
+      if (!actualCount) {
+        setTotalStudentsCount(allStudentsData.length);
+      }
       
       const formattedStudents = allStudentsData.map(s => ({
         id: s.id,

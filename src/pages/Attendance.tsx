@@ -110,16 +110,22 @@ const AttendanceMarking = () => {
           .order('name')
           .range(from, from + batchSize - 1);
         
-        if (batchError) throw batchError;
+        if (batchError) {
+          console.error('Error fetching batch:', batchError);
+          throw batchError;
+        }
         
         if (batch && batch.length > 0) {
           allStudentsData = [...allStudentsData, ...batch];
+          console.info(`Fetched batch ${Math.floor(from / batchSize) + 1}: ${batch.length} students (total so far: ${allStudentsData.length})`);
           from += batchSize;
           hasMore = batch.length === batchSize;
         } else {
           hasMore = false;
         }
       }
+      
+      console.info('Total students loaded for attendance:', allStudentsData.length);
       
       const formattedStudents = allStudentsData.map(s => ({
         id: s.id,
