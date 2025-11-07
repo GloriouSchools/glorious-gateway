@@ -24,13 +24,12 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-import { generateSchoolEmail } from "@/utils/emailGenerator";
 
 const teacherSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
   personal_email: z.string().email("Invalid email address").optional().or(z.literal("")),
-  id: z.string().min(1, "Teacher ID is required"),
+  teacher_id: z.string().min(1, "Teacher ID is required"),
   nationality: z.string().optional(),
   sex: z.enum(["Male", "Female", "Other"]).optional(),
   contactNumber: z.string().optional(),
@@ -71,22 +70,12 @@ export function AddTeacherModal({
       const randomNum = Math.floor(Math.random() * 10000);
       const defaultPassword = randomNum.toString().padStart(4, '0');
 
-      // Fetch existing emails to check for duplicates
-      const { data: existingTeachers } = await supabase
-        .from("teachers")
-        .select("email");
-      
-      const existingEmails = existingTeachers?.map(t => t.email).filter(Boolean) as string[] || [];
-      
-      // Generate school email using the utility function
-      const schoolEmail = generateSchoolEmail(data.name, existingEmails);
-
       const { error } = await supabase.from("teachers").insert([
         {
-          id: data.id,
           name: data.name,
-          email: schoolEmail,
+          email: data.email,
           personal_email: data.personal_email || null,
+          teacher_id: data.teacher_id,
           nationality: data.nationality || null,
           sex: data.sex || null,
           contactNumber: data.contactNumber ? parseInt(data.contactNumber) : null,
@@ -94,10 +83,7 @@ export function AddTeacherModal({
           classesTaught: data.classesTaught || null,
           photo_url: data.photo_url || null,
           default_password: parseInt(defaultPassword),
-          password_hash: null,
-          is_verified: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+          is_verified: false,
         },
       ]);
 
@@ -145,17 +131,17 @@ export function AddTeacherModal({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="id">
+              <Label htmlFor="teacher_id">
                 Teacher ID <span className="text-destructive">*</span>
               </Label>
               <Input
-                id="id"
+                id="teacher_id"
                 placeholder="TCH001"
-                {...register("id")}
+                {...register("teacher_id")}
                 disabled={loading}
               />
-              {errors.id && (
-                <p className="text-sm text-destructive">{errors.id.message}</p>
+              {errors.teacher_id && (
+                <p className="text-sm text-destructive">{errors.teacher_id.message}</p>
               )}
             </div>
           </div>
@@ -163,18 +149,18 @@ export function AddTeacherModal({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="email">
-                School Email (Auto-generated)
+                School Email <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="Will be auto-generated from name"
-                disabled={true}
-                className="bg-muted"
+                placeholder="teacher@school.com"
+                {...register("email")}
+                disabled={loading}
               />
-              <p className="text-xs text-muted-foreground">
-                Email will be generated from first two names @glorious.com
-              </p>
+              {errors.email && (
+                <p className="text-sm text-destructive">{errors.email.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">

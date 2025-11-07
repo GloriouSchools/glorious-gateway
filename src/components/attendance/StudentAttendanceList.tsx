@@ -19,7 +19,6 @@ interface StudentAttendance {
   photoUrl?: string;
   status: 'present' | 'absent' | 'not-marked';
   timeMarked?: string;
-  gender?: string;
 }
 
 interface StudentAttendanceListProps {
@@ -104,7 +103,7 @@ export const StudentAttendanceList = ({ students }: StudentAttendanceListProps) 
       // Use all filtered students (not just displayed ones) for the PDF
       const studentsForPDF = filteredStudents.map(student => ({
         name: student.name,
-        gender: student.gender || 'N/A',
+        email: student.email,
         stream: student.stream,
         status: student.status,
         timeMarked: student.timeMarked,

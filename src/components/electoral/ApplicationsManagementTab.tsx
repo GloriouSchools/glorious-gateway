@@ -63,7 +63,7 @@ interface ElectoralApplication {
   class_teacher_name?: string;
   class_teacher_tel?: string;
   parent_name?: string;
-  parent_tel?: string;
+  parent_tel?: number;
   status: 'pending' | 'approved' | 'rejected';
   created_at: string;
 }

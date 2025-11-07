@@ -124,7 +124,7 @@ export default function LiveResults() {
       
       // Load positions
       const { data: positions, error: positionsError } = await supabase
-        .from('electoral_rows')
+        .from('electoral_positions')
         .select('*')
         .eq('is_active', true);
       
@@ -155,14 +155,6 @@ export default function LiveResults() {
       
       if (votesError) throw votesError;
 
-      // Fetch physical votes
-      const { data: physicalVotesData, error: physicalVotesError } = await supabase
-        .from('physical_votes')
-        .select('candidate_id, candidate_name, position, votes_count')
-        .limit(100000);
-      
-      if (physicalVotesError) throw physicalVotesError;
-
       // Calculate results for each position
       const calculatedResults: Record<string, PositionResult> = {};
       
@@ -172,19 +164,10 @@ export default function LiveResults() {
         
         // Count actual votes for each candidate (only valid votes)
         const voteCounts: Record<string, number> = {};
-        
-        // Add online votes
         (votesData || [])
           .filter(vote => vote.position === position.title && vote.vote_status === 'valid')
           .forEach(vote => {
             voteCounts[vote.candidate_id] = (voteCounts[vote.candidate_id] || 0) + 1;
-          });
-        
-        // Add physical votes
-        (physicalVotesData || [])
-          .filter(vote => vote.position === position.title)
-          .forEach(vote => {
-            voteCounts[vote.candidate_id] = (voteCounts[vote.candidate_id] || 0) + (vote.votes_count || 0);
           });
         
         const candidates: ResultCandidate[] = positionCandidates.map((candidate, index) => {
@@ -211,8 +194,7 @@ export default function LiveResults() {
           };
         }).sort((a, b) => b.votes - a.votes);
         
-        // Calculate total votes from all votes cast for this position (including non-confirmed candidates)
-        const totalPositionVotes = Object.values(voteCounts).reduce((sum, count) => sum + count, 0);
+        const totalPositionVotes = candidates.reduce((sum, candidate) => sum + candidate.votes, 0);
         
         // Calculate percentages
         candidates.forEach(candidate => {

@@ -160,7 +160,7 @@ export default function AddPrefectModal({ open, onOpenChange, onSuccess }: AddPr
       ] = await Promise.all([
         supabase.from('classes').select('id, name'),
         supabase.from('streams').select('id, name'),
-        supabase.from('electoral_rows').select('id, title').eq('is_active', true)
+        supabase.from('electoral_positions').select('id, title').eq('is_active', true)
       ]);
 
       if (classesError) throw classesError;
@@ -299,7 +299,7 @@ export default function AddPrefectModal({ open, onOpenChange, onSuccess }: AddPr
         class_teacher_name: formData.class_teacher_name || null,
         class_teacher_tel: formData.class_teacher_tel || null,
         parent_name: formData.parent_name || null,
-        parent_tel: formData.parent_tel || null,
+        parent_tel: formData.parent_tel ? parseInt(formData.parent_tel) : null,
         status: formData.status as 'pending' | 'confirmed' | 'rejected'
       };
 

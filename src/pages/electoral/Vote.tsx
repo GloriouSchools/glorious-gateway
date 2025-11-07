@@ -239,7 +239,7 @@ export default function Vote() {
 
         // Fetch active positions first
         const { data: positionsData, error: positionsError } = await supabase
-          .from('electoral_rows')
+          .from('electoral_positions')
           .select('*')
           .eq('is_active', true)
           .order('title');
@@ -400,17 +400,17 @@ export default function Vote() {
         screen_resolution: deviceInfo.screenResolution,
         timezone: deviceInfo.timezone,
         language: deviceInfo.language,
-        latitude: String(locationInfo.latitude) || null,
-        longitude: String(locationInfo.longitude) || null,
-        location_accuracy: String(locationInfo.accuracy) || null,
+        latitude: locationInfo.latitude || null,
+        longitude: locationInfo.longitude || null,
+        location_accuracy: locationInfo.accuracy || null,
         canvas_fingerprint: fingerprintInfo.canvasFingerprint,
         webgl_fingerprint: fingerprintInfo.webglFingerprint,
         installed_fonts: fingerprintInfo.installedFonts.join(','),
         battery_level: fingerprintInfo.batteryLevel || null,
-        battery_charging: String(fingerprintInfo.batteryCharging) || null,
+        battery_charging: fingerprintInfo.batteryCharging || null,
         mouse_movement_count: behaviorAnalytics.mouse_movement_count || null,
         average_mouse_speed: behaviorAnalytics.average_mouse_speed || null,
-        typing_speed: String(behaviorAnalytics.average_typing_speed) || null,
+        typing_speed: behaviorAnalytics.average_typing_speed || null,
         click_count: behaviorAnalytics.click_count || null,
         behavior_signature: behaviorAnalytics.behavior_signature,
         ip_address: ipAddress,

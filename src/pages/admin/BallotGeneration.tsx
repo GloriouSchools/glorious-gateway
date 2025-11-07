@@ -8,10 +8,27 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Vote, Users, Loader2, Eye, Download } from "lucide-react";
+import { ArrowLeft, Vote, Users, Loader2, Eye, Download, Filter } from "lucide-react";
 import { BallotContainer } from "@/components/electoral/ballot";
 import jsPDF from "jspdf";
 import { generateBallotPDF } from "@/utils/pdfUtils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Candidate {
   id: string;
@@ -37,6 +54,8 @@ export default function BallotGeneration() {
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [positions, setPositions] = useState<Position[]>([]);
   const [showBallotPreview, setShowBallotPreview] = useState(false);
+  const [selectedPosition, setSelectedPosition] = useState<string>("all");
+  const [showBallotTypeDialog, setShowBallotTypeDialog] = useState(false);
 
   const handleLogout = () => {
     navigate('/login');
@@ -137,29 +156,47 @@ export default function BallotGeneration() {
     setShowBallotPreview(false);
   };
 
-  const generatePDFBallots = async () => {
+  const generatePDFBallots = async (ballotType: 'normal' | 'by-election') => {
     try {
       setGeneratingPDF(true);
-      const ballotPositions = positions
-        .filter((p) => p.candidates.length > 0)
-        .map((p) => ({
-          title: p.title,
-          candidates: p.candidates.map((c) => ({
-            id: c.id,
-            name: c.name,
-            class: c.class,
-            stream: c.stream,
-            photo: c.photo || null,
-          })),
-        }));
+      
+      // Filter positions based on selection
+      let filteredPositions = positions.filter((p) => p.candidates.length > 0);
+      
+      if (selectedPosition !== "all") {
+        filteredPositions = filteredPositions.filter((p) => p.id === selectedPosition);
+      }
+
+      const ballotPositions = filteredPositions.map((p) => ({
+        title: ballotType === 'by-election' ? `${p.title} (By-Election)` : p.title,
+        candidates: p.candidates.map((c) => ({
+          id: c.id,
+          name: c.name,
+          class: c.class,
+          stream: c.stream,
+          photo: c.photo || null,
+        })),
+      }));
+
+      if (ballotPositions.length === 0) {
+        toast({
+          title: 'No Positions Selected',
+          description: 'Please select at least one position with candidates.',
+          variant: 'destructive',
+        });
+        return;
+      }
 
       const doc = await generateBallotPDF(ballotPositions, 'Official Ballot Paper', 3);
-      doc.save(`ballots-${new Date().toISOString().split('T')[0]}.pdf`);
+      const fileName = ballotType === 'by-election' 
+        ? `by-election-ballots-${new Date().toISOString().split('T')[0]}.pdf`
+        : `ballots-${new Date().toISOString().split('T')[0]}.pdf`;
+      doc.save(fileName);
 
       const totalBallots = ballotPositions.length * 3;
       toast({
         title: 'PDF Generated',
-        description: `Generated ${ballotPositions.length} pages with ${totalBallots} ballots (3 per position)`,
+        description: `Generated ${ballotPositions.length} ${ballotType === 'by-election' ? 'by-election ' : ''}page(s) with ${totalBallots} ballot(s) (3 per position)`,
       });
     } catch (error) {
       console.error('Error generating PDF:', error);
@@ -170,10 +207,19 @@ export default function BallotGeneration() {
       });
     } finally {
       setGeneratingPDF(false);
+      setShowBallotTypeDialog(false);
     }
   };
 
+  const handleGenerateBallots = () => {
+    setShowBallotTypeDialog(true);
+  };
+
   const totalCandidates = positions.reduce((sum, pos) => sum + pos.candidates.length, 0);
+  
+  const filteredPositions = selectedPosition === "all" 
+    ? positions 
+    : positions.filter(p => p.id === selectedPosition);
 
   if (showBallotPreview) {
     return (
@@ -187,7 +233,7 @@ export default function BallotGeneration() {
           Close Preview
         </Button>
         <BallotContainer
-          positions={positions.filter(p => p.candidates.length > 0)}
+          positions={filteredPositions.filter(p => p.candidates.length > 0)}
           onVotePosition={handleVotePosition}
           onVoteComplete={handleVoteComplete}
         />
@@ -233,7 +279,7 @@ export default function BallotGeneration() {
                     <div className="flex gap-2">
                       <Button
                         onClick={() => setShowBallotPreview(true)}
-                        disabled={totalCandidates === 0}
+                        disabled={filteredPositions.filter(p => p.candidates.length > 0).length === 0}
                         size="lg"
                         className="gap-2"
                         variant="secondary"
@@ -242,8 +288,8 @@ export default function BallotGeneration() {
                         Preview Ballot
                       </Button>
                       <Button
-                        onClick={generatePDFBallots}
-                        disabled={totalCandidates === 0 || generatingPDF}
+                        onClick={handleGenerateBallots}
+                        disabled={filteredPositions.filter(p => p.candidates.length > 0).length === 0 || generatingPDF}
                         size="lg"
                         className="gap-2"
                       >
@@ -265,14 +311,41 @@ export default function BallotGeneration() {
               </CardHeader>
             </ProfessionalCard>
 
+            {/* Filter */}
+            <ProfessionalCard variant="elevated">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-4">
+                  <Filter className="h-5 w-5 text-primary" />
+                  <div className="flex-1">
+                    <label className="text-sm font-medium mb-2 block">Filter by Position</label>
+                    <Select value={selectedPosition} onValueChange={setSelectedPosition}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select position" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Positions</SelectItem>
+                        {positions.map((position) => (
+                          <SelectItem key={position.id} value={position.id}>
+                            {position.title} ({position.candidates.length} candidate{position.candidates.length !== 1 ? 's' : ''})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardContent>
+            </ProfessionalCard>
+
             {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <ProfessionalCard variant="elevated">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Total Positions</p>
-                      <p className="text-2xl font-bold">{positions.length}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {selectedPosition === "all" ? "Total Positions" : "Filtered Position"}
+                      </p>
+                      <p className="text-2xl font-bold">{filteredPositions.length}</p>
                     </div>
                     <Vote className="h-8 w-8 text-primary" />
                   </div>
@@ -283,8 +356,12 @@ export default function BallotGeneration() {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Approved Candidates</p>
-                      <p className="text-2xl font-bold">{totalCandidates}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {selectedPosition === "all" ? "Total Candidates" : "Candidates in Position"}
+                      </p>
+                      <p className="text-2xl font-bold">
+                        {filteredPositions.reduce((sum, pos) => sum + pos.candidates.length, 0)}
+                      </p>
                     </div>
                     <Users className="h-8 w-8 text-green-500" />
                   </div>
@@ -299,18 +376,22 @@ export default function BallotGeneration() {
               </div>
             ) : (
               <div className="space-y-6">
-                {positions.length === 0 ? (
+                {filteredPositions.length === 0 ? (
                   <Card>
                     <CardContent className="p-12 text-center">
                       <Vote className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold mb-2">No Positions Available</h3>
+                      <h3 className="text-lg font-semibold mb-2">
+                        {selectedPosition === "all" ? "No Positions Available" : "No Match Found"}
+                      </h3>
                       <p className="text-muted-foreground">
-                        No electoral positions have been created yet
+                        {selectedPosition === "all" 
+                          ? "No electoral positions have been created yet"
+                          : "No positions match your filter criteria"}
                       </p>
                     </CardContent>
                   </Card>
                 ) : (
-                  positions.map((position) => (
+                  filteredPositions.map((position) => (
                     <ProfessionalCard key={position.id} variant="bordered">
                       <CardHeader>
                         <div className="flex items-center justify-between">
@@ -373,6 +454,26 @@ export default function BallotGeneration() {
         </div>
       </div>
 
+      {/* Ballot Type Selection Dialog */}
+      <AlertDialog open={showBallotTypeDialog} onOpenChange={setShowBallotTypeDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Select Ballot Type</AlertDialogTitle>
+            <AlertDialogDescription>
+              Choose the type of ballot to generate. By-Election ballots will include "(By-Election)" in the position title.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => generatePDFBallots('normal')}>
+              Normal Ballots
+            </AlertDialogAction>
+            <AlertDialogAction onClick={() => generatePDFBallots('by-election')}>
+              By-Election Ballots
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 }

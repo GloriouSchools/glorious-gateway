@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
-
+import { updateManualApplication } from "@/utils/electoralStorageUtils";
 
 interface ElectoralApplication {
   id: string;
@@ -22,7 +22,7 @@ interface ElectoralApplication {
   class_teacher_name?: string;
   class_teacher_tel?: string;
   parent_name?: string;
-  parent_tel?: string;
+  parent_tel?: number;
   status: 'pending' | 'confirmed' | 'rejected';
 }
 
@@ -78,18 +78,28 @@ export default function EditPrefectModal({ open, onOpenChange, application, onSu
     setLoading(true);
 
     try {
-      // Always update in database
-      const { error } = await supabase
-        .from('electoral_applications')
-        .update({
+      // Check if it's a local application
+      if (application.id.startsWith('manual_')) {
+        updateManualApplication(application.id, {
           position: formData.position,
           class_teacher_tel: formData.class_teacher_tel || null,
-          parent_tel: formData.parent_tel || null,
-          status: formData.status
-        })
-        .eq('id', application.id);
+          parent_tel: formData.parent_tel ? parseInt(formData.parent_tel) : null,
+          status: formData.status as 'pending' | 'confirmed' | 'rejected'
+        });
+      } else {
+        // Database application
+        const { error } = await supabase
+          .from('electoral_applications')
+          .update({
+            position: formData.position,
+            class_teacher_tel: formData.class_teacher_tel || null,
+            parent_tel: formData.parent_tel ? parseInt(formData.parent_tel) : null,
+            status: formData.status
+          })
+          .eq('id', application.id);
 
-      if (error) throw error;
+        if (error) throw error;
+      }
 
       toast({
         title: "Success",
