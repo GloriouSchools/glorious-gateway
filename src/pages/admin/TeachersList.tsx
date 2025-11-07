@@ -33,9 +33,9 @@ import {
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { exportData, ExportFormat } from "@/utils/exportUtils";
-import { ExportControls } from "@/components/electoral/dashboard/ExportControls";
 import { useAuth } from "@/hooks/useAuth";
 import { StudentsPagination } from "@/components/admin/StudentsPagination";
 import { AddTeacherModal } from "@/components/admin/AddTeacherModal";
@@ -153,44 +153,30 @@ export default function TeachersList() {
     setFilteredTeachers(filtered);
   };
 
-  const handleExport = (format: ExportFormat) => {
-    try {
-      const exportableData = filteredTeachers.map(teacher => ({
-        name: teacher.name || '',
-        email: teacher.email || '',
-        teacherId: teacher.teacher_id || '',
-        personalEmail: teacher.personal_email || '',
-        phone: teacher.contactNumber?.toString() || '',
-        subjects: teacher.subjectsTaught || '',
-        classes: teacher.classesTaught || '',
-        gender: teacher.sex || '',
-        nationality: teacher.nationality || '',
-        status: teacher.is_verified ? 'Verified' : 'Unverified',
-        joined: new Date(teacher.created_at).toLocaleDateString()
-      }));
+  const downloadPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(20);
+    doc.text('Teachers Report', 20, 20);
+    doc.setFontSize(12);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 30);
+    doc.text(`Total Teachers: ${filteredTeachers.length}`, 20, 40);
 
-      exportData(format, {
-        filename: `teachers_${new Date().toISOString().split('T')[0]}`,
-        title: 'Teachers Report',
-        columns: [
-          { header: 'Name', key: 'name', width: 35 },
-          { header: 'Email', key: 'email', width: 45 },
-          { header: 'Teacher ID', key: 'teacherId', width: 25 },
-          { header: 'Phone', key: 'phone', width: 25 },
-          { header: 'Subjects', key: 'subjects', width: 30 },
-          { header: 'Classes', key: 'classes', width: 25 },
-          { header: 'Gender', key: 'gender', width: 15 },
-          { header: 'Status', key: 'status', width: 20 },
-          { header: 'Joined', key: 'joined', width: 25 }
-        ],
-        data: exportableData
-      });
+    const tableData = filteredTeachers.map(teacher => [
+      teacher.photo_url ? 'Photo' : 'No Photo',
+      teacher.name || 'No Name',
+      teacher.email || 'No Email',
+      teacher.teacher_id || 'No ID'
+    ]);
 
-      toast.success(`Exported ${filteredTeachers.length} teachers as ${format.toUpperCase()}`);
-    } catch (error) {
-      console.error('Export error:', error);
-      toast.error('Failed to export data');
-    }
+    (doc as any).autoTable({
+      head: [['Avatar', 'Name', 'Email', 'Teacher ID']],
+      body: tableData,
+      startY: 50,
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [59, 130, 246] },
+    });
+
+    doc.save('teachers-report.pdf');
   };
 
   // Pagination
@@ -280,14 +266,10 @@ export default function TeachersList() {
             </div>
           </div>
           <div className="flex gap-2 w-full sm:w-auto shrink-0">
-            <ExportControls onExport={(format) => {
-              if (format === 'print') {
-                handleExport('pdf');
-                window.print();
-              } else {
-                handleExport(format as ExportFormat);
-              }
-            }} />
+            <Button onClick={downloadPDF} variant="outline" size="sm" className="flex-1 sm:flex-none">
+              <FileText className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">PDF</span>
+            </Button>
             <Button onClick={() => setAddModalOpen(true)} size="sm" className="flex-1 sm:flex-none">
               <UserPlus className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Enroll Teacher</span>

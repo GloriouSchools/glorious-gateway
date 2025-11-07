@@ -18,7 +18,6 @@ import {
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { exportData, ExportFormat } from "@/utils/exportUtils";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 
 const defaultAvatar = "https://raw.githubusercontent.com/Fresh-Teacher/glorious-gateway-65056-78561-35497/main/src/assets/default-avatar.png";
@@ -125,8 +124,8 @@ export default function StudentsList() {
   useEffect(() => {
     const loadRefData = async () => {
       const [{ data: classData, error: classError }, { data: streamData, error: streamError }] = await Promise.all([
-        supabase.from('classes').select('id, name'),
-        supabase.from('streams').select('id, name')
+        supabase.from('classes').select('id, name').order('name'),
+        supabase.from('streams').select('id, name, class_id').order('name')
       ]);
       if (classError) console.error('Error fetching classes:', classError);
       if (streamError) console.error('Error fetching streams:', streamError);
@@ -149,11 +148,7 @@ export default function StudentsList() {
     return () => clearTimeout(timer);
   }, [searchTerm, debouncedSearchTerm]);
 
-  useEffect(() => {
-    fetchStudents();
-  }, [currentPage, debouncedSearchTerm, filterClass, filterStream, filterVerified, sortBy, sortOrder, paramStream]);
-
-  const fetchStudents = async () => {
+  const fetchStudents = useCallback(async () => {
     try {
       // Only show full loading screen on initial load, not when searching/filtering
       if (initialLoad) {
@@ -162,27 +157,32 @@ export default function StudentsList() {
       
       let query = supabase
         .from('students')
-        .select('id, name, email, photo_url, class_id, stream_id, is_verified, created_at, default_password', { count: 'exact' })
-        .order(sortBy, { ascending: sortOrder === 'asc' });
+        .select('id, name, email, photo_url, class_id, stream_id, is_verified, created_at, default_password', { count: 'exact' });
 
-      // Filters
+      // Apply filters first (more selective)
+      if (filterClass && filterClass !== 'all') {
+        query = query.eq('class_id', filterClass);
+      }
+      
+      const streamId = (filterStream && filterStream !== 'all') ? filterStream : paramStream;
+      if (streamId) {
+        query = query.eq('stream_id', streamId);
+      }
+      
+      if (filterVerified && filterVerified !== 'all') {
+        query = query.eq('is_verified', filterVerified === 'verified');
+      }
+
+      // Apply search after filters (search on filtered set)
       if (debouncedSearchTerm) {
         query = query.or(
           `name.ilike.%${debouncedSearchTerm}%,email.ilike.%${debouncedSearchTerm}%,id.ilike.%${debouncedSearchTerm}%`
         );
       }
-      if (filterClass && filterClass !== 'all') {
-        query = query.eq('class_id', filterClass);
-      }
-      const streamId = (filterStream && filterStream !== 'all') ? filterStream : paramStream;
-      if (streamId) {
-        query = query.eq('stream_id', streamId);
-      }
-      if (filterVerified && filterVerified !== 'all') {
-        query = query.eq('is_verified', filterVerified === 'verified');
-      }
 
-      // Pagination
+      // Apply sorting and pagination last
+      query = query.order(sortBy, { ascending: sortOrder === 'asc' });
+      
       const from = (currentPage - 1) * pageSize;
       const to = from + pageSize - 1;
       const { data, error, count } = await query.range(from, to);
@@ -195,82 +195,42 @@ export default function StudentsList() {
 
       setStudents(data || []);
       setTotalCount(count || 0);
-      setInitialLoad(false); // Mark initial load as complete
+      setInitialLoad(false);
     } catch (error) {
       console.error('Error:', error);
       toast.error('Failed to fetch students');
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, debouncedSearchTerm, filterClass, filterStream, filterVerified, sortBy, sortOrder, paramStream, initialLoad, pageSize]);
+
+  useEffect(() => {
+    fetchStudents();
+  }, [fetchStudents]);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
-  const handleExport = async (format: ExportFormat) => {
-    try {
-      toast.loading(`Preparing ${format.toUpperCase()} export...`);
-      
-      // Fetch ALL students for export
-      let query = supabase
-        .from('students')
-        .select('id, name, email, photo_url, class_id, stream_id, is_verified, created_at, default_password')
-        .order('class_id')
-        .order('stream_id')
-        .order('name');
+  const exportToCSV = () => {
+    const headers = ['Name', 'Email', 'Password', 'Class', 'Stream'];
+    const csvData = students.map(student => [
+      student.name || '',
+      student.email || '',
+      '********',
+      student.class_id ? (classNameById[student.class_id] || student.class_id) : '',
+      student.stream_id ? (streamNameById[student.stream_id] || student.stream_id) : ''
+    ]);
 
-      // Apply same filters
-      if (debouncedSearchTerm) {
-        query = query.or(
-          `name.ilike.%${debouncedSearchTerm}%,email.ilike.%${debouncedSearchTerm}%,id.ilike.%${debouncedSearchTerm}%`
-        );
-      }
-      if (filterClass && filterClass !== 'all') {
-        query = query.eq('class_id', filterClass);
-      }
-      const streamId = (filterStream && filterStream !== 'all') ? filterStream : paramStream;
-      if (streamId) {
-        query = query.eq('stream_id', streamId);
-      }
-      if (filterVerified && filterVerified !== 'all') {
-        query = query.eq('is_verified', filterVerified === 'verified');
-      }
+    const csvContent = [headers, ...csvData]
+      .map(row => row.map(field => `"${field}"`).join(','))
+      .join('\n');
 
-      const { data: allStudents, error } = await query;
-
-      if (error) throw error;
-
-      const exportableData = (allStudents || []).map(student => ({
-        name: student.name || '',
-        email: student.email || '',
-        password: '********',
-        class: student.class_id ? (classNameById[student.class_id] || student.class_id) : '',
-        stream: student.stream_id ? (streamNameById[student.stream_id] || student.stream_id) : '',
-        status: student.is_verified ? 'Verified' : 'Unverified',
-        joined: student.created_at ? new Date(student.created_at).toLocaleDateString() : ''
-      }));
-
-      exportData(format, {
-        filename: `students_${new Date().toISOString().split('T')[0]}`,
-        title: 'Students Report',
-        columns: [
-          { header: 'Name', key: 'name', width: 40 },
-          { header: 'Email', key: 'email', width: 50 },
-          { header: 'Password', key: 'password', width: 25 },
-          { header: 'Class', key: 'class', width: 20 },
-          { header: 'Stream', key: 'stream', width: 20 },
-          { header: 'Status', key: 'status', width: 20 },
-          { header: 'Joined', key: 'joined', width: 25 }
-        ],
-        data: exportableData
-      });
-
-      toast.dismiss();
-      toast.success(`Exported ${allStudents?.length || 0} students as ${format.toUpperCase()}`);
-    } catch (error) {
-      console.error('Export error:', error);
-      toast.dismiss();
-      toast.error('Failed to export data');
-    }
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `students_page_${currentPage}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
   };
 
   const handlePrint = useCallback(async () => {
@@ -349,10 +309,9 @@ export default function StudentsList() {
         <StudentsActions 
           totalCount={totalCount}
           filteredCount={students.length}
-          onExportCSV={() => handleExport('csv')}
+          onExportCSV={exportToCSV}
           onPrint={handlePrint}
           isPrinting={isPrinting}
-          onExport={handleExport}
         />
 
         {/* Filters */}

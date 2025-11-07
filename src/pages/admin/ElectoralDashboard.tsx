@@ -100,7 +100,7 @@ export default function ElectoralDashboard() {
 
   const [allVotes, setAllVotes] = useState<any[]>([]);
   
-  // Load votes from database
+  // Load votes from database (combines online and physical votes)
   useEffect(() => {
     const loadVotes = async () => {
       const { data, error } = await supabase
@@ -149,7 +149,37 @@ export default function ElectoralDashboard() {
             return vote;
           })
         );
-        setAllVotes(enrichedVotes);
+        
+        // Fetch physical votes and expand them into individual vote records for consistency
+        const { data: physicalVotes } = await supabase
+          .from('physical_votes')
+          .select('*');
+        
+        if (physicalVotes) {
+          const expandedPhysicalVotes = physicalVotes.flatMap(pv => 
+            Array.from({ length: pv.votes_count || 0 }, (_, i) => ({
+              id: `${pv.id}_${i}`,
+              voter_id: `physical_${pv.id}_${i}`,
+              voter_name: `Physical Ballot ${i + 1}`,
+              position: pv.position,
+              candidate_id: pv.candidate_id,
+              candidate_name: pv.candidate_name,
+              voted_at: pv.added_at,
+              vote_status: 'valid',
+              candidate_photo: candidatePhotos.get(pv.candidate_id),
+              voter: {
+                email: 'physical@ballot.local',
+                gender: null,
+                classes: { name: 'Physical' },
+                streams: { name: 'Ballot' }
+              }
+            }))
+          );
+          
+          setAllVotes([...enrichedVotes, ...expandedPhysicalVotes]);
+        } else {
+          setAllVotes(enrichedVotes);
+        }
       }
       setIsLoading(false);
     };

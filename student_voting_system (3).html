@@ -1372,888 +1372,22 @@
                 padding: 15px 30px;
             }
         }
-        .fullscreen-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.95);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 10000;
-}
-
-.fullscreen-modal.active {
-    display: flex;
-}
-
-.modal-content-optimized {
-    width: 92vw;
-    height: 88vh;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 15px;
-    padding: 20px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-.modal-header-optimized {
-    text-align: center;
-    margin-bottom: 15px;
-    animation: slideInDown 0.5s ease-out;
-}
-
-.modal-header-optimized h2 {
-    font-size: 2.5rem;
-    color: #fff;
-    margin: 0;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-    font-weight: 900;
-}
-
-.position-title-optimized {
-    font-size: 1.6rem;
-    color: #ffd700;
-    margin: 5px 0 0 0;
-    font-weight: 700;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.modal-body-optimized {
-    flex: 1;
-    display: grid;
-    grid-template-columns: 1fr 1.8fr;
-    gap: 20px;
-    overflow: hidden;
-}
-
-/* Left Side - Candidate Section */
-.candidate-section {
-    background: rgba(255, 255, 255, 0.98);
-    border-radius: 12px;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    animation: slideInLeft 0.5s ease-out;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-}
-
-.candidate-photo-medium-container {
-    position: relative;
-    width: 160px;
-    height: 160px;
-    margin-bottom: 15px;
-}
-
-.photo-placeholder-medium {
-    width: 160px;
-    height: 160px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 3rem;
-    font-weight: 700;
-    border: 5px solid #ffd700;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-}
-
-.candidate-photo-medium {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 160px;
-    height: 160px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 5px solid #ffd700;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-}
-
-.rank-badge-overlay {
-    position: absolute;
-    top: -10px;
-    right: -10px;
-    font-size: 2.5rem;
-    border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-    animation: bounce 1s infinite;
-    background: rgba(255, 0, 0, 0.8);
-            color: rgb(255, 0, 0);
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-weight: bold;
-            background: none; /* no background colour */
-
-}
-/* For medal badges 🥇, 🥈, 🥉 */
-.rank-badge-overlay.medal-rank {
-  background-color: red;
-  color: white;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-}
-/* Default for numeric ranks (e.g., 4th, 5th...) */
-.rank-badge-overlay.text-rank {
-  color: red;
-  background: none;
-  border: none;
-}
-
-.candidate-name-medium {
-    font-size: 1.8rem;
-    font-weight: 900;
-    color: #333;
-    text-align: center;
-    margin: 0 0 5px 0;
-    line-height: 1.2;
-}
-
-.candidate-position {
-    font-size: 1.2rem;
-    color: #667eea;
-    font-weight: 600;
-    text-align: center;
-    margin: 0 0 20px 0;
-}
-
-.gender-stats {
-    width: 100%;
-    margin-top: auto;
-}
-
-.section-title {
-    font-size: 1.4rem;
-    color: #333;
-    font-weight: 700;
-    margin: 0 0 15px 0;
-    text-align: center;
-}
-
-.gender-stat-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 15px;
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-    border-radius: 10px;
-    margin-bottom: 12px;
-    border-left: 4px solid #667eea;
-}
-
-.gender-icon {
-    font-size: 2rem;
-}
-
-.gender-text {
-    font-size: 1.2rem;
-    color: #333;
-    margin: 0;
-}
-
-.gender-text strong {
-    color: #667eea;
-    font-size: 1.4rem;
-}
-
-/* Right Side - Analysis Section */
-.analysis-section {
-    background: rgba(255, 255, 255, 0.98);
-    border-radius: 12px;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    animation: slideInRight 0.5s ease-out;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-    overflow: hidden;
-}
-
-.grid-table-wrapper {
-    flex: 1;
-    margin-bottom: 15px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.stream-grid-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.95rem;
-}
-
-.stream-grid-table td {
-    border: 2px solid #667eea;
-    padding: 8px 10px;
-    text-align: center;
-    background: white;
-    transition: background 0.2s ease;
-}
-
-.stream-grid-table td:hover {
-    background: rgba(102, 126, 234, 0.1);
-}
-
-.stream-grid-table td.stream-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    font-weight: 700;
-    font-size: 1rem;
-    padding: 10px;
-}
-
-.stream-grid-table td.stream-name {
-    background: rgba(102, 126, 234, 0.15);
-    font-weight: 700;
-    color: #667eea;
-    font-size: 1rem;
-}
-
-.stream-grid-table td.vote-count {
-    font-weight: 900;
-    color: #333;
-    font-size: 1.1rem;
-}
-
-.stream-grid-table td.vote-count.animated {
-    animation: numberPop 0.5s ease-out;
-}
-
-/* Gender stats animation */
-.gender-text strong {
-    color: #667eea;
-    font-size: 1.4rem;
-    display: inline-block;
-}
-
-.gender-text strong.animated {
-    animation: numberPulse 0.6s ease-out;
-}
-
-/* Modal slide animations */
-.modal-body-optimized.slide-out-left {
-    animation: slideOutLeft 0.5s ease-in-out forwards;
-}
-
-.modal-body-optimized.slide-in-right {
-    animation: slideInFromRight 0.5s ease-in-out forwards;
-}
-
-.modal-body-optimized.slide-out-right {
-    animation: slideOutRight 0.5s ease-in-out forwards;
-}
-
-.modal-body-optimized.slide-in-left {
-    animation: slideInFromLeft 0.5s ease-in-out forwards;
-}
-
-.vote-totals {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.total-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 20px;
-    border-radius: 8px;
-    transition: transform 0.2s ease;
-}
-
-.total-item:hover {
-    transform: translateX(5px);
-}
-
-.total-item.online {
-    background: rgba(52, 152, 219, 0.15);
-    border-left: 4px solid #3498db;
-}
-
-.total-item.physical {
-    background: rgba(46, 204, 113, 0.15);
-    border-left: 4px solid #2ecc71;
-}
-
-.total-item.grand {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border-left: 4px solid #ffd700;
-    padding: 15px 20px;
-}
-
-.total-label {
-    font-size: 1.2rem;
-    font-weight: 600;
-}
-
-.total-item.grand .total-label {
-    font-size: 1.4rem;
-    font-weight: 900;
-}
-
-.total-value {
-    font-size: 1.5rem;
-    font-weight: 900;
-    color: #667eea;
-}
-
-.total-item.grand .total-value {
-    font-size: 2rem;
-    color: #ffd700;
-}
-
-/* Scrollbar */
-.analysis-section::-webkit-scrollbar {
-    width: 8px;
-}
-
-.analysis-section::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 10px;
-}
-
-.analysis-section::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 10px;
-}
-
-/* Animations */
-@keyframes slideInLeft {
-    from {
-        opacity: 0;
-        transform: translateX(-30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-@keyframes slideInRight {
-    from {
-        opacity: 0;
-        transform: translateX(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-@keyframes slideInDown {
-    from {
-        opacity: 0;
-        transform: translateY(-30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes bounce {
-    0%, 100% {
-        transform: translateY(0);
-    }
-    50% {
-        transform: translateY(-8px);
-    }
-}
-
-@keyframes numberPop {
-    0% {
-        transform: scale(0.5);
-        opacity: 0;
-    }
-    50% {
-        transform: scale(1.2);
-    }
-    100% {
-        transform: scale(1);
-        opacity: 1;
-    }
-}
-
-@keyframes numberPulse {
-    0% {
-        transform: scale(1);
-        color: #667eea;
-    }
-    50% {
-        transform: scale(1.3);
-        color: #ffd700;
-    }
-    100% {
-        transform: scale(1);
-        color: #667eea;
-    }
-}
-
-@keyframes slideOutLeft {
-    from {
-        opacity: 1;
-        transform: translateX(0);
-    }
-    to {
-        opacity: 0;
-        transform: translateX(-100%);
-    }
-}
-
-@keyframes slideInFromRight {
-    from {
-        opacity: 0;
-        transform: translateX(100%);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-@keyframes slideOutRight {
-    from {
-        opacity: 1;
-        transform: translateX(0);
-    }
-    to {
-        opacity: 0;
-        transform: translateX(100%);
-    }
-}
-
-@keyframes slideInFromLeft {
-    from {
-        opacity: 0;
-        transform: translateX(-100%);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-   /* Congratulations Modal Styles */
-   .congratulations-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 10001;
-            animation: modalFadeIn 0.5s ease-in-out;
-            overflow-y: auto;
-            padding: 20px;
-        }
-
-        .congratulations-modal.active {
-            display: flex;
-        }
-
-        @keyframes modalFadeIn {
-            from {
-                opacity: 0;
-                transform: scale(0.9);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-
-        @keyframes modalFadeOut {
-            from {
-                opacity: 1;
-                transform: scale(1);
-            }
-            to {
-                opacity: 0;
-                transform: scale(0.9);
-            }
-        }
-
-        .congrats-modal-content {
-            width: 98%;
-            max-width: 1600px;
-            max-height: 95vh;
-            background: white;
-            border-radius: 15px;
-            padding: 15px 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            position: relative;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .congrats-modal-header {
-            text-align: center;
-            margin-bottom: 15px;
-            flex-shrink: 0;
-        }
-
-        .congrats-modal-header h2 {
-            font-size: 1.8rem;
-            color: #333;
-            margin-bottom: 5px;
-        }
-
-        .congrats-modal-header .position-title {
-            font-size: 1.2rem;
-            color: #667eea;
-            font-weight: 600;
-        }
-
-        .congrats-modal-candidates {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            flex: 1;
-            min-height: 0;
-        }
-
-        .congrats-candidate-section {
-            background: white;
-            border-radius: 12px;
-            padding: 15px 20px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            flex: 1;
-            display: flex;
-            align-items: center;
-        }
-
-        .congrats-candidate-section.winner {
-            background: linear-gradient(135deg, #fff8e1 0%, #ffe0b2 100%);
-            border: 2px solid gold;
-        }
-
-        .congrats-candidate-section.last {
-            background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
-            border: 2px solid #999;
-        }
-
-        .congrats-candidate-grid {
-            display: grid;
-            grid-template-columns: 1fr auto;
-            gap: 20px;
-            align-items: center;
-            width: 100%;
-        }
-
-        .congrats-candidate-info {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .congrats-photo-container {
-            width: 100px;
-            height: 100px;
-            flex-shrink: 0;
-            border-radius: 50%;
-            overflow: hidden;
-            border: 3px solid white;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            position: relative;
-            background: #f0f0f0;
-        }
-
-        .congrats-photo-container .initials {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 1.8rem;
-            font-weight: bold;
-            color: #667eea;
-        }
-
-        .congrats-photo-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .congrats-details {
-            flex: 1;
-        }
-
-        .congrats-rank-badge {
-            display: inline-block;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
-        .winner .congrats-rank-badge {
-            background: gold;
-            color: #333;
-        }
-
-        .last .congrats-rank-badge {
-            background: #666;
-            color: white;
-        }
-
-        .congrats-candidate-name {
-            font-size: 1.4rem;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 10px;
-        }
-
-        .congrats-vote-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 6px 0;
-            border-bottom: 1px solid rgba(0,0,0,0.1);
-        }
-
-        .congrats-vote-row:last-child {
-            border-bottom: none;
-        }
-
-        .congrats-vote-row.total {
-            border-top: 2px solid #333;
-            margin-top: 5px;
-            padding-top: 8px;
-            font-weight: bold;
-        }
-
-        .congrats-vote-label {
-            font-size: 0.95rem;
-            color: #555;
-        }
-
-        .congrats-vote-row.total .congrats-vote-label {
-            font-size: 1.1rem;
-            color: #333;
-        }
-
-        .congrats-vote-count {
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: #667eea;
-        }
-
-        .congrats-vote-row.total .congrats-vote-count {
-            font-size: 1.3rem;
-            color: #333;
-        }
-
-        .congrats-celebration {
-            border: none;
-            box-shadow: none;
-            border-radius: 0;
-            background: transparent;
-            padding: 0;
-            margin: 0;
-        }
-
-        .congrats-celebration img {
-            width: auto;
-            height: 200px;
-            object-fit: contain;
-            border: none;
-            box-shadow: none;
-            border-radius: 0;
-            background: transparent;
-            display: block;
-        }
-        .winner-crown {
-            font-size: 2rem;
-            position: absolute;
-            top: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-
-        .congrats-countdown {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            width: 50px;
-            height: 50px;
-            background: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.3rem;
-            font-weight: bold;
-            color: #667eea;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            z-index: 10;
-        }
-
-        @media (max-width: 1024px) {
-            .congrats-candidate-grid {
-                grid-template-columns: 1fr;
-                gap: 15px;
-            }
-
-            .congrats-celebration {
-                width: 150px;
-                height: 150px;
-                margin: 0 auto;
-            }
-
-            .congrats-photo-container {
-                width: 80px;
-                height: 80px;
-            }
-
-            .congrats-candidate-name {
-                font-size: 1.2rem;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .congrats-modal-content {
-                padding: 10px 15px;
-            }
-
-            .congrats-modal-header h2 {
-                font-size: 1.4rem;
-            }
-
-            .congrats-modal-header .position-title {
-                font-size: 1rem;
-            }
-
-            .congrats-candidate-info {
-                flex-direction: row;
-                gap: 15px;
-            }
-
-            .congrats-photo-container {
-                width: 70px;
-                height: 70px;
-            }
-
-            .congrats-candidate-name {
-                font-size: 1.1rem;
-            }
-
-            .congrats-vote-row {
-                padding: 4px 0;
-            }
-
-            .congrats-vote-label {
-                font-size: 0.85rem;
-            }
-
-            .congrats-vote-count {
-                font-size: 0.95rem;
-            }
-
-            .congrats-celebration {
-                width: 120px;
-                height: 120px;
-            }
-
-            .congrats-candidate-section {
-                padding: 12px 15px;
-            }
-        }
-        .vote-totals .total-item.online .total-label,
-.vote-totals .total-item.physical .total-label {
-  color: red;
-  font-weight: bold;
-}
-.gender-stat-item:first-child .gender-icon { color: #8b4513; } /* dark brown for boys */
-.gender-stat-item:last-child .gender-icon { color: #a0522d; } /* lighter brown for girls */
-
     </style>
 </head>
 <body>
-    <div class="congratulations-modal" id="congratulationsModal">
-        <div class="congrats-modal-content">
-            <div class="congrats-countdown" id="congratsCountdown">10</div>
-            <div class="congrats-modal-header">
-                <h2>🏆 Top & Bottom Performers</h2>
-                <p class="position-title" id="congratsPositionTitle"></p>
-            </div>
-            <div class="congrats-modal-candidates" id="congratsCandidates">
-                <!-- Candidates will be injected here -->
-            </div>
-        </div>
-    </div>
-
     <!-- Fullscreen Modal -->
-    <div class="fullscreen-modal" id="fullscreenModal">
-        <div class="modal-content-optimized">
-            <div class="modal-header-optimized">
-                <h2 id="modalHeaderTitle">🐐 THE G.O.A.T</h2>
-                <p style="font-size: 0.9rem; color: #fff; margin: 5px 0;" id="modalHeaderSubtitle">Greatest of All Time</p>
-                <p class="position-title-optimized" id="modalPositionTitle"></p>
-            </div>
-            <div class="modal-body-optimized">
-                <!-- Left Side: Candidate Info + Gender Breakdown -->
-                <div class="candidate-section">
-                    <div class="candidate-photo-medium-container">
-                        <div class="photo-placeholder-medium" id="candidateInitials">AB</div>
-                        <img id="candidatePhoto" src="" alt="" class="candidate-photo-medium">
-                        <div class="rank-badge-overlay" id="candidateRankBadge">🥇</div>
-                    </div>
-                    <h2 class="candidate-name-medium" id="candidateName">Candidate Name</h2>
-                    
-                    <div class="gender-stats">
-                        <div class="gender-stat-item">
-                            <span class="gender-icon">👨</span>
-                            <p class="gender-text" id="maleStats">Voted by <strong>0</strong> Boys</p>
-                        </div>
-                        <div class="gender-stat-item">
-                            <span class="gender-icon">👩</span>
-                            <p class="gender-text" id="femaleStats">Voted by <strong>0</strong> Girls</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Right Side: Stream Analysis Table -->
-                <div class="analysis-section">
-                    <div class="grid-table-wrapper">
-                        <table class="stream-grid-table" id="streamGridTable">
-                            <!-- Populated by JavaScript as a grid -->
-                        </table>
-                    </div>
-                    
-                    <div class="vote-totals">
-                        <div class="total-item online">
-                            <span class="total-label">Online Votes:</span>
-                            <span class="total-value" id="onlineTotal" data-target="0">0</span>
-                        </div>
-                        <div class="total-item physical">
-                            <span class="total-label">Physical Votes:</span>
-                            <span class="total-value" id="physicalTotal" data-target="0">0</span>
-                        </div>
-                        <div class="total-item grand">
-                            <span class="total-label">TOTAL VOTES:</span>
-                            <span class="total-value" id="grandTotal" data-target="0">0</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<div class="fullscreen-modal" id="fullscreenModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>🐐 THE G.O.A.T</h2>
+            <p style="font-size: 0.9rem; color: #999; margin: 5px 0;">Greatest of All Time</p>
+            <p class="position-title" id="modalPositionTitle"></p>
+        </div>
+        <div class="modal-candidates" id="modalCandidates">
+            <!-- Candidates will be injected here -->
         </div>
     </div>
+</div>
     <div class="filter-section" id="filterSection">
         <div class="filter-controls">
             <select class="position-select" id="positionFilter">
@@ -2273,11 +1407,11 @@
     
     <div class="pagination" id="pagination"></div>
 
-  <script>
-    // Optimized Electoral Data Script
-    const ELECTORAL_DATA = {
+    <script>
+        // Hardcoded electoral data
+        const ELECTORAL_DATA = {
   "total_positions": 14,
-  "total_votes_across_all_positions": 7762,
+  "total_votes_across_all_positions": 0,
   "positions": [
     {
       "position": "ACADEMIC PREFECT",
@@ -2285,310 +1419,102 @@
       "total_candidates": 4,
       "candidates": [
         {
-          "position": "ACADEMIC PREFECT",
+          "candidate_id": "12e2fdb3-c109-4b74-8036-044e4c641861",
           "candidate_name": "MUGARURA PAXTON",
-          "online_votes": 219,
-          "physical_votes": 90,
-          "votes_by_gender": {
-            "male": 169,
-            "female": 50
-          },
-          "votes_by_stream": {
-            "P5-SUNRISE": 34,
-            "P7-ACHIEVERS": 12,
-            "P5-SUNSET": 13,
-            "P4-SPARKLES": 21,
-            "P4-EAGLETS": 20,
-            "P6-VIBRANT": 15,
-            "P4-CUBS": 21,
-            "P7-WINNERS": 20,
-            "P4-BUNNIES": 10,
-            "P6-VICTORS": 11,
-            "P7-SUCCESS": 17,
-            "P5-SKYHIGH": 18,
-            "P6-RADIANT": 7
-          }
+          "total_votes": 0,
+          "online_votes": 220,
+          "physical_votes": 36
         },
         {
-          "position": "ACADEMIC PREFECT",
+          "candidate_id": "f6216054-9161-441c-a139-be2f39959428",
           "candidate_name": "MIREMBE GIFT REBECCA",
+          "total_votes": 0,
           "online_votes": 145,
-          "physical_votes": 66,
-          "votes_by_gender": {
-            "male": 31,
-            "female": 114
-          },
-          "votes_by_stream": {
-            "P6-RADIANT": 42,
-            "P7-WINNERS": 5,
-            "P5-SUNSET": 11,
-            "P5-SUNRISE": 8,
-            "P6-VIBRANT": 15,
-            "P4-EAGLETS": 7,
-            "P4-CUBS": 16,
-            "P7-SUCCESS": 3,
-            "P4-SPARKLES": 11,
-            "P5-SKYHIGH": 9,
-            "P7-ACHIEVERS": 3,
-            "P4-BUNNIES": 13,
-            "P6-VICTORS": 2
-          }
+          "physical_votes": 66
         },
         {
-          "position": "ACADEMIC PREFECT",
-          "candidate_name": "NAMMANDA HAIFA",
-          "online_votes": 96,
-          "physical_votes": 70,
-          "votes_by_gender": {
-            "male": 23,
-            "female": 73
-          },
-          "votes_by_stream": {
-            "P4-BUNNIES": 10,
-            "P5-SUNSET": 11,
-            "P7-ACHIEVERS": 12,
-            "P6-VICTORS": 23,
-            "P4-SPARKLES": 8,
-            "P4-EAGLETS": 6,
-            "P5-SUNRISE": 6,
-            "P7-SUCCESS": 10,
-            "P4-CUBS": 3,
-            "P6-VIBRANT": 2,
-            "P5-SKYHIGH": 1,
-            "P7-WINNERS": 4
-          }
-        },
-        {
-          "position": "ACADEMIC PREFECT",
+          "candidate_id": "037a1b56-8cf1-44d2-af2f-f7bd4bc99dfb",
           "candidate_name": "NAYIGA SHUDAT ZAHARA",
-          "online_votes": 95,
-          "physical_votes": 75,
-          "votes_by_gender": {
-            "male": 43,
-            "female": 52
-          },
-          "votes_by_stream": {
-            "P5-SUNRISE": 4,
-            "P5-SUNSET": 7,
-            "P4-BUNNIES": 11,
-            "P7-SUCCESS": 10,
-            "P6-VIBRANT": 13,
-            "P5-SKYHIGH": 10,
-            "P4-EAGLETS": 10,
-            "P4-CUBS": 9,
-            "P7-WINNERS": 13,
-            "P7-ACHIEVERS": 2,
-            "P4-SPARKLES": 5,
-            "P6-RADIANT": 1
-          }
+          "total_votes": 0,
+          "online_votes": 96,
+          "physical_votes": 75
+        },
+        {
+          "candidate_id": "7c859c8b-7f7c-478e-917c-915d0f805fa4",
+          "candidate_name": "NAMMANDA HAIFA",
+          "total_votes": 0,
+          "online_votes": 96,
+          "physical_votes": 70
         }
       ]
     },
     {
-      "position": "ENTERTAINMENT PREFECT",
+      "position": "WELFARE PREFECT  MESS PREFECT ",
       "total_votes_cast": 0,
       "total_candidates": 4,
       "candidates": [
         {
-          "position": "ENTERTAINMENT PREFECT",
-          "candidate_name": "NAKITTO RHONEL RUTH",
-          "online_votes": 330,
-          "physical_votes": 69,
-          "votes_by_gender": {
-            "male": 142,
-            "female": 188
-          },
-          "votes_by_stream": {
-            "P7-ACHIEVERS": 22,
-            "P4-BUNNIES": 35,
-            "P6-RADIANT": 48,
-            "P5-SKYHIGH": 10,
-            "P6-VICTORS": 23,
-            "P7-WINNERS": 23,
-            "P6-VIBRANT": 38,
-            "P7-SUCCESS": 28,
-            "P4-SPARKLES": 34,
-            "P4-CUBS": 31,
-            "P4-EAGLETS": 18,
-            "P5-SUNRISE": 17,
-            "P5-SUNSET": 3
-          }
+          "candidate_id": "11fe0e24-9857-4961-89f3-9eb6d69edf26",
+          "candidate_name": "SSEMOMBWE ANDERSON",
+          "total_votes": 0,
+          "online_votes": 204,
+          "physical_votes": 73
         },
         {
-          "position": "ENTERTAINMENT PREFECT",
-          "candidate_name": "WASAJJA CHARLES DICKENS",
-          "candidate_id": "cc1e41ad-90a8-4740-9dd6-ee2c21100a4d",
+          "candidate_id": "c07dc678-06ac-4529-b774-3a9f09e4db11",
+          "candidate_name": "KASULE ELSEN ZAWADI",
+          "total_votes": 0,
+          "online_votes": 128,
+          "physical_votes": 74
+        },
+        {
+          "candidate_id": "49e495b6-18ec-400a-94d5-f358cc460533",
+          "candidate_name": "NIMUKUNDA CYRUS",
+          "total_votes": 0,
+          "online_votes": 127,
+          "physical_votes": 63
+        },
+        {
+          "candidate_id": "a8adf432-418d-42c9-a819-e8f1f24f4f9d",
+          "candidate_name": "NAKALUNGI GABRIELLA IVANNAH",
+          "total_votes": 0,
+          "online_votes": 92,
+          "physical_votes": 103
+        }
+      ]
+    },
+    {
+      "position": "HEALTH   SANITATION",
+      "total_votes_cast": 0,
+      "total_candidates": 4,
+      "candidates": [
+        {
+          "candidate_id": "ec5958c5-5e1a-46bd-94b6-338dbf67f1ad",
+          "candidate_name": "AMODING DORCAS LAURETTA",
+          "total_votes": 0,
+          "online_votes": 265,
+          "physical_votes": 160
+        },
+        {
+          "candidate_id": "bc4e1485-57ea-457e-bf36-1563d2e1312a",
+          "candidate_name": "NAMUBIRU AFRICA RACHEAL",
+          "total_votes": 0,
+          "online_votes": 125,
+          "physical_votes": 32
+        },
+        {
+          "candidate_id": "77b6656e-2abd-4e44-978b-b229aad981e1",
+          "candidate_name": "INEZA PEACE DORIAN",
+          "total_votes": 0,
           "online_votes": 111,
-          "physical_votes": 124,
-          "votes_by_gender": {
-            "male": 73,
-            "female": 38
-          },
-          "votes_by_stream": {
-            "P4-EAGLETS": 20,
-            "P6-VICTORS": 6,
-            "P7-SUCCESS": 12,
-            "P7-ACHIEVERS": 7,
-            "P5-SUNSET": 6,
-            "P7-WINNERS": 18,
-            "P5-SUNRISE": 16,
-            "P4-CUBS": 8,
-            "P6-RADIANT": 2,
-            "P5-SKYHIGH": 2,
-            "P4-SPARKLES": 4,
-            "P4-BUNNIES": 5,
-            "P6-VIBRANT": 5
-          }
+          "physical_votes": 85
         },
         {
-          "position": "ENTERTAINMENT PREFECT",
-          "candidate_name": "KALIBBALA JANAT",
-          "candidate_id": "d4dc551e-2e31-4a4a-82b1-ca65ebe506fe",
-          "online_votes": 58,
-          "physical_votes": 57,
-          "votes_by_gender": {
-            "male": 23,
-            "female": 35
-          },
-          "votes_by_stream": {
-            "P4-BUNNIES": 3,
-            "P5-SKYHIGH": 25,
-            "P5-SUNSET": 6,
-            "P5-SUNRISE": 7,
-            "P4-CUBS": 5,
-            "P4-SPARKLES": 2,
-            "P6-VICTORS": 4,
-            "P6-VIBRANT": 2,
-            "P7-WINNERS": 1,
-            "P4-EAGLETS": 3
-          }
-        },
-        {
-          "position": "ENTERTAINMENT PREFECT",
-          "candidate_name": "NAKASUJJA SHANNAH",
-          "candidate_id": "0721ccee-05b5-4909-b1cd-9a87194e5446",
-          "online_votes": 56,
-          "physical_votes": 55,
-          "votes_by_gender": {
-            "male": 25,
-            "female": 31
-          },
-          "votes_by_stream": {
-            "P6-VICTORS": 3,
-            "P5-SUNSET": 25,
-            "P4-CUBS": 6,
-            "P4-BUNNIES": 1,
-            "P4-EAGLETS": 3,
-            "P5-SUNRISE": 13,
-            "P4-SPARKLES": 3,
-            "P5-SKYHIGH": 2
-          }
-        }
-      ]
-    },
-    {
-      "position": "FURNITURE PREFECT(S)",
-      "total_votes_cast": 0,
-      "total_candidates": 4,
-      "candidates": [
-        {
-          "position": "FURNITURE PREFECT(S)",
-          "candidate_name": "MATENYITIA MERCY",
-          "online_votes": 178,
-          "physical_votes": 74,
-          "votes_by_gender": {
-            "male": 29,
-            "female": 149
-          },
-          "votes_by_stream": {
-            "P6-RADIANT": 19,
-            "P6-VIBRANT": 17,
-            "P7-SUCCESS": 8,
-            "P7-ACHIEVERS": 5,
-            "P6-VICTORS": 15,
-            "P4-CUBS": 17,
-            "P7-WINNERS": 16,
-            "P4-BUNNIES": 5,
-            "P4-SPARKLES": 12,
-            "P5-SUNSET": 23,
-            "P5-SUNRISE": 29,
-            "P5-SKYHIGH": 7,
-            "P4-EAGLETS": 5
-          }
-        },
-        {
-          "position": "FURNITURE PREFECT(S)",
-          "candidate_name": "BUYONDO ISRAEL",
-          "online_votes": 156,
-          "physical_votes": 121,
-          "votes_by_gender": {
-            "male": 84,
-            "female": 72
-          },
-          "votes_by_stream": {
-            "P4-SPARKLES": 11,
-            "P6-VICTORS": 14,
-            "P4-BUNNIES": 15,
-            "P7-WINNERS": 14,
-            "P6-RADIANT": 24,
-            "P6-VIBRANT": 20,
-            "P4-CUBS": 9,
-            "P7-ACHIEVERS": 15,
-            "P4-EAGLETS": 11,
-            "P5-SUNSET": 2,
-            "P7-SUCCESS": 17,
-            "P5-SKYHIGH": 3,
-            "P5-SUNRISE": 1
-          }
-        },
-        {
-          "position": "FURNITURE PREFECT(S)",
-          "candidate_name": "NTAMBI REAGAN",
-          "online_votes": 152,
-          "physical_votes": 67,
-          "votes_by_gender": {
-            "male": 105,
-            "female": 47
-          },
-          "votes_by_stream": {
-            "P5-SUNSET": 6,
-            "P7-WINNERS": 9,
-            "P4-SPARKLES": 18,
-            "P4-CUBS": 21,
-            "P4-EAGLETS": 24,
-            "P7-SUCCESS": 15,
-            "P7-ACHIEVERS": 7,
-            "P4-BUNNIES": 22,
-            "P6-VICTORS": 7,
-            "P6-VIBRANT": 7,
-            "P6-RADIANT": 6,
-            "P5-SUNRISE": 8,
-            "P5-SKYHIGH": 2
-          }
-        },
-        {
-          "position": "FURNITURE PREFECT(S)",
-          "candidate_name": "KIMBUGWE MELVIN ELISHA",
-          "online_votes": 69,
-          "physical_votes": 65,
-          "votes_by_gender": {
-            "male": 46,
-            "female": 23
-          },
-          "votes_by_stream": {
-            "P5-SKYHIGH": 27,
-            "P5-SUNSET": 10,
-            "P5-SUNRISE": 15,
-            "P6-VICTORS": 1,
-            "P4-CUBS": 3,
-            "P7-WINNERS": 3,
-            "P4-EAGLETS": 3,
-            "P4-SPARKLES": 2,
-            "P7-SUCCESS": 1,
-            "P7-ACHIEVERS": 2,
-            "P6-VIBRANT": 1,
-            "P6-RADIANT": 1
-          }
+          "candidate_id": "8a14d42f-5320-41b6-b859-d0d978267db9",
+          "candidate_name": "AYEBAREYESU EXCELLENT",
+          "total_votes": 0,
+          "online_votes": 57,
+          "physical_votes": 37
         }
       ]
     },
@@ -2598,703 +1524,32 @@
       "total_candidates": 4,
       "candidates": [
         {
-          "position": "GAMES AND SPORTS PREFECT",
+          "candidate_id": "a4ee087d-37bf-4317-84c3-4a1a9f1827fb",
           "candidate_name": "NAMPIIMA PAULINE",
-          "online_votes": 250,
-          "physical_votes": 111,
-          "votes_by_gender": {
-            "male": 68,
-            "female": 182
-          },
-          "votes_by_stream": {
-            "P4-CUBS": 34,
-            "P4-BUNNIES": 32,
-            "P5-SKYHIGH": 8,
-            "P6-VIBRANT": 25,
-            "P6-VICTORS": 24,
-            "P4-SPARKLES": 35,
-            "P6-RADIANT": 42,
-            "P5-SUNSET": 6,
-            "P7-WINNERS": 6,
-            "P4-EAGLETS": 22,
-            "P7-ACHIEVERS": 5,
-            "P5-SUNRISE": 10,
-            "P7-SUCCESS": 1
-          }
+          "total_votes": 0,
+          "online_votes": 251,
+          "physical_votes": 111
         },
         {
-          "position": "GAMES AND SPORTS PREFECT",
+          "candidate_id": "7bd0e4ea-5928-49d7-b344-7959cbd53d87",
           "candidate_name": "SSEKANDI RAMADHAN",
+          "total_votes": 0,
           "online_votes": 148,
-          "physical_votes": 75,
-          "votes_by_gender": {
-            "male": 141,
-            "female": 7
-          },
-          "votes_by_stream": {
-            "P6-VIBRANT": 16,
-            "P4-CUBS": 12,
-            "P5-SKYHIGH": 19,
-            "P6-VICTORS": 11,
-            "P5-SUNRISE": 24,
-            "P5-SUNSET": 11,
-            "P4-EAGLETS": 19,
-            "P4-SPARKLES": 6,
-            "P4-BUNNIES": 8,
-            "P7-WINNERS": 11,
-            "P6-RADIANT": 8,
-            "P7-SUCCESS": 3
-          }
+          "physical_votes": 75
         },
         {
-          "position": "GAMES AND SPORTS PREFECT",
+          "candidate_id": "e721d219-fc28-4786-9169-cf80f99efb67",
           "candidate_name": "KEMIGISHA ALEXANDRIA",
-          "online_votes": 113,
-          "physical_votes": 65,
-          "votes_by_gender": {
-            "male": 43,
-            "female": 70
-          },
-          "votes_by_stream": {
-            "P7-WINNERS": 22,
-            "P5-SKYHIGH": 9,
-            "P7-ACHIEVERS": 23,
-            "P5-SUNSET": 22,
-            "P7-SUCCESS": 35,
-            "P4-SPARKLES": 1,
-            "P5-SUNRISE": 1
-          }
+          "total_votes": 0,
+          "online_votes": 114,
+          "physical_votes": 65
         },
         {
-          "position": "GAMES AND SPORTS PREFECT",
+          "candidate_id": "adf78342-fbe3-4bf7-a2cd-afea3f5618ec",
           "candidate_name": "NVANUNGI SHANIEZ",
+          "total_votes": 0,
           "online_votes": 42,
-          "physical_votes": 69,
-          "votes_by_gender": {
-            "male": 12,
-            "female": 30
-          },
-          "votes_by_stream": {
-            "P5-SKYHIGH": 3,
-            "P5-SUNRISE": 18,
-            "P4-BUNNIES": 1,
-            "P4-SPARKLES": 1,
-            "P4-CUBS": 4,
-            "P6-VIBRANT": 4,
-            "P7-SUCCESS": 1,
-            "P7-ACHIEVERS": 1,
-            "P5-SUNSET": 3,
-            "P6-VICTORS": 1,
-            "P7-WINNERS": 3,
-            "P4-EAGLETS": 2
-          }
-        }
-      ]
-    },
-    {
-      "position": "HEAD MONITOR(ES)",
-      "total_votes_cast": 0,
-      "total_candidates": 4,
-      "candidates": [
-        {
-          "position": "HEAD MONITOR(ES)",
-          "candidate_name": "NANUNGI DRUCILLA LUTEETE",
-          "candidate_id": "7399d5ba-188e-4ebb-b722-69078283a7b2",
-          "online_votes": 198,
-          "physical_votes": 110,
-          "votes_by_gender": {
-            "male": 96,
-            "female": 102
-          },
-          "votes_by_stream": {
-            "P6-VIBRANT": 11,
-            "P5-SUNSET": 30,
-            "P6-VICTORS": 16,
-            "P4-EAGLETS": 14,
-            "P6-RADIANT": 6,
-            "P5-SUNRISE": 49,
-            "P5-SKYHIGH": 30,
-            "P7-ACHIEVERS": 7,
-            "P4-SPARKLES": 10,
-            "P4-CUBS": 14,
-            "P7-WINNERS": 3,
-            "P4-BUNNIES": 4,
-            "P7-SUCCESS": 4
-          }
-        },
-        {
-          "position": "HEAD MONITOR(ES)",
-          "candidate_name": "BESIGYE TRICIA",
-          "online_votes": 149,
-          "physical_votes": 63,
-          "votes_by_gender": {
-            "male": 97,
-            "female": 52
-          },
-          "votes_by_stream": {
-            "P6-VIBRANT": 16,
-            "P4-BUNNIES": 4,
-            "P4-SPARKLES": 27,
-            "P7-WINNERS": 34,
-            "P5-SUNSET": 4,
-            "P4-EAGLETS": 13,
-            "P5-SKYHIGH": 6,
-            "P4-CUBS": 12,
-            "P7-ACHIEVERS": 8,
-            "P6-VICTORS": 11,
-            "P6-RADIANT": 6,
-            "P7-SUCCESS": 7,
-            "P5-SUNRISE": 1
-          }
-        },
-        {
-          "position": "HEAD MONITOR(ES)",
-          "candidate_name": "NAMAZZI DESIRE HILDA",
-          "online_votes": 137,
-          "physical_votes": 51,
-          "votes_by_gender": {
-            "male": 45,
-            "female": 92
-          },
-          "votes_by_stream": {
-            "P4-EAGLETS": 10,
-            "P4-SPARKLES": 6,
-            "P4-CUBS": 20,
-            "P6-RADIANT": 37,
-            "P4-BUNNIES": 34,
-            "P6-VIBRANT": 16,
-            "P5-SUNRISE": 2,
-            "P6-VICTORS": 9,
-            "P5-SKYHIGH": 2,
-            "P7-WINNERS": 1
-          }
-        },
-        {
-          "position": "HEAD MONITOR(ES)",
-          "candidate_name": "ALIMPA DESTINY ANGELLA",
-          "online_votes": 72,
-          "physical_votes": 94,
-          "votes_by_gender": {
-            "male": 26,
-            "female": 46
-          },
-          "votes_by_stream": {
-            "P7-SUCCESS": 29,
-            "P7-WINNERS": 4,
-            "P6-RADIANT": 1,
-            "P4-EAGLETS": 6,
-            "P7-ACHIEVERS": 14,
-            "P5-SUNSET": 8,
-            "P4-CUBS": 4,
-            "P6-VIBRANT": 2,
-            "P5-SKYHIGH": 2,
-            "P5-SUNRISE": 1,
-            "P6-VICTORS": 1
-          }
-        }
-      ]
-    },
-    {
-      "position": "HEAD PREFECT",
-      "total_votes_cast": 0,
-      "total_candidates": 4,
-      "candidates": [
-        {
-          "position": "HEAD PREFECT",
-          "candidate_name": "BALUKU ELEUTHERIUS BROGAN",
-          "online_votes": 230,
-          "physical_votes": 84,
-          "votes_by_gender": {
-            "male": 179,
-            "female": 51
-          },
-          "votes_by_stream": {
-            "P4-EAGLETS": 11,
-            "P7-ACHIEVERS": 13,
-            "P5-SKYHIGH": 20,
-            "P5-SUNRISE": 26,
-            "P7-SUCCESS": 17,
-            "P5-SUNSET": 19,
-            "P6-VIBRANT": 25,
-            "P6-VICTORS": 20,
-            "P4-BUNNIES": 12,
-            "P7-WINNERS": 32,
-            "P4-CUBS": 15,
-            "P6-RADIANT": 10,
-            "P4-SPARKLES": 10
-          }
-        },
-        {
-          "position": "HEAD PREFECT",
-          "candidate_name": "NAMATA DIVINE HANNAH",
-          "online_votes": 216,
-          "physical_votes": 56,
-          "votes_by_gender": {
-            "male": 53,
-            "female": 163
-          },
-          "votes_by_stream": {
-            "P7-SUCCESS": 11,
-            "P5-SUNSET": 14,
-            "P5-SKYHIGH": 9,
-            "P4-BUNNIES": 26,
-            "P4-SPARKLES": 24,
-            "P4-CUBS": 28,
-            "P6-RADIANT": 32,
-            "P6-VIBRANT": 8,
-            "P4-EAGLETS": 29,
-            "P7-ACHIEVERS": 9,
-            "P5-SUNRISE": 17,
-            "P6-VICTORS": 8,
-            "P7-WINNERS": 1
-          }
-        },
-        {
-          "position": "HEAD PREFECT",
-          "candidate_name": "NSUBUGA ERON",
-          "online_votes": 59,
-          "physical_votes": 128,
-          "votes_by_gender": {
-            "male": 24,
-            "female": 35
-          },
-          "votes_by_stream": {
-            "P5-SUNRISE": 5,
-            "P4-CUBS": 6,
-            "P5-SKYHIGH": 6,
-            "P4-SPARKLES": 7,
-            "P4-BUNNIES": 3,
-            "P6-RADIANT": 7,
-            "P5-SUNSET": 3,
-            "P6-VIBRANT": 8,
-            "P7-WINNERS": 4,
-            "P7-ACHIEVERS": 2,
-            "P4-EAGLETS": 2,
-            "P7-SUCCESS": 5,
-            "P6-VICTORS": 1
-          }
-        },
-        {
-          "position": "HEAD PREFECT",
-          "candidate_name": "KAJJUMBA BELLA",
-          "candidate_id": "e8629458-7717-4afc-8012-887c05763978",
-          "online_votes": 50,
-          "physical_votes": 46,
-          "votes_by_gender": {
-            "male": 7,
-            "female": 43
-          },
-          "votes_by_stream": {
-            "P5-SUNRISE": 5,
-            "P7-WINNERS": 5,
-            "P6-VICTORS": 7,
-            "P5-SKYHIGH": 5,
-            "P7-ACHIEVERS": 5,
-            "P4-SPARKLES": 2,
-            "P7-SUCCESS": 7,
-            "P5-SUNSET": 6,
-            "P6-VIBRANT": 4,
-            "P4-EAGLETS": 1,
-            "P6-RADIANT": 1,
-            "P4-BUNNIES": 1,
-            "P4-CUBS": 1
-          }
-        }
-      ]
-    },
-    {
-      "position": "HEALTH & SANITATION",
-      "total_votes_cast": 0,
-      "total_candidates": 4,
-      "candidates": [
-        {
-          "position": "HEALTH & SANITATION",
-          "candidate_name": "AMODING DORCAS LAURETTA",
-          "online_votes": 264,
-          "physical_votes": 160,
-          "votes_by_gender": {
-            "male": 108,
-            "female": 156
-          },
-          "votes_by_stream": {
-            "P4-BUNNIES": 7,
-            "P7-SUCCESS": 26,
-            "P6-VICTORS": 31,
-            "P6-RADIANT": 49,
-            "P5-SUNSET": 17,
-            "P4-SPARKLES": 10,
-            "P7-WINNERS": 19,
-            "P6-VIBRANT": 39,
-            "P5-SUNRISE": 16,
-            "P4-EAGLETS": 11,
-            "P5-SKYHIGH": 17,
-            "P7-ACHIEVERS": 13,
-            "P4-CUBS": 9
-          }
-        },
-        {
-          "position": "HEALTH & SANITATION",
-          "candidate_name": "NAMUBIRU AFRICA RACHEAL",
-          "online_votes": 125,
-          "physical_votes": 32,
-          "votes_by_gender": {
-            "male": 51,
-            "female": 74
-          },
-          "votes_by_stream": {
-            "P5-SUNSET": 10,
-            "P5-SKYHIGH": 3,
-            "P4-SPARKLES": 25,
-            "P4-EAGLETS": 13,
-            "P7-ACHIEVERS": 6,
-            "P4-CUBS": 15,
-            "P7-WINNERS": 7,
-            "P4-BUNNIES": 26,
-            "P5-SUNRISE": 9,
-            "P6-VICTORS": 1,
-            "P6-VIBRANT": 4,
-            "P7-SUCCESS": 5,
-            "P6-RADIANT": 1
-          }
-        },
-        {
-          "position": "HEALTH & SANITATION",
-          "candidate_name": "INEZA PEACE DORIAN",
-          "online_votes": 110,
-          "physical_votes": 85,
-          "votes_by_gender": {
-            "male": 66,
-            "female": 44
-          },
-          "votes_by_stream": {
-            "P4-BUNNIES": 7,
-            "P4-CUBS": 16,
-            "P7-ACHIEVERS": 7,
-            "P5-SUNRISE": 15,
-            "P7-SUCCESS": 6,
-            "P5-SUNSET": 13,
-            "P4-SPARKLES": 8,
-            "P4-EAGLETS": 12,
-            "P5-SKYHIGH": 18,
-            "P7-WINNERS": 7,
-            "P6-VICTORS": 1
-          }
-        },
-        {
-          "position": "HEALTH & SANITATION",
-          "candidate_name": "AYEBAREYESU EXCELLENT",
-          "online_votes": 57,
-          "physical_votes": 37,
-          "votes_by_gender": {
-            "male": 38,
-            "female": 19
-          },
-          "votes_by_stream": {
-            "P6-VIBRANT": 2,
-            "P7-WINNERS": 9,
-            "P5-SUNSET": 2,
-            "P5-SKYHIGH": 2,
-            "P5-SUNRISE": 13,
-            "P4-CUBS": 10,
-            "P7-ACHIEVERS": 3,
-            "P7-SUCCESS": 3,
-            "P4-EAGLETS": 7,
-            "P4-BUNNIES": 3,
-            "P4-SPARKLES": 1,
-            "P6-VICTORS": 2
-          }
-        }
-      ]
-    },
-    {
-      "position": "ICT PREFECT",
-      "total_votes_cast": 0,
-      "total_candidates": 4,
-      "candidates": [
-        {
-          "position": "ICT PREFECT",
-          "candidate_name": "NANYUNJA RINAH NANA",
-          "online_votes": 193,
-          "physical_votes": 79,
-          "votes_by_gender": {
-            "male": 67,
-            "female": 126
-          },
-          "votes_by_stream": {
-            "P7-ACHIEVERS": 20,
-            "P6-VICTORS": 11,
-            "P6-RADIANT": 16,
-            "P7-WINNERS": 26,
-            "P4-SPARKLES": 28,
-            "P5-SKYHIGH": 10,
-            "P4-EAGLETS": 8,
-            "P7-SUCCESS": 23,
-            "P5-SUNSET": 14,
-            "P4-CUBS": 3,
-            "P6-VIBRANT": 11,
-            "P5-SUNRISE": 17,
-            "P4-BUNNIES": 6
-          }
-        },
-        {
-          "position": "ICT PREFECT",
-          "candidate_name": "HANNAH FRIEND KIZITO",
-          "online_votes": 142,
-          "physical_votes": 75,
-          "votes_by_gender": {
-            "male": 41,
-            "female": 101
-          },
-          "votes_by_stream": {
-            "P5-SUNRISE": 13,
-            "P5-SKYHIGH": 12,
-            "P4-EAGLETS": 11,
-            "P4-SPARKLES": 6,
-            "P6-RADIANT": 14,
-            "P7-WINNERS": 3,
-            "P4-CUBS": 44,
-            "P7-SUCCESS": 7,
-            "P5-SUNSET": 11,
-            "P4-BUNNIES": 5,
-            "P6-VIBRANT": 5,
-            "P7-ACHIEVERS": 4,
-            "P6-VICTORS": 7
-          }
-        },
-        {
-          "position": "ICT PREFECT",
-          "candidate_name": "OMODING ETHAN EYALAMA",
-          "online_votes": 121,
-          "physical_votes": 88,
-          "votes_by_gender": {
-            "male": 84,
-            "female": 37
-          },
-          "votes_by_stream": {
-            "P6-VIBRANT": 26,
-            "P4-CUBS": 1,
-            "P5-SUNRISE": 12,
-            "P7-SUCCESS": 7,
-            "P7-WINNERS": 13,
-            "P6-VICTORS": 13,
-            "P5-SUNSET": 15,
-            "P6-RADIANT": 16,
-            "P5-SKYHIGH": 11,
-            "P7-ACHIEVERS": 4,
-            "P4-SPARKLES": 1,
-            "P4-EAGLETS": 2
-          }
-        },
-        {
-          "position": "ICT PREFECT",
-          "candidate_name": "AHUMUZA PRAISE ROBERT",
-          "online_votes": 102,
-          "physical_votes": 72,
-          "votes_by_gender": {
-            "male": 71,
-            "female": 31
-          },
-          "votes_by_stream": {
-            "P5-SKYHIGH": 7,
-            "P4-EAGLETS": 22,
-            "P4-SPARKLES": 9,
-            "P5-SUNRISE": 11,
-            "P4-BUNNIES": 31,
-            "P6-VIBRANT": 3,
-            "P6-RADIANT": 4,
-            "P5-SUNSET": 3,
-            "P7-SUCCESS": 4,
-            "P6-VICTORS": 5,
-            "P4-CUBS": 2,
-            "P7-ACHIEVERS": 1
-          }
-        }
-      ]
-    },
-    {
-      "position": "PREFECT FOR LOWER SECTION",
-      "total_votes_cast": 0,
-      "total_candidates": 4,
-      "candidates": [
-        {
-          "position": "PREFECT FOR LOWER SECTION",
-          "candidate_name": "ATUKUNDA SALOME",
-          "online_votes": 287,
-          "physical_votes": 147,
-          "votes_by_gender": {
-            "male": 103,
-            "female": 184
-          },
-          "votes_by_stream": {
-            "P6-VICTORS": 24,
-            "P5-SUNRISE": 22,
-            "P7-ACHIEVERS": 21,
-            "P7-WINNERS": 33,
-            "P5-SUNSET": 24,
-            "P7-SUCCESS": 35,
-            "P5-SKYHIGH": 20,
-            "P6-RADIANT": 29,
-            "P4-CUBS": 21,
-            "P6-VIBRANT": 17,
-            "P4-EAGLETS": 14,
-            "P4-BUNNIES": 20,
-            "P4-SPARKLES": 7
-          }
-        },
-        {
-          "position": "PREFECT FOR LOWER SECTION",
-          "candidate_name": "ALINDA TIFFANY",
-          "online_votes": 136,
-          "physical_votes": 91,
-          "votes_by_gender": {
-            "male": 78,
-            "female": 58
-          },
-          "votes_by_stream": {
-            "P4-SPARKLES": 28,
-            "P7-WINNERS": 5,
-            "P5-SUNSET": 3,
-            "P4-EAGLETS": 20,
-            "P4-BUNNIES": 12,
-            "P5-SUNRISE": 19,
-            "P6-RADIANT": 13,
-            "P4-CUBS": 18,
-            "P5-SKYHIGH": 8,
-            "P7-ACHIEVERS": 3,
-            "P7-SUCCESS": 3,
-            "P6-VIBRANT": 3,
-            "P6-VICTORS": 1
-          }
-        },
-        {
-          "position": "PREFECT FOR LOWER SECTION",
-          "candidate_name": "NAMPIJJA RAHUMAH",
-          "online_votes": 93,
-          "physical_votes": 30,
-          "votes_by_gender": {
-            "male": 57,
-            "female": 36
-          },
-          "votes_by_stream": {
-            "P4-CUBS": 8,
-            "P6-VIBRANT": 19,
-            "P6-VICTORS": 10,
-            "P5-SKYHIGH": 9,
-            "P5-SUNRISE": 8,
-            "P5-SUNSET": 9,
-            "P7-ACHIEVERS": 5,
-            "P6-RADIANT": 6,
-            "P4-EAGLETS": 4,
-            "P4-BUNNIES": 9,
-            "P4-SPARKLES": 3,
-            "P7-SUCCESS": 1,
-            "P7-WINNERS": 2
-          }
-        },
-        {
-          "position": "PREFECT FOR LOWER SECTION",
-          "candidate_name": "NANTIMBA JULIAN SEKATE",
-          "online_votes": 39,
-          "physical_votes": 55,
-          "votes_by_gender": {
-            "male": 25,
-            "female": 14
-          },
-          "votes_by_stream": {
-            "P4-CUBS": 3,
-            "P5-SUNRISE": 4,
-            "P4-SPARKLES": 6,
-            "P5-SUNSET": 6,
-            "P6-VIBRANT": 6,
-            "P4-EAGLETS": 5,
-            "P4-BUNNIES": 1,
-            "P5-SKYHIGH": 3,
-            "P6-VICTORS": 1,
-            "P6-RADIANT": 2,
-            "P7-WINNERS": 2
-          }
-        }
-      ]
-    },
-    {
-      "position": "PREFECT FOR UPPER SECTION",
-      "total_votes_cast": 0,
-      "total_candidates": 3,
-      "candidates": [
-        {
-          "position": "PREFECT FOR UPPER SECTION",
-          "candidate_name": "ASHABA ELIZABETH",
-          "online_votes": 225,
-          "physical_votes": 127,
-          "votes_by_gender": {
-            "male": 89,
-            "female": 136
-          },
-          "votes_by_stream": {
-            "P4-BUNNIES": 11,
-            "P4-EAGLETS": 20,
-            "P6-RADIANT": 47,
-            "P5-SUNRISE": 19,
-            "P7-SUCCESS": 10,
-            "P4-SPARKLES": 12,
-            "P6-VIBRANT": 22,
-            "P4-CUBS": 24,
-            "P6-VICTORS": 13,
-            "P5-SKYHIGH": 11,
-            "P7-WINNERS": 16,
-            "P5-SUNSET": 14,
-            "P7-ACHIEVERS": 6
-          }
-        },
-        {
-          "position": "PREFECT FOR UPPER SECTION",
-          "candidate_name": "KHARUNDA ESTHER",
-          "online_votes": 172,
-          "physical_votes": 85,
-          "votes_by_gender": {
-            "male": 95,
-            "female": 77
-          },
-          "votes_by_stream": {
-            "P7-SUCCESS": 14,
-            "P5-SUNRISE": 24,
-            "P4-EAGLETS": 9,
-            "P4-CUBS": 20,
-            "P6-VIBRANT": 10,
-            "P7-ACHIEVERS": 9,
-            "P4-SPARKLES": 22,
-            "P4-BUNNIES": 19,
-            "P7-WINNERS": 13,
-            "P5-SKYHIGH": 22,
-            "P6-VICTORS": 6,
-            "P5-SUNSET": 3,
-            "P6-RADIANT": 1
-          }
-        },
-        {
-          "position": "PREFECT FOR UPPER SECTION",
-          "candidate_name": "ATAMBA CAROL JIREH",
-          "online_votes": 159,
-          "physical_votes": 108,
-          "votes_by_gender": {
-            "male": 79,
-            "female": 80
-          },
-          "votes_by_stream": {
-            "P5-SUNSET": 25,
-            "P7-WINNERS": 13,
-            "P6-VIBRANT": 13,
-            "P7-ACHIEVERS": 14,
-            "P6-VICTORS": 17,
-            "P4-BUNNIES": 12,
-            "P4-SPARKLES": 10,
-            "P4-EAGLETS": 14,
-            "P7-SUCCESS": 16,
-            "P5-SKYHIGH": 7,
-            "P5-SUNRISE": 10,
-            "P4-CUBS": 6,
-            "P6-RADIANT": 2
-          }
+          "physical_votes": 69
         }
       ]
     },
@@ -3304,104 +1559,270 @@
       "total_candidates": 4,
       "candidates": [
         {
-          "position": "PREFECT IN CHARGE OF DISCIPLINE",
+          "candidate_id": "ec105766-e320-4321-af3e-3cd5028400e8",
           "candidate_name": "ALIYAH ADAMS KYEYUNE",
+          "total_votes": 0,
           "online_votes": 176,
-          "physical_votes": 104,
-          "votes_by_gender": {
-            "male": 82,
-            "female": 94
-          },
-          "votes_by_stream": {
-            "P5-SUNRISE": 10,
-            "P4-SPARKLES": 29,
-            "P4-EAGLETS": 19,
-            "P7-ACHIEVERS": 6,
-            "P4-CUBS": 6,
-            "P7-WINNERS": 10,
-            "P6-VICTORS": 15,
-            "P5-SUNSET": 12,
-            "P7-SUCCESS": 15,
-            "P6-VIBRANT": 14,
-            "P4-BUNNIES": 21,
-            "P6-RADIANT": 9,
-            "P5-SKYHIGH": 10
-          }
+          "physical_votes": 104
         },
         {
-          "position": "PREFECT IN CHARGE OF DISCIPLINE",
+          "candidate_id": "288f0c93-ac55-4a91-abfe-ef088e214111",
           "candidate_name": "AMPUMUZA ELIANAH",
+          "total_votes": 0,
           "online_votes": 152,
-          "physical_votes": 23,
-          "votes_by_gender": {
-            "male": 80,
-            "female": 72
-          },
-          "votes_by_stream": {
-            "P4-CUBS": 40,
-            "P7-WINNERS": 20,
-            "P7-ACHIEVERS": 16,
-            "P4-SPARKLES": 7,
-            "P7-SUCCESS": 11,
-            "P5-SUNSET": 5,
-            "P6-VIBRANT": 7,
-            "P6-VICTORS": 11,
-            "P6-RADIANT": 10,
-            "P4-EAGLETS": 8,
-            "P4-BUNNIES": 10,
-            "P5-SKYHIGH": 4,
-            "P5-SUNRISE": 3
-          }
+          "physical_votes": 23
         },
         {
-          "position": "PREFECT IN CHARGE OF DISCIPLINE",
+          "candidate_id": "397a55c3-db27-49f6-b432-c0f35e340927",
           "candidate_name": "NAKAWEESI MICHELLE",
+          "total_votes": 0,
           "online_votes": 141,
-          "physical_votes": 90,
-          "votes_by_gender": {
-            "male": 71,
-            "female": 70
-          },
-          "votes_by_stream": {
-            "P7-SUCCESS": 13,
-            "P7-WINNERS": 8,
-            "P6-RADIANT": 13,
-            "P7-ACHIEVERS": 6,
-            "P5-SUNRISE": 33,
-            "P5-SKYHIGH": 18,
-            "P5-SUNSET": 20,
-            "P4-BUNNIES": 5,
-            "P6-VICTORS": 4,
-            "P6-VIBRANT": 11,
-            "P4-SPARKLES": 2,
-            "P4-EAGLETS": 6,
-            "P4-CUBS": 2
-          }
+          "physical_votes": 90
         },
         {
-          "position": "PREFECT IN CHARGE OF DISCIPLINE",
+          "candidate_id": "d6d3cf5a-0051-4bf5-91a3-63bb03456783",
           "candidate_name": "NAKIREMBEKA RUTH TENDO ESTHER",
-          "online_votes": 85,
-          "physical_votes": 105,
-          "votes_by_gender": {
-            "male": 29,
-            "female": 56
-          },
-          "votes_by_stream": {
-            "P6-RADIANT": 18,
-            "P4-BUNNIES": 6,
-            "P7-WINNERS": 4,
-            "P6-VIBRANT": 13,
-            "P5-SKYHIGH": 8,
-            "P4-SPARKLES": 4,
-            "P4-EAGLETS": 10,
-            "P6-VICTORS": 6,
-            "P5-SUNSET": 5,
-            "P4-CUBS": 2,
-            "P5-SUNRISE": 7,
-            "P7-SUCCESS": 1,
-            "P7-ACHIEVERS": 1
-          }
+          "total_votes": 0,
+          "online_votes": 87,
+          "physical_votes": 105
+        }
+      ]
+    },
+    {
+      "position": "HEAD MONITOR ES ",
+      "total_votes_cast": 0,
+      "total_candidates": 4,
+      "candidates": [
+        {
+          "candidate_id": "7399d5ba-188e-4ebb-b722-69078283a7b2",
+          "candidate_name": "NANUNGI DRUCILLA LUTEETE",
+          "total_votes": 0,
+          "online_votes": 198,
+          "physical_votes": 110
+        },
+        {
+          "candidate_id": "8f3b1b27-b571-4e90-908a-43b70108ebf7",
+          "candidate_name": "BESIGYE TRICIA",
+          "total_votes": 0,
+          "online_votes": 149,
+          "physical_votes": 63
+        },
+        {
+          "candidate_id": "2ed41268-bdef-42cc-8f2c-25806c93c03f",
+          "candidate_name": "NAMAZZI DESIRE HILDA",
+          "total_votes": 0,
+          "online_votes": 137,
+          "physical_votes": 51
+        },
+        {
+          "candidate_id": "74ac9c3d-b409-459f-a7c0-ac787640b4fd",
+          "candidate_name": "ALIMPA DESTINY ANGELLA",
+          "total_votes": 0,
+          "online_votes": 74,
+          "physical_votes": 94
+        }
+      ]
+    },
+    {
+      "position": "PREFECT FOR LOWER SECTION",
+      "total_votes_cast": 0,
+      "total_candidates": 4,
+      "candidates": [
+        {
+          "candidate_id": "867e02b5-5212-436e-a60b-00d92911e99f",
+          "candidate_name": "ATUKUNDA SALOME",
+          "total_votes": 0,
+          "online_votes": 287,
+          "physical_votes": 147
+        },
+        {
+          "candidate_id": "64dd7a65-0c02-4699-a361-b63df52d3589",
+          "candidate_name": "ALINDA TIFFANY",
+          "total_votes": 0,
+          "online_votes": 136,
+          "physical_votes": 91
+        },
+        {
+          "candidate_id": "63bbde7f-60f4-432b-8c61-e987c07124fe",
+          "candidate_name": "NAMPIJJA RAHUMAH",
+          "total_votes": 0,
+          "online_votes": 94,
+          "physical_votes": 30
+        },
+        {
+          "candidate_id": "70ebb200-3a75-494b-ae8e-f803b48222cf",
+          "candidate_name": "NANTIMBA JULIAN SEKATE",
+          "total_votes": 0,
+          "online_votes": 40,
+          "physical_votes": 55
+        }
+      ]
+    },
+    {
+      "position": "PREFECT FOR UPPER SECTION",
+      "total_votes_cast": 0,
+      "total_candidates": 3,
+      "candidates": [
+        {
+          "candidate_id": "77c65296-2605-4b9d-a48b-ac86c96f1b09",
+          "candidate_name": "ASHABA ELIZABETH",
+          "total_votes": 0,
+          "online_votes": 226,
+          "physical_votes": 127
+        },
+        {
+          "candidate_id": "5e7db028-8752-4ef6-b877-75b16f71c093",
+          "candidate_name": "KHARUNDA ESTHER",
+          "total_votes": 0,
+          "online_votes": 173,
+          "physical_votes": 18
+        },
+        {
+          "candidate_id": "f60ab5ee-28d3-42e6-bee9-d32bd500b45f",
+          "candidate_name": "ATAMBA CAROL JIREH",
+          "total_votes": 0,
+          "online_votes": 159,
+          "physical_votes": 13
+        }
+      ]
+    },
+    {
+      "position": "ENTERTAINMENT PREFECT",
+      "total_votes_cast": 0,
+      "total_candidates": 4,
+      "candidates": [
+        {
+          "candidate_id": "9b305326-35ab-440f-84de-f97ce4f6ebb3",
+          "candidate_name": "NAKITTO RHONEL RUTH",
+          "total_votes": 0,
+          "online_votes": 330,
+          "physical_votes": 69
+        },
+        {
+          "candidate_id": "cc1e41ad-90a8-4740-9dd6-ee2c21100a4d",
+          "candidate_name": "WASAJJA CHARLES DICKENS",
+          "total_votes": 0,
+          "online_votes": 112,
+          "physical_votes": 124
+        },
+        {
+          "candidate_id": "d4dc551e-2e31-4a4a-82b1-ca65ebe506fe",
+          "candidate_name": "KALIBBALA JANAT",
+          "total_votes": 0,
+          "online_votes": 58,
+          "physical_votes": 57
+        },
+        {
+          "candidate_id": "0721ccee-05b5-4909-b1cd-9a87194e5446",
+          "candidate_name": "NAKASUJJA SHANNAH",
+          "total_votes": 0,
+          "online_votes": 57,
+          "physical_votes": 55
+        }
+      ]
+    },
+    {
+      "position": "FURNITURE PREFECT S ",
+      "total_votes_cast": 0,
+      "total_candidates": 4,
+      "candidates": [
+        {
+          "candidate_id": "9df21105-7581-45ee-8ce4-fef62a9677b6",
+          "candidate_name": "MATENYITIA MERCY",
+          "total_votes": 0,
+          "online_votes": 178,
+          "physical_votes": 74
+        },
+        {
+          "candidate_id": "1128f604-473a-4c91-b063-9717a8bd2996",
+          "candidate_name": "BUYONDO ISRAEL",
+          "total_votes": 0,
+          "online_votes": 156,
+          "physical_votes": 121
+        },
+        {
+          "candidate_id": "4a6b9fc5-4619-4329-b17b-c36f409db58d",
+          "candidate_name": "NTAMBI REAGAN",
+          "total_votes": 0,
+          "online_votes": 153,
+          "physical_votes": 67
+        },
+        {
+          "candidate_id": "d0bfe2b8-1651-4229-8b66-77f8d15a6732",
+          "candidate_name": "KIMBUGWE MELVIN ELISHA",
+          "total_votes": 0,
+          "online_votes": 70,
+          "physical_votes": 65
+        }
+      ]
+    },
+    {
+      "position": "HEAD PREFECT",
+      "total_votes_cast": 0,
+      "total_candidates": 4,
+      "candidates": [
+        {
+          "candidate_id": "707be6be-9afb-4e3e-9eeb-9b14c43df9d6",
+          "candidate_name": "BALUKU ELEUTHERIUS BROGAN",
+          "total_votes": 0,
+          "online_votes": 231,
+          "physical_votes": 84
+        },
+        {
+          "candidate_id": "c52d4326-b329-471f-a973-a566f030d283",
+          "candidate_name": "NAMATA DIVINE HANNAH",
+          "total_votes": 0,
+          "online_votes": 216,
+          "physical_votes": 56
+        },
+        {
+          "candidate_id": "fddcd1af-3477-45b0-a0e5-c9f19a4345be",
+          "candidate_name": "NSUBUGA ERON",
+          "total_votes": 0,
+          "online_votes": 59,
+          "physical_votes": 128
+        },
+        {
+          "candidate_id": "e8629458-7717-4afc-8012-887c05763978",
+          "candidate_name": "KAJJUMBA BELLA",
+          "total_votes": 0,
+          "online_votes": 51,
+          "physical_votes": 46
+        }
+      ]
+    },
+    {
+      "position": "ICT PREFECT",
+      "total_votes_cast": 0,
+      "total_candidates": 4,
+      "candidates": [
+        {
+          "candidate_id": "d191dc3a-4e7f-4063-8310-2db636425562",
+          "candidate_name": "NANYUNJA RINAH NANA",
+          "total_votes": 0,
+          "online_votes": 193,
+          "physical_votes": 79
+        },
+        {
+          "candidate_id": "8ae99fc2-8ac3-4491-b372-195a862f9888",
+          "candidate_name": "HANNAH FRIEND KIZITO",
+          "total_votes": 0,
+          "online_votes": 142,
+          "physical_votes": 75
+        },
+        {
+          "candidate_id": "25ad3083-661d-498a-8a6d-1d1fabe18385",
+          "candidate_name": "OMODING ETHAN EYALAMA",
+          "total_votes": 0,
+          "online_votes": 121,
+          "physical_votes": 88
+        },
+        {
+          "candidate_id": "1712fe59-6b20-4157-81d6-bb66a3909afe",
+          "candidate_name": "AHUMUZA PRAISE ROBERT",
+          "total_votes": 0,
+          "online_votes": 104,
+          "physical_votes": 72
         }
       ]
     },
@@ -3411,591 +1832,282 @@
       "total_candidates": 4,
       "candidates": [
         {
-          "position": "TIME KEEPER",
-          "candidate_name": "NAMALA SALSABEL",
           "candidate_id": "827613e8-3d87-4900-8cce-23a238ead93b",
+          "candidate_name": "NAMALA SALSABEL",
+          "total_votes": 0,
           "online_votes": 259,
-          "physical_votes": 73,
-          "votes_by_gender": {
-            "male": 82,
-            "female": 177
-          },
-          "votes_by_stream": {
-            "P4-CUBS": 8,
-            "P6-VIBRANT": 31,
-            "P7-WINNERS": 24,
-            "P6-VICTORS": 25,
-            "P5-SUNSET": 33,
-            "P6-RADIANT": 37,
-            "P4-BUNNIES": 6,
-            "P5-SKYHIGH": 14,
-            "P4-SPARKLES": 11,
-            "P4-EAGLETS": 1,
-            "P7-ACHIEVERS": 19,
-            "P7-SUCCESS": 18,
-            "P5-SUNRISE": 32
-          }
+          "physical_votes": 73
         },
         {
-          "position": "TIME KEEPER",
+          "candidate_id": "5bc8f386-b780-4955-9c68-672df6dfd73a",
           "candidate_name": "ISINGOMA EDGAR",
-          "online_votes": 122,
-          "physical_votes": 68,
-          "votes_by_gender": {
-            "male": 89,
-            "female": 33
-          },
-          "votes_by_stream": {
-            "P6-VICTORS": 6,
-            "P7-WINNERS": 3,
-            "P4-CUBS": 21,
-            "P4-BUNNIES": 16,
-            "P5-SUNRISE": 3,
-            "P4-EAGLETS": 39,
-            "P4-SPARKLES": 15,
-            "P6-VIBRANT": 4,
-            "P6-RADIANT": 7,
-            "P5-SKYHIGH": 6,
-            "P5-SUNSET": 2
-          }
+          "total_votes": 0,
+          "online_votes": 123,
+          "physical_votes": 68
         },
         {
-          "position": "TIME KEEPER",
+          "candidate_id": "942f7387-a7e7-4b0c-a9f5-04006ed29dd2",
           "candidate_name": "NDAGIRE SARAH",
+          "total_votes": 0,
           "online_votes": 124,
-          "physical_votes": 88,
-          "votes_by_gender": {
-            "male": 31,
-            "female": 65
-          },
-          "votes_by_stream": {
-            "P7-SUCCESS": 19,
-            "P4-EAGLETS": 3,
-            "P7-WINNERS": 12,
-            "P5-SKYHIGH": 2,
-            "P7-ACHIEVERS": 7,
-            "P4-BUNNIES": 19,
-            "P4-CUBS": 14,
-            "P6-RADIANT": 3,
-            "P4-SPARKLES": 9,
-            "P5-SUNRISE": 6,
-            "P5-SUNSET": 1,
-            "P6-VIBRANT": 1
-          }
+          "physical_votes": 88
         },
         {
-          "position": "TIME KEEPER",
-          "candidate_name": "CHOL GAI",
           "candidate_id": "318e74da-7b00-4482-bf06-0189eef5a874",
-          "online_votes": 77,
-          "physical_votes": 80,
-          "votes_by_gender": {
-            "male": 59,
-            "female": 18
-          },
-          "votes_by_stream": {
-            "P5-SUNRISE": 12,
-            "P5-SKYHIGH": 17,
-            "P4-CUBS": 7,
-            "P7-ACHIEVERS": 3,
-            "P6-VIBRANT": 9,
-            "P4-BUNNIES": 2,
-            "P5-SUNSET": 7,
-            "P7-SUCCESS": 3,
-            "P6-VICTORS": 5,
-            "P4-SPARKLES": 5,
-            "P6-RADIANT": 4,
-            "P7-WINNERS": 3
-          }
+          "candidate_name": "CHOL GAI",
+          "total_votes": 0,
+          "online_votes": 78,
+          "physical_votes": 80
         }
       ]
     },
     {
-      "position": "UNIFORM & UNIFORMITY",
+      "position": "UNIFORM   UNIFORMITY",
       "total_votes_cast": 0,
       "total_candidates": 6,
       "candidates": [
         {
-          "position": "UNIFORM & UNIFORMITY",
+          "candidate_id": "c3107612-2b87-41d9-9e45-e497ffb588f3",
           "candidate_name": "NAMBUUSI VERONICA NAKATO",
+          "total_votes": 0,
           "online_votes": 217,
-          "physical_votes": 180,
-          "votes_by_gender": {
-            "male": 90,
-            "female": 127
-          },
-          "votes_by_stream": {
-            "P5-SUNRISE": 31,
-            "P6-RADIANT": 41,
-            "P6-VICTORS": 28,
-            "P4-SPARKLES": 3,
-            "P5-SKYHIGH": 21,
-            "P4-CUBS": 11,
-            "P5-SUNSET": 18,
-            "P6-VIBRANT": 26,
-            "P7-SUCCESS": 12,
-            "P4-EAGLETS": 4,
-            "P7-ACHIEVERS": 9,
-            "P4-BUNNIES": 6,
-            "P7-WINNERS": 7
-          }
+          "physical_votes": 180
         },
         {
-          "position": "UNIFORM & UNIFORMITY",
+          "candidate_id": "93f51074-0cd7-44a1-a361-da2280ac0963",
           "candidate_name": "MPAIRWE SERENE LYTON",
+          "total_votes": 0,
           "online_votes": 91,
-          "physical_votes": 33,
-          "votes_by_gender": {
-            "male": 33,
-            "female": 58
-          },
-          "votes_by_stream": {
-            "P7-WINNERS": 12,
-            "P4-SPARKLES": 15,
-            "P7-ACHIEVERS": 10,
-            "P4-EAGLETS": 10,
-            "P7-SUCCESS": 11,
-            "P6-VIBRANT": 8,
-            "P4-CUBS": 8,
-            "P6-VICTORS": 4,
-            "P4-BUNNIES": 5,
-            "P5-SUNRISE": 2,
-            "P5-SKYHIGH": 4,
-            "P6-RADIANT": 2
-          }
+          "physical_votes": 33
         },
         {
-          "position": "UNIFORM & UNIFORMITY",
+          "candidate_id": "e3a2723e-faa1-4382-8181-22de92cbbc4c",
           "candidate_name": "NAMUJJUZI WINFRED",
+          "total_votes": 0,
           "online_votes": 77,
-          "physical_votes": 20,
-          "votes_by_gender": {
-            "male": 42,
-            "female": 35
-          },
-          "votes_by_stream": {
-            "P6-VIBRANT": 5,
-            "P7-SUCCESS": 12,
-            "P7-WINNERS": 18,
-            "P5-SUNRISE": 6,
-            "P7-ACHIEVERS": 9,
-            "P5-SUNSET": 13,
-            "P4-SPARKLES": 4,
-            "P6-RADIANT": 1,
-            "P4-CUBS": 4,
-            "P4-BUNNIES": 1,
-            "P5-SKYHIGH": 3,
-            "P6-VICTORS": 1
-          }
+          "physical_votes": 20
         },
         {
-          "position": "UNIFORM & UNIFORMITY",
-          "candidate_name": "KAWEESA KIERAN",
           "candidate_id": "1dd36e3b-24e0-4ee8-b289-fa915ee24eb6",
-          "online_votes": 57,
-          "physical_votes": 25,
-          "votes_by_gender": {
-            "male": 44,
-            "female": 13
-          },
-          "votes_by_stream": {
-            "P5-SKYHIGH": 5,
-            "P4-CUBS": 10,
-            "P5-SUNSET": 3,
-            "P5-SUNRISE": 4,
-            "P6-VIBRANT": 3,
-            "P4-BUNNIES": 6,
-            "P4-SPARKLES": 17,
-            "P6-RADIANT": 3,
-            "P7-WINNERS": 1,
-            "P4-EAGLETS": 3,
-            "P6-VICTORS": 1,
-            "P7-SUCCESS": 1
-          }
+          "candidate_name": "KAWEESA KIERAN",
+          "total_votes": 0,
+          "online_votes": 58,
+          "physical_votes": 25
         },
         {
-          "position": "UNIFORM & UNIFORMITY",
+          "candidate_id": "46b426c3-bd68-4360-a2ac-16dbdb1cb4d6",
           "candidate_name": "NAKASIISA SHEILLA KABOGGOZA",
+          "total_votes": 0,
           "online_votes": 56,
-          "physical_votes": 20,
-          "votes_by_gender": {
-            "male": 29,
-            "female": 27
-          },
-          "votes_by_stream": {
-            "P7-WINNERS": 4,
-            "P4-EAGLETS": 26,
-            "P5-SUNRISE": 7,
-            "P6-VIBRANT": 2,
-            "P4-CUBS": 8,
-            "P7-SUCCESS": 3,
-            "P6-VICTORS": 1,
-            "P4-BUNNIES": 1,
-            "P4-SPARKLES": 1,
-            "P5-SKYHIGH": 1,
-            "P7-ACHIEVERS": 1,
-            "P6-RADIANT": 1
-          }
+          "physical_votes": 20
         },
         {
-          "position": "UNIFORM & UNIFORMITY",
+          "candidate_id": "26659747-902e-484f-a0c0-efa652c59d10",
           "candidate_name": "AKAMUTUHA JANET",
-          "online_votes": 53,
-          "physical_votes": 47,
-          "votes_by_gender": {
-            "male": 23,
-            "female": 30
-          },
-          "votes_by_stream": {
-            "P4-BUNNIES": 22,
-            "P5-SUNSET": 8,
-            "P4-CUBS": 9,
-            "P5-SUNRISE": 3,
-            "P6-VICTORS": 1,
-            "P5-SKYHIGH": 5,
-            "P7-SUCCESS": 1,
-            "P6-RADIANT": 2,
-            "P6-VIBRANT": 1,
-            "P7-ACHIEVERS": 1
-          }
-        }
-      ]
-    },
-    {
-      "position": "WELFARE PREFECT (MESS PREFECT)",
-      "total_votes_cast": 0,
-      "total_candidates": 4,
-      "candidates": [
-        {
-          "position": "WELFARE PREFECT (MESS PREFECT)",
-          "candidate_name": "SSEMOMBWE ANDERSON",
-          "online_votes": 204,
-          "physical_votes": 73,
-          "votes_by_gender": {
-            "male": 128,
-            "female": 76
-          },
-          "votes_by_stream": {
-            "P6-VIBRANT": 28,
-            "P5-SUNRISE": 40,
-            "P4-BUNNIES": 10,
-            "P4-EAGLETS": 19,
-            "P6-RADIANT": 29,
-            "P5-SUNSET": 23,
-            "P6-VICTORS": 14,
-            "P7-WINNERS": 8,
-            "P7-SUCCESS": 7,
-            "P5-SKYHIGH": 3,
-            "P4-SPARKLES": 9,
-            "P4-CUBS": 6,
-            "P7-ACHIEVERS": 8
-          }
-        },
-        {
-          "position": "WELFARE PREFECT (MESS PREFECT)",
-          "candidate_name": "NIMUKUNDA CYRUS",
-          "candidate_id": "49e495b6-18ec-400a-94d5-f358cc460533",
-          "online_votes": 127,
-          "physical_votes": 63,
-          "votes_by_gender": {
-            "male": 79,
-            "female": 48
-          },
-          "votes_by_stream": {
-            "P5-SKYHIGH": 32,
-            "P7-SUCCESS": 24,
-            "P6-VICTORS": 5,
-            "P7-ACHIEVERS": 13,
-            "P7-WINNERS": 24,
-            "P5-SUNSET": 9,
-            "P4-BUNNIES": 2,
-            "P5-SUNRISE": 7,
-            "P6-VIBRANT": 1,
-            "P4-EAGLETS": 6,
-            "P4-SPARKLES": 3,
-            "P6-RADIANT": 1
-          }
-        },
-        {
-          "position": "WELFARE PREFECT (MESS PREFECT)",
-          "candidate_name": "KASULE ELSEN ZAWADI",
-          "online_votes": 127,
-          "physical_votes": 74,
-          "votes_by_gender": {
-            "male": 38,
-            "female": 89
-          },
-          "votes_by_stream": {
-            "P6-VIBRANT": 11,
-            "P4-EAGLETS": 7,
-            "P4-BUNNIES": 15,
-            "P6-RADIANT": 16,
-            "P4-CUBS": 40,
-            "P5-SUNRISE": 3,
-            "P7-SUCCESS": 5,
-            "P6-VICTORS": 12,
-            "P4-SPARKLES": 8,
-            "P5-SKYHIGH": 1,
-            "P5-SUNSET": 4,
-            "P7-WINNERS": 3,
-            "P7-ACHIEVERS": 2
-          }
-        },
-        {
-          "position": "WELFARE PREFECT (MESS PREFECT)",
-          "candidate_name": "NAKALUNGI GABRIELLA IVANNAH",
-          "online_votes": 91,
-          "physical_votes": 103,
-          "votes_by_gender": {
-            "male": 14,
-            "female": 77
-          },
-          "votes_by_stream": {
-            "P4-SPARKLES": 19,
-            "P4-BUNNIES": 14,
-            "P6-RADIANT": 5,
-            "P4-EAGLETS": 11,
-            "P7-SUCCESS": 4,
-            "P7-ACHIEVERS": 6,
-            "P5-SKYHIGH": 3,
-            "P6-VICTORS": 5,
-            "P5-SUNRISE": 3,
-            "P7-WINNERS": 7,
-            "P6-VIBRANT": 5,
-            "P5-SUNSET": 5,
-            "P4-CUBS": 4
-          }
+          "total_votes": 0,
+          "online_votes": 54,
+          "physical_votes": 47
         }
       ]
     }
   ]
 };
 
-let pages = [];
-let allPages = [];
-let currentPage = 0;
-let isTransitioning = false;
-let autoScrollTimer;
-let modalTimer;
-let modalCountdownTimer;
-let congratsCountdownTimer;
-let modalCountdown = 10;
-let congratsCountdown = 10;
-let showingModal = false;
-let showingCongratsModal = false;
-let activeAnimations = [];
+        let pages = [];
+        let allPages = [];
+        let currentPage = 0;
+        let isTransitioning = false;
+        let autoScrollTimer;
+        let modalTimer;
+        let modalCountdownTimer;
+        let modalCountdown = 10;
+        let showingModal = false;
 
-const transitions = [
-    { in: 'slideInRight', out: 'slideOutLeft' },
-    { in: 'slideInLeft', out: 'slideOutRight' },
-    { in: 'bounceIn', out: 'bounceOut' },
-    { in: 'flipInY', out: 'flipOutY' },
-    { in: 'flipInX', out: 'flipOutX' },
-    { in: 'zoomIn', out: 'zoomOut' },
-    { in: 'swipeInUp', out: 'swipeOutDown' },
-    { in: 'morphIn', out: 'morphOut' }
-];
+        const transitions = [
+            { in: 'slideInRight', out: 'slideOutLeft' },
+            { in: 'slideInLeft', out: 'slideOutRight' },
+            { in: 'bounceIn', out: 'bounceOut' },
+            { in: 'flipInY', out: 'flipOutY' },
+            { in: 'flipInX', out: 'flipOutX' },
+            { in: 'zoomIn', out: 'zoomOut' },
+            { in: 'swipeInUp', out: 'swipeOutDown' },
+            { in: 'morphIn', out: 'morphOut' }
+        ];
 
-function getInitials(name) {
-    return name.split(' ').map(word => word[0]).join('').substring(0, 2);
-}
+        function getInitials(name) {
+            return name.split(' ').map(word => word[0]).join('').substring(0, 2);
+        }
 
-function getPositionLabel(position) {
-    const labels = {
-        1: '1st',
-        2: '2nd',
-        3: '3rd'
-    };
-    return labels[position] || `${position}th`;
-}
+        function getPositionLabel(position) {
+            const labels = {
+                1: '1st',
+                2: '2nd',
+                3: '3rd'
+            };
+            return labels[position] || `${position}th`;
+        }
 
-function getCandidatePhotoUrl(candidateId, name) {
-    const specialCases = {
-        '1dd36e3b-24e0-4ee8-b289-fa915ee24eb6': 'https://fresh-teacher.github.io/gloriouschool/KAWEESA%20KEIRAN.JPG',
-        'e8629458-7717-4afc-8012-887c05763978': 'https://fresh-teacher.github.io/gloriouschool/KAJJUMBA%20BELLA%20COLYTE.JPG',
-        '49e495b6-18ec-400a-94d5-f358cc460533': 'https://fresh-teacher.github.io/gloriouschool/NIMUKUNDA%20CYRUS%20MURAMIRA.JPG',
-        '7399d5ba-188e-4ebb-b722-69078283a7b2': 'https://fresh-teacher.github.io/gloriouschool/NANUNGI%20DRUCILA%20LUTEETE.JPG',
-        '827613e8-3d87-4900-8cce-23a238ead93b': 'https://fresh-teacher.github.io/gloriouschool/NAMALA%20SALASBEL.JPG',
-        '318e74da-7b00-4482-bf06-0189eef5a874': 'https://fresh-teacher.github.io/gloriouschool/CHOL%20GAI%20ALIER%20NHIAL.JPG',
-        'd4dc551e-2e31-4a4a-82b1-ca65ebe506fe': 'https://niyikondibenoit-cpu.github.io/glorious-gateway-54305-90485-86962-1001-77825/janat.jpg',
-        '0721ccee-05b5-4909-b1cd-9a87194e5446': 'https://niyikondibenoit-cpu.github.io/glorious-gateway-54305-90485-86962-1001-77825/shannah.jpg',
-        'cc1e41ad-90a8-4740-9dd6-ee2c21100a4d': 'https://fresh-teacher.github.io/gloriouschool/WASSAJJA%20DICKENS%20CHARLES.JPG'
-    };
-     
-    if (candidateId && specialCases[candidateId]) {
-        return specialCases[candidateId];
-    }
-    
-    const baseUrl = 'https://fresh-teacher.github.io/gloriouschool';
-    const encodedName = encodeURIComponent(name);
-    return `${baseUrl}/${encodedName}.JPG`;
-}
+        function getCandidatePhotoUrl(candidateId, name) {
+            const specialCases = {
+                '1dd36e3b-24e0-4ee8-b289-fa915ee24eb6': 'https://fresh-teacher.github.io/gloriouschool/KAWEESA%20KEIRAN.JPG',
+                'e8629458-7717-4afc-8012-887c05763978': 'https://fresh-teacher.github.io/gloriouschool/KAJJUMBA%20BELLA%20COLYTE.JPG',
+                '49e495b6-18ec-400a-94d5-f358cc460533': 'https://fresh-teacher.github.io/gloriouschool/NIMUKUNDA%20CYRUS%20MURAMIRA.JPG',
+                '7399d5ba-188e-4ebb-b722-69078283a7b2': 'https://fresh-teacher.github.io/gloriouschool/NANUNGI%20DRUCILA%20LUTEETE.JPG',
+                '827613e8-3d87-4900-8cce-23a238ead93b': 'https://fresh-teacher.github.io/gloriouschool/NAMALA%20SALASBEL.JPG',
+                '318e74da-7b00-4482-bf06-0189eef5a874': 'https://fresh-teacher.github.io/gloriouschool/CHOL%20GAI%20ALIER%20NHIAL.JPG',
+                'd4dc551e-2e31-4a4a-82b1-ca65ebe506fe': 'https://niyikondibenoit-cpu.github.io/glorious-gateway-54305-90485-86962-1001-77825/janat.jpg',
+                '0721ccee-05b5-4909-b1cd-9a87194e5446': 'https://niyikondibenoit-cpu.github.io/glorious-gateway-54305-90485-86962-1001-77825/shannah.jpg',
+                'cc1e41ad-90a8-4740-9dd6-ee2c21100a4d': 'https://fresh-teacher.github.io/gloriouschool/WASSAJJA%20DICKENS%20CHARLES.JPG'
+            };
+             
+            if (candidateId && specialCases[candidateId]) {
+                return specialCases[candidateId];
+            }
+            
+            const baseUrl = 'https://fresh-teacher.github.io/gloriouschool';
+            const encodedName = encodeURIComponent(name);
+            return `${baseUrl}/${encodedName}.JPG`;
+        }
 
-function createPageHTML(page, pageIndex) {
-    return `
-        <div class="page-content ${pageIndex === 0 ? 'active' : ''}" data-page="${pageIndex}">
-            <div class="header">
-                <h1>🗳️ Final Election Results</h1>
-                <p class="post-name">${page.title}</p>
-            </div>
-            <div class="results-container" data-page-index="${pageIndex}">
-                ${page.candidates.map((candidate, i) => `
-                    <div class="candidate-card position-${i + 1}" data-position="${i + 1}" data-votes="${candidate.votes}">
-                        ${i === 0 ? '<div class="crown-emoji">👑</div>' : ''}
-                        <div class="position-ribbon">${getPositionLabel(i + 1)}</div>
-                        <div class="photo-container">
-                            <span class="initials">${candidate.initials}</span>
-                            <img src="${candidate.photoUrl}" alt="${candidate.name}" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'">
-                        </div>
-                        <div class="votes-display">
-                            <h3 class="candidate-name">${candidate.name}</h3>
-                            <div class="vote-row">
-                                <span class="votes-label">Online Votes:</span>
-                                <span class="votes-count" data-target="${candidate.onlineVotes}">0</span>
-                            </div>
-                            <div class="vote-row">
-                                <span class="votes-label">Physical Votes:</span>
-                                <span class="votes-count" data-target="${candidate.physicalVotes}">0</span>
-                            </div>
-                            <div class="vote-row total">
-                                <span class="votes-label total-label">Total Votes:</span>
-                                <span class="votes-count total-count" data-target="${candidate.votes}">0</span>
-                            </div>
-                        </div>
+        function createPageHTML(page, pageIndex) {
+            return `
+                <div class="page-content ${pageIndex === 0 ? 'active' : ''}" data-page="${pageIndex}">
+                    <div class="header">
+                        <h1>🗳️ Final Election Results</h1>
+                        <p class="post-name">${page.title}</p>
                     </div>
-                `).join('')}
-            </div>
-        </div>
-    `;
-}
-
-function calculateTotalVotes(data) {
-    let overallTotal = 0;
-    
-    data.positions.forEach(position => {
-        let positionTotal = 0;
-        
-        position.candidates.forEach(candidate => {
-            const onlineVotes = candidate.online_votes || 0;
-            const physicalVotes = candidate.physical_votes || 0;
-            
-            candidate.total_votes = onlineVotes + physicalVotes;
-            positionTotal += candidate.total_votes;
-            
-            candidate.online_votes = onlineVotes;
-            candidate.physical_votes = physicalVotes;
-        });
-        
-        position.candidates.sort((a, b) => b.total_votes - a.total_votes);
-        
-        position.total_votes_cast = positionTotal;
-        overallTotal += positionTotal;
-    });
-    
-    data.total_votes_across_all_positions = overallTotal;
-    
-    return data;
-}
-
-const updatedData = calculateTotalVotes(ELECTORAL_DATA);
-console.log('Total votes calculated:', updatedData.total_votes_across_all_positions);
-
-// Optimized animation function with cancellation support
-function animateCount(element, start, end, duration) {
-    // Cancel any existing animation on this element
-    if (element._animationId) {
-        cancelAnimationFrame(element._animationId);
-    }
-    
-    const startTime = Date.now();
-    const range = end - start;
-    
-    function updateCount() {
-        const elapsed = Date.now() - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const easeOutQuad = progress * (2 - progress);
-        const current = Math.floor(start + (range * easeOutQuad));
-        
-        element.textContent = current.toLocaleString();
-        
-        if (progress < 1) {
-            element._animationId = requestAnimationFrame(updateCount);
-        } else {
-            element.textContent = end.toLocaleString();
-            element._animationId = null;
+                    <div class="results-container" data-page-index="${pageIndex}">
+                        ${page.candidates.map((candidate, i) => `
+                            <div class="candidate-card position-${i + 1}" data-position="${i + 1}" data-votes="${candidate.votes}">
+                                ${i === 0 ? '<div class="crown-emoji">👑</div>' : ''}
+                                <div class="position-ribbon">${getPositionLabel(i + 1)}</div>
+                                <div class="photo-container">
+                                    <span class="initials">${candidate.initials}</span>
+                                    <img src="${candidate.photoUrl}" alt="${candidate.name}" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'">
+                                </div>
+                                <div class="votes-display">
+                                    <h3 class="candidate-name">${candidate.name}</h3>
+                                    <div class="vote-row">
+                                        <span class="votes-label">Online Votes:</span>
+                                        <span class="votes-count" data-target="${candidate.onlineVotes}">0</span>
+                                    </div>
+                                    <div class="vote-row">
+                                        <span class="votes-label">Physical Votes:</span>
+                                        <span class="votes-count" data-target="${candidate.physicalVotes}">0</span>
+                                    </div>
+                                    <div class="vote-row total">
+                                        <span class="votes-label total-label">Total Votes:</span>
+                                        <span class="votes-count total-count" data-target="${candidate.votes}">0</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
         }
-    }
-    
-    element._animationId = requestAnimationFrame(updateCount);
-}
 
-// Cancel all active animations
-function cancelAllAnimations() {
-    document.querySelectorAll('[data-target]').forEach(el => {
-        if (el._animationId) {
-            cancelAnimationFrame(el._animationId);
-            el._animationId = null;
+        function calculateTotalVotes(data) {
+            let overallTotal = 0;
+            
+            data.positions.forEach(position => {
+                let positionTotal = 0;
+                
+                position.candidates.forEach(candidate => {
+                    candidate.total_votes = candidate.online_votes + candidate.physical_votes;
+                    positionTotal += candidate.total_votes;
+                });
+                
+                // Sort candidates by total votes (highest to lowest)
+                position.candidates.sort((a, b) => b.total_votes - a.total_votes);
+                
+                position.total_votes_cast = positionTotal;
+                overallTotal += positionTotal;
+            });
+            
+            data.total_votes_across_all_positions = overallTotal;
+            
+            return data;
         }
-    });
-}
 
-function animatePageCounts(pageIndex) {
-    const pageContent = document.querySelector(`.page-content[data-page="${pageIndex}"]`);
-    if (!pageContent) return;
+        const updatedData = calculateTotalVotes(ELECTORAL_DATA);
+        console.log('Total votes calculated:', updatedData.total_votes_across_all_positions);
 
-    const voteCountElements = pageContent.querySelectorAll('.votes-count');
-    
-    // Use shorter delays and batch updates
-    voteCountElements.forEach((element, index) => {
-        const targetVotes = parseInt(element.dataset.target);
-        setTimeout(() => {
-            animateCount(element, 0, targetVotes, 1200); // Reduced from 1500
-        }, index * 50); // Reduced from 100
-    });
-}
+        function animateCount(element, start, end, duration) {
+            const startTime = Date.now();
+            const range = end - start;
+            
+            function updateCount() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const easeOutQuad = progress * (2 - progress);
+                const current = Math.floor(start + (range * easeOutQuad));
+                
+                element.textContent = current.toLocaleString();
+                
+                if (progress < 1) {
+                    requestAnimationFrame(updateCount);
+                } else {
+                    element.textContent = end.toLocaleString();
+                }
+            }
+            
+            requestAnimationFrame(updateCount);
+        }
 
-// Optimized confetti with fewer particles and auto-cleanup
-function createConfetti() {
+        function animatePageCounts(pageIndex) {
+            const pageContent = document.querySelector(`.page-content[data-page="${pageIndex}"]`);
+            if (!pageContent) return;
+
+            const voteCountElements = pageContent.querySelectorAll('.votes-count');
+            
+            voteCountElements.forEach((element, index) => {
+                const targetVotes = parseInt(element.dataset.target);
+                setTimeout(() => {
+                    animateCount(element, 0, targetVotes, 1500);
+                }, index * 100);
+            });
+        }
+
+        function createConfetti() {
     const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#ff69b4'];
-    const confettiCount = 80; // Reduced from 150
-    const fragment = document.createDocumentFragment();
+    const confettiCount = 150;
     
     for (let i = 0; i < confettiCount; i++) {
         const confetti = document.createElement('div');
         confetti.className = 'confetti';
         confetti.style.left = Math.random() * 100 + 'vw';
         confetti.style.top = '-10px';
-        confetti.style.animationDelay = Math.random() * 2 + 's'; // Reduced from 3s
-        confetti.style.animationDuration = (Math.random() * 2 + 2) + 's'; // Reduced from 3+2
+        confetti.style.animationDelay = Math.random() * 3 + 's';
+        confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
         confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-        fragment.appendChild(confetti);
+        document.body.appendChild(confetti);
+        
+        // Remove confetti after animation completes
+        const duration = parseFloat(confetti.style.animationDuration) * 1000;
+        const delay = parseFloat(confetti.style.animationDelay) * 1000;
+        setTimeout(() => {
+            confetti.remove();
+        }, duration + delay);
     }
-    
-    document.body.appendChild(fragment);
-    
-    // Clean up all confetti after max duration
-    setTimeout(() => {
-        document.querySelectorAll('.confetti').forEach(c => c.remove());
-    }, 5000);
 }
 
-// Optimized modal vote animation with batching
+// Add this function to animate modal vote counts:
 function animateModalVotes() {
-    const voteElements = [
-        document.getElementById('onlineTotal'),
-        document.getElementById('physicalTotal'),
-        document.getElementById('grandTotal')
-    ];
+    const modal = document.getElementById('fullscreenModal');
+    const voteCountElements = modal.querySelectorAll('.modal-vote-count');
     
-    voteElements.forEach((element, index) => {
-        const targetVotes = parseInt(element.dataset.target);
+    voteCountElements.forEach((element, index) => {
+        const targetVotes = parseInt(element.textContent.replace(/,/g, ''));
+        element.textContent = '0';
         
         setTimeout(() => {
-            animateCount(element, 0, targetVotes, 1200); // Reduced from 1500
-        }, index * 150); // Reduced from 200
+            animateCount(element, 0, targetVotes, 1500);
+        }, index * 150);
     });
 }
 
+// Update the showModal function to show candidates sequentially:
 let currentCandidateIndex = 0;
 
 function showModal(pageIndex) {
@@ -4010,326 +2122,143 @@ function showModal(pageIndex) {
 
 function showCandidateInModal(page, candidateIndex) {
     const modal = document.getElementById('fullscreenModal');
-    const modalBody = document.querySelector('.modal-body-optimized');
+    const modalCandidates = document.getElementById('modalCandidates');
+    const modalPositionTitle = document.getElementById('modalPositionTitle');
+    
     const candidate = page.candidates[candidateIndex];
-    const isWinner = candidateIndex === 0;
+const isWinner = candidateIndex === 0;
+
+// Get rank badge based on position
+const rankBadges = {
+    0: '🥇 Winner',
+    1: '🥈 2nd Place',
+    2: '🥉 3rd Place'
+};
+const rankBadge = rankBadges[candidateIndex] || `${getPositionLabel(candidateIndex + 1)} Place`;
+
+// Update modal header based on whether it's the winner or not
+const modalHeader = document.querySelector('.modal-header h2');
+const goatSubtitle = document.querySelector('.modal-header p[style*="font-size: 0.9rem"]');
+if (isWinner) {
+    modalHeader.style.display = 'block';
+    goatSubtitle.style.display = 'block';
+} else {
+    modalHeader.style.display = 'none';
+    goatSubtitle.style.display = 'none';
+}
+
+modalPositionTitle.textContent = page.title;
     
-    const slideDirection = candidateIndex % 2 === 0 ? 'right' : 'left';
-    
-    if (candidateIndex > 0) {
-        // Cancel any ongoing animations before transition
-        cancelAllAnimations();
-        
-        modalBody.classList.add(`slide-out-${slideDirection === 'right' ? 'left' : 'right'}`);
-        
-        setTimeout(() => {
-            modalBody.classList.remove(`slide-out-${slideDirection === 'right' ? 'left' : 'right'}`);
-            updateModalContent(page, candidate, candidateIndex, isWinner);
-            modalBody.classList.add(`slide-in-${slideDirection}`);
-            
-            setTimeout(() => {
-                modalBody.classList.remove(`slide-in-${slideDirection}`);
-            }, 400); // Reduced from 500
-        }, 400); // Reduced from 500
-    } else {
-        updateModalContent(page, candidate, candidateIndex, isWinner);
+    // Build votes breakdown HTML if data exists
+    let votesBreakdownHTML = '';
+    if (candidate.votesByGender) {
+        votesBreakdownHTML += `
+            <div class="modal-vote-section">
+                <h4>Votes by Gender</h4>
+                <div class="modal-vote-row">
+                    <span class="modal-vote-label">Male:</span>
+                    <span class="modal-vote-count">${candidate.votesByGender.male.toLocaleString()}</span>
+                </div>
+                <div class="modal-vote-row">
+                    <span class="modal-vote-label">Female:</span>
+                    <span class="modal-vote-count">${candidate.votesByGender.female.toLocaleString()}</span>
+                </div>
+            </div>
+        `;
     }
+    
+    if (candidate.votesByStream) {
+        const streamEntries = Object.entries(candidate.votesByStream).sort((a, b) => b[1] - a[1]);
+        votesBreakdownHTML += `
+            <div class="modal-vote-section">
+                <h4>Votes by Stream</h4>
+                <div class="stream-votes-grid">
+                    ${streamEntries.map(([stream, votes]) => `
+                        <div class="modal-vote-row stream-vote">
+                            <span class="modal-vote-label">${stream}:</span>
+                            <span class="modal-vote-count">${votes.toLocaleString()}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    modalCandidates.innerHTML = `
+        <div class="modal-candidate-section ${isWinner ? 'winner' : ''}">
+            <div class="modal-candidate-grid">
+                <div class="modal-details">
+                    <div class="modal-rank-badge">${rankBadge}</div>
+                    <h3 class="modal-candidate-name">${candidate.name}</h3>
+                    <div class="modal-vote-section">
+                        <h4>Vote Summary</h4>
+                        <div class="modal-vote-row">
+                            <span class="modal-vote-label">Online Votes:</span>
+                            <span class="modal-vote-count">${candidate.onlineVotes.toLocaleString()}</span>
+                        </div>
+                        <div class="modal-vote-row">
+                            <span class="modal-vote-label">Physical Votes:</span>
+                            <span class="modal-vote-count">${candidate.physicalVotes.toLocaleString()}</span>
+                        </div>
+                        <div class="modal-vote-row total">
+                            <span class="modal-vote-label">Total Votes:</span>
+                            <span class="modal-vote-count">${candidate.votes.toLocaleString()}</span>
+                        </div>
+                    </div>
+                    ${votesBreakdownHTML}
+                </div>
+                <div class="modal-photo-container-large">
+                    <span class="initials">${candidate.initials}</span>
+                    <img src="${candidate.photoUrl}" alt="${candidate.name}" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'">
+                </div>
+            </div>
+        </div>
+    `;
     
     if (!modal.classList.contains('active')) {
         modal.classList.add('active');
     }
     
+    // Create confetti only for winner
     if (isWinner) {
         setTimeout(() => {
             createConfetti();
         }, 100);
     }
     
-    clearTimeout(modalTimer);
-    
-    modalTimer = setTimeout(() => {
-        if (candidateIndex < page.candidates.length - 1) {
-            showCandidateInModal(page, candidateIndex + 1);
-        } else {
-            hideModal();
-            setTimeout(() => {
-                showCongratulationsModal(page);
-            }, 500);
-        }
-    }, 20000);
-}
-
-function updateModalContent(page, candidate, candidateIndex, isWinner) {
-    // Batch DOM updates
-    const updates = [];
-    
-    const modalHeaderTitle = document.getElementById('modalHeaderTitle');
-    const modalHeaderSubtitle = document.getElementById('modalHeaderSubtitle');
-    if (isWinner) {
-        modalHeaderTitle.style.display = 'block';
-        modalHeaderSubtitle.style.display = 'block';
-    } else {
-        modalHeaderTitle.style.display = 'none';
-        modalHeaderSubtitle.style.display = 'none';
-    }
-    
-    document.getElementById('modalPositionTitle').textContent = page.title;
-    
-    const rankBadges = {
-        0: '🥇',
-        1: '🥈',
-        2: '🥉'
-    };
-    const rankBadge = rankBadges[candidateIndex] || `${candidateIndex + 1}th`;
-    document.getElementById('candidateRankBadge').textContent = rankBadge;
-    
-    document.getElementById('candidateInitials').textContent = candidate.initials;
-    const photoElement = document.getElementById('candidatePhoto');
-    photoElement.src = candidate.photoUrl;
-    photoElement.alt = candidate.name;
-    photoElement.onload = function() {
-        document.getElementById('candidateInitials').style.display = 'none';
-    };
-    photoElement.onerror = function() {
-        this.style.display = 'none';
-        document.getElementById('candidateInitials').style.display = 'flex';
-    };
-    
-    document.getElementById('candidateName').textContent = candidate.name;
-    
-    if (candidate.votesByGender) {
-        const maleVotes = candidate.votesByGender.male;
-        const femaleVotes = candidate.votesByGender.female;
-        
-        const maleStatsEl = document.getElementById('maleStats');
-        const femaleStatsEl = document.getElementById('femaleStats');
-        
-        maleStatsEl.innerHTML = `Voted by <strong class="gender-vote-count" data-target="${maleVotes}">0</strong> Boy${maleVotes !== 1 ? 's' : ''} online`;
-femaleStatsEl.innerHTML = `Voted by <strong class="gender-vote-count" data-target="${femaleVotes}">0</strong> Girl${femaleVotes !== 1 ? 's' : ''} online`;
-  
-        setTimeout(() => {
-            const genderCounts = document.querySelectorAll('.gender-vote-count');
-            genderCounts.forEach((el, index) => {
-                const target = parseInt(el.dataset.target);
-                el.classList.add('animated');
-                setTimeout(() => {
-                    animateCount(el, 0, target, 800); // Reduced from 1000
-                }, index * 150); // Reduced from 200
-            });
-        }, 200); // Reduced from 300
-    }
-    
-    // Build Stream Analysis Grid Table
-    const streamGridTable = document.getElementById('streamGridTable');
-    streamGridTable.innerHTML = '';
-    
-    if (candidate.votesByStream) {
-        const streamEntries = Object.entries(candidate.votesByStream).sort((a, b) => b[1] - a[1]);
-        const totalStreams = streamEntries.length;
-        
-        let columns = 3;
-        if (totalStreams <= 6) columns = 2;
-        if (totalStreams <= 3) columns = 1;
-        
-        const rows = Math.ceil(totalStreams / columns);
-        const fragment = document.createDocumentFragment();
-        
-        for (let row = 0; row < rows; row++) {
-            const tr = document.createElement('tr');
-            
-            for (let col = 0; col < columns; col++) {
-                const index = row * columns + col;
-                
-                if (index < totalStreams) {
-                    const [stream, votes] = streamEntries[index];
-                    
-                    const nameCell = document.createElement('td');
-                    nameCell.className = 'stream-name';
-                    nameCell.textContent = stream;
-                    tr.appendChild(nameCell);
-                    
-                    const voteCell = document.createElement('td');
-                    voteCell.className = 'vote-count stream-vote-count';
-                    voteCell.dataset.target = votes;
-                    voteCell.textContent = '0';
-                    tr.appendChild(voteCell);
-                } else {
-                    const emptyName = document.createElement('td');
-                    emptyName.style.border = 'none';
-                    emptyName.style.background = 'transparent';
-                    tr.appendChild(emptyName);
-                    
-                    const emptyVote = document.createElement('td');
-                    emptyVote.style.border = 'none';
-                    emptyVote.style.background = 'transparent';
-                    tr.appendChild(emptyVote);
-                }
-            }
-            fragment.appendChild(tr);
-        }
-        
-        streamGridTable.appendChild(fragment);
-        
-        setTimeout(() => {
-            const streamVoteCounts = document.querySelectorAll('.stream-vote-count');
-            streamVoteCounts.forEach((el, index) => {
-                const target = parseInt(el.dataset.target);
-                setTimeout(() => {
-                    el.classList.add('animated');
-                    animateCount(el, 0, target, 1000); // Reduced from 1200
-                }, index * 60); // Reduced from 80
-            });
-        }, 400); // Reduced from 500
-    }
-    
-    document.getElementById('onlineTotal').dataset.target = candidate.onlineVotes;
-    document.getElementById('onlineTotal').textContent = '0';
-    document.getElementById('physicalTotal').dataset.target = candidate.physicalVotes;
-    document.getElementById('physicalTotal').textContent = '0';
-    document.getElementById('grandTotal').dataset.target = candidate.votes;
-    document.getElementById('grandTotal').textContent = '0';
-    
+    // Animate vote counts in modal
     setTimeout(() => {
         animateModalVotes();
-    }, 500); // Reduced from 700
-}
-
-function showCongratulationsModal(page) {
-    if (page.candidates.length < 2) {
-        setTimeout(() => {
-            nextPage();
-        }, 500);
-        return;
-    }
-    
-    showingCongratsModal = true;
-    const modal = document.getElementById('congratulationsModal');
-    const congratsCandidates = document.getElementById('congratsCandidates');
-    const congratsPositionTitle = document.getElementById('congratsPositionTitle');
-    
-    const firstCandidate = page.candidates[0];
-    const lastCandidate = page.candidates[page.candidates.length - 1];
-    
-    congratsPositionTitle.textContent = page.title;
-    
-    const congratsGif = 'goat-a-goat.gif'; 
-    const comfortImage = 'a-goat-pilgor.gif';
-    
-    congratsCandidates.innerHTML = `
-        <div class="congrats-candidate-section winner">
-            <div class="winner-crown">👑</div>
-            <div class="congrats-candidate-grid">
-                <div class="congrats-candidate-info">
-                    <div class="congrats-photo-container">
-                        <span class="initials">${firstCandidate.initials}</span>
-                        <img src="${firstCandidate.photoUrl}" alt="${firstCandidate.name}" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'">
-                    </div>
-                    <div class="congrats-details">
-                        <div class="congrats-rank-badge">🥇 Winner</div>
-                        <h3 class="congrats-candidate-name">${firstCandidate.name}</h3>
-                        <div class="congrats-vote-row">
-                            <span class="congrats-vote-label">Online Votes:</span>
-                            <span class="congrats-vote-count">${firstCandidate.onlineVotes.toLocaleString()}</span>
-                        </div>
-                        <div class="congrats-vote-row">
-                            <span class="congrats-vote-label">Physical Votes:</span>
-                            <span class="congrats-vote-count">${firstCandidate.physicalVotes.toLocaleString()}</span>
-                        </div>
-                        <div class="congrats-vote-row total">
-                            <span class="congrats-vote-label">Total Votes:</span>
-                            <span class="congrats-vote-count">${firstCandidate.votes.toLocaleString()}</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="congrats-celebration">
-                    <img src="${congratsGif}" alt="Congratulations">
-                </div>
-            </div>
-        </div>
-
-        <div class="congrats-candidate-section last">
-            <div class="congrats-candidate-grid">
-                <div class="congrats-candidate-info">
-                    <div class="congrats-photo-container">
-                        <span class="initials">${lastCandidate.initials}</span>
-                        <img src="${lastCandidate.photoUrl}" alt="${lastCandidate.name}" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'">
-                    </div>
-                    <div class="congrats-details">
-                        <div class="congrats-rank-badge">Last Position</div>
-                        <h3 class="congrats-candidate-name">${lastCandidate.name}</h3>
-                        <div class="congrats-vote-row">
-                            <span class="congrats-vote-label">Online Votes:</span>
-                            <span class="congrats-vote-count">${lastCandidate.onlineVotes.toLocaleString()}</span>
-                        </div>
-                        <div class="congrats-vote-row">
-                            <span class="congrats-vote-label">Physical Votes:</span>
-                            <span class="congrats-vote-count">${lastCandidate.physicalVotes.toLocaleString()}</span>
-                        </div>
-                        <div class="congrats-vote-row total">
-                            <span class="congrats-vote-label">Total Votes:</span>
-                            <span class="congrats-vote-count">${lastCandidate.votes.toLocaleString()}</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="congrats-celebration">
-                    <img src="${comfortImage}" alt="Better luck next time">
-                </div>
-            </div>
-        </div>
-    `;
-    
-    modal.classList.add('active');
-    
-    // Preload GIFs to ensure they play
-    const gifImages = modal.querySelectorAll('.congrats-celebration img');
-    gifImages.forEach(img => {
-        // Force reload to restart GIF
-        const src = img.src;
-        img.src = '';
-        img.src = src;
-    });
-    
-    congratsCountdown = 10;
-    document.getElementById('congratsCountdown').textContent = congratsCountdown;
-    
-    clearInterval(congratsCountdownTimer);
-    congratsCountdownTimer = setInterval(() => {
-        congratsCountdown--;
-        document.getElementById('congratsCountdown').textContent = congratsCountdown;
-        
-        if (congratsCountdown <= 0) {
-            clearInterval(congratsCountdownTimer);
-        }
-    }, 1000);
+    }, 300);
     
     clearTimeout(modalTimer);
-    modalTimer = setTimeout(() => {
-        hideCongratulationsModal();
-    }, 10000);
-}
 
-function hideCongratulationsModal() {
-    const modal = document.getElementById('congratulationsModal');
-    modal.style.animation = 'modalFadeOut 0.5s ease-in-out';
-    
-    setTimeout(() => {
-        modal.classList.remove('active');
-        modal.style.animation = '';
-        showingCongratsModal = false;
-        
+// Show this candidate for 10 seconds, then move to next
+modalTimer = setTimeout(() => {
+    if (candidateIndex < page.candidates.length - 1) {
+        // Slide out current candidate to the left
+        modalCandidates.style.animation = 'slideOutLeft 0.5s ease-in-out';
         setTimeout(() => {
-            nextPage();
+            modalCandidates.style.animation = '';
+            showCandidateInModal(page, candidateIndex + 1);
+            // Slide in next candidate from the right
+            modalCandidates.style.animation = 'slideInRight 0.5s ease-in-out';
+            setTimeout(() => {
+                modalCandidates.style.animation = '';
+            }, 500);
         }, 500);
-    }, 500);
+    } else {
+        // All candidates shown, hide modal
+        hideModal();
+    }
+}, 10000);
 }
 
 function hideModal() {
     const modal = document.getElementById('fullscreenModal');
     
-    // Cancel all animations before hiding
-    cancelAllAnimations();
-    
-    const confettiElements = document.querySelectorAll('.confetti');
+    // Clear any remaining confetti
+    const confettiElements = modal.querySelectorAll('.confetti');
     confettiElements.forEach(c => c.remove());
     
     modal.style.animation = 'modalFadeOut 0.5s ease-in-out';
@@ -4339,237 +2268,229 @@ function hideModal() {
         modal.style.animation = '';
         showingModal = false;
         
+        // Move to next page after modal closes
         setTimeout(() => {
             nextPage();
         }, 500);
     }, 500);
 }
 
-function initializePages() {
-    if (pages.length === 0) return;
+        function initializePages() {
+            if (pages.length === 0) return;
 
-    const container = document.getElementById('pagesContainer');
-    const pagination = document.getElementById('pagination');
-    
-    container.innerHTML = pages.map((page, index) => createPageHTML(page, index)).join('');
-    
-    if (pages.length > 1) {
-        pagination.innerHTML = pages.map((_, index) => 
-            `<button class="page-btn ${index === 0 ? 'active' : ''}" data-page="${index}">${index + 1}</button>`
-        ).join('');
+            const container = document.getElementById('pagesContainer');
+            const pagination = document.getElementById('pagination');
+            
+            container.innerHTML = pages.map((page, index) => createPageHTML(page, index)).join('');
+            
+            if (pages.length > 1) {
+                pagination.innerHTML = pages.map((_, index) => 
+                    `<button class="page-btn ${index === 0 ? 'active' : ''}" data-page="${index}">${index + 1}</button>`
+                ).join('');
 
-        document.querySelectorAll('.page-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                goToPage(parseInt(btn.dataset.page));
-            });
-        });
+                document.querySelectorAll('.page-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        goToPage(parseInt(btn.dataset.page));
+                    });
+                });
 
-        startAutoScroll();
-    } else {
-        pagination.innerHTML = '';
-    }
+                startAutoScroll();
+            } else {
+                pagination.innerHTML = '';
+            }
 
-    setTimeout(() => {
-        animatePageCounts(0);
-        setTimeout(() => {
-            showModal(0);
-        }, 10000);
-    }, 100);
-}
-
-function startAutoScroll() {
-    clearInterval(autoScrollTimer);
-}
-
-function nextPage() {
-    if (pages.length === 0 || showingModal) return;
-    const nextPageIndex = (currentPage + 1) % pages.length;
-    goToPage(nextPageIndex, true);
-}
-
-function previousPage() {
-    if (pages.length === 0 || showingModal) return;
-    const prevPageIndex = (currentPage - 1 + pages.length) % pages.length;
-    goToPage(prevPageIndex, false);
-}
-
-function goToPage(pageIndex, showModalAfter = true) {
-    if (isTransitioning || pageIndex === currentPage || pages.length === 0) return;
-    
-    isTransitioning = true;
-    
-    // Cancel all animations before page transition
-    cancelAllAnimations();
-    
-    const oldPage = currentPage;
-    const transition = transitions[Math.floor(Math.random() * transitions.length)];
-    
-    const oldContent = document.querySelector(`.page-content[data-page="${oldPage}"]`);
-    const newContent = document.querySelector(`.page-content[data-page="${pageIndex}"]`);
-    
-    const newVoteCounts = newContent.querySelectorAll('.votes-count');
-    newVoteCounts.forEach(count => {
-        count.textContent = '0';
-    });
-    
-    if (oldContent) {
-        oldContent.style.animationName = transition.out;
-        
-        setTimeout(() => {
-            oldContent.classList.remove('active');
-            oldContent.style.animationName = '';
-        }, 600); // Reduced from 800
-    }
-    
-    setTimeout(() => {
-        currentPage = pageIndex;
-        newContent.classList.add('active');
-        newContent.style.animationName = transition.in;
-        
-        setTimeout(() => {
-            animatePageCounts(pageIndex);
-        }, 200); // Reduced from 300
-        
-        setTimeout(() => {
-            newContent.style.animationName = '';
-            isTransitioning = false;
-        }, 600); // Reduced from 800
-        
-        document.querySelectorAll('.page-btn').forEach((btn, index) => {
-            btn.classList.toggle('active', index === pageIndex);
-        });
-        
-        if (showModalAfter) {
             setTimeout(() => {
-                showModal(pageIndex);
-            }, 10000);
+                animatePageCounts(0);
+                // Show modal for first page after 10 seconds
+                setTimeout(() => {
+                    showModal(0);
+                }, 10000);
+            }, 100);
         }
-    }, 100);
-}
 
-function populateFilterDropdown() {
-    const select = document.getElementById('positionFilter');
-    select.innerHTML = '<option value="">All Positions</option>';
-    
-    ELECTORAL_DATA.positions.forEach(position => {
-        const option = document.createElement('option');
-        option.value = position.position;
-        option.textContent = `${position.position} (${position.total_votes_cast} votes)`;
-        select.appendChild(option);
-    });
-    
-    select.addEventListener('change', function() {
-        if (this.value) {
-            filterByPosition(this.value);
-        } else {
-            showAllPositions();
+        function startAutoScroll() {
+            clearInterval(autoScrollTimer);
+            // No auto scroll - modal handles transitions
         }
-    });
-}
 
-function filterByPosition(positionName) {
-    clearInterval(autoScrollTimer);
-    clearTimeout(modalTimer);
-    clearInterval(modalCountdownTimer);
-    cancelAllAnimations();
-    pages = allPages.filter(page => page.title === positionName);
-    currentPage = 0;
-    initializePages();
-}
+        function nextPage() {
+            if (pages.length === 0 || showingModal) return;
+            const nextPageIndex = (currentPage + 1) % pages.length;
+            goToPage(nextPageIndex, true);
+        }
 
-function showAllPositions() {
-    document.getElementById('positionFilter').value = '';
-    clearTimeout(modalTimer);
-    clearInterval(modalCountdownTimer);
-    cancelAllAnimations();
-    pages = [...allPages];
-    currentPage = 0;
-    initializePages();
-}
+        function previousPage() {
+            if (pages.length === 0 || showingModal) return;
+            const prevPageIndex = (currentPage - 1 + pages.length) % pages.length;
+            goToPage(prevPageIndex, false);
+        }
 
-function loadElectoralData() {
-    console.log('Loading hardcoded electoral data...');
-    
-    const processedData = calculateTotalVotes(ELECTORAL_DATA);
-    
-    allPages = processedData.positions.map(position => {
-        const candidates = position.candidates.map(candidate => ({
-            name: candidate.candidate_name,
-            votes: candidate.total_votes,
-            onlineVotes: candidate.online_votes || 0,
-            physicalVotes: candidate.physical_votes || 0,
-            votesByGender: candidate.votes_by_gender || null,
-            votesByStream: candidate.votes_by_stream || null,
-            initials: getInitials(candidate.candidate_name),
-            photoUrl: getCandidatePhotoUrl(candidate.candidate_id, candidate.candidate_name)
-        }));
+        function goToPage(pageIndex, showModalAfter = true) {
+            if (isTransitioning || pageIndex === currentPage || pages.length === 0) return;
+            
+            isTransitioning = true;
+            const oldPage = currentPage;
+            const transition = transitions[Math.floor(Math.random() * transitions.length)];
+            
+            const oldContent = document.querySelector(`.page-content[data-page="${oldPage}"]`);
+            const newContent = document.querySelector(`.page-content[data-page="${pageIndex}"]`);
+            
+            const newVoteCounts = newContent.querySelectorAll('.votes-count');
+            newVoteCounts.forEach(count => {
+                count.textContent = '0';
+            });
+            
+            if (oldContent) {
+                oldContent.style.animationName = transition.out;
+                
+                setTimeout(() => {
+                    oldContent.classList.remove('active');
+                    oldContent.style.animationName = '';
+                }, 800);
+            }
+            
+            setTimeout(() => {
+                currentPage = pageIndex;
+                newContent.classList.add('active');
+                newContent.style.animationName = transition.in;
+                
+                setTimeout(() => {
+                    animatePageCounts(pageIndex);
+                }, 300);
+                
+                setTimeout(() => {
+                    newContent.style.animationName = '';
+                    isTransitioning = false;
+                }, 800);
+                
+                document.querySelectorAll('.page-btn').forEach((btn, index) => {
+                    btn.classList.toggle('active', index === pageIndex);
+                });
+                
+                // Show modal after 10 seconds on new page
+                if (showModalAfter) {
+                    setTimeout(() => {
+                        showModal(pageIndex);
+                    }, 10000);
+                }
+            }, 100);
+        }
 
-        return {
-            title: position.position,
-            candidates: candidates
-        };
-    });
-    
-    pages = [...allPages];
-    populateFilterDropdown();
-    initializePages();
-    
-    console.log(`Loaded ${processedData.total_positions} positions with ${processedData.total_votes_across_all_positions} total votes`);
-}
+        function populateFilterDropdown() {
+            const select = document.getElementById('positionFilter');
+            select.innerHTML = '<option value="">All Positions</option>';
+            
+            ELECTORAL_DATA.positions.forEach(position => {
+                const option = document.createElement('option');
+                option.value = position.position;
+                option.textContent = `${position.position} (${position.total_votes_cast} votes)`;
+                select.appendChild(option);
+            });
+            
+            select.addEventListener('change', function() {
+                if (this.value) {
+                    filterByPosition(this.value);
+                } else {
+                    showAllPositions();
+                }
+            });
+        }
 
-function keepAwake() {
-    if ('wakeLock' in navigator) {
-        navigator.wakeLock.request('screen').catch(err => {
-            console.log('Wake Lock error:', err);
+        function filterByPosition(positionName) {
+            clearInterval(autoScrollTimer);
+            clearTimeout(modalTimer);
+            clearInterval(modalCountdownTimer);
+            pages = allPages.filter(page => page.title === positionName);
+            currentPage = 0;
+            initializePages();
+        }
+
+        function showAllPositions() {
+            document.getElementById('positionFilter').value = '';
+            clearTimeout(modalTimer);
+            clearInterval(modalCountdownTimer);
+            pages = [...allPages];
+            currentPage = 0;
+            initializePages();
+        }
+
+        function loadElectoralData() {
+            console.log('Loading hardcoded electoral data...');
+            
+            allPages = ELECTORAL_DATA.positions.map(position => {
+                const candidates = position.candidates.map(candidate => ({
+    name: candidate.candidate_name,
+    votes: candidate.total_votes,
+    onlineVotes: candidate.online_votes || 0,
+    physicalVotes: candidate.physical_votes || 0,
+    votesByGender: candidate.votes_by_gender || null,
+    votesByStream: candidate.votes_by_stream || null,
+    initials: getInitials(candidate.candidate_name),
+    photoUrl: getCandidatePhotoUrl(candidate.candidate_id, candidate.candidate_name)
+}));
+
+                return {
+                    title: position.position,
+                    candidates: candidates
+                };
+            });
+            
+            pages = [...allPages];
+            populateFilterDropdown();
+            initializePages();
+            
+            console.log(`Loaded ${ELECTORAL_DATA.total_positions} positions with ${ELECTORAL_DATA.total_votes_across_all_positions} total votes`);
+        }
+        function keepAwake() {
+            if ('wakeLock' in navigator) {
+                navigator.wakeLock.request('screen').catch(err => {
+                    console.log('Wake Lock error:', err);
+                });
+            }
+        }
+
+        function preloadImages() {
+            allPages.forEach(page => {
+                page.candidates.forEach(candidate => {
+                    const img = new Image();
+                    img.src = candidate.photoUrl;
+                });
+            });
+        }
+
+        window.addEventListener('load', () => {
+            loadElectoralData();
+            keepAwake();
+            setTimeout(preloadImages, 1000);
         });
-    }
-}
 
-function preloadImages() {
-    // Use passive image loading
-    const images = [];
-    allPages.forEach(page => {
-        page.candidates.forEach(candidate => {
-            const img = new Image();
-            img.src = candidate.photoUrl;
-            images.push(img);
+        document.addEventListener('keydown', e => {
+            if (pages.length === 0 || showingModal) return;
+            if (e.key === 'ArrowLeft') previousPage();
+            if (e.key === 'ArrowRight') nextPage();
         });
-    });
-}
 
-window.addEventListener('load', () => {
-    loadElectoralData();
-    keepAwake();
-    setTimeout(preloadImages, 1000);
-});
+        let touchStartX = 0;
+        let touchEndX = 0;
 
-document.addEventListener('keydown', e => {
-    if (pages.length === 0 || showingModal) return;
-    if (e.key === 'ArrowLeft') previousPage();
-    if (e.key === 'ArrowRight') nextPage();
-});
+        function handleSwipe() {
+            if (showingModal) return;
+            const swipeThreshold = 50;
+            if (touchEndX < touchStartX - swipeThreshold) {
+                nextPage();
+            } else if (touchEndX > touchStartX + swipeThreshold) {
+                previousPage();
+            }
+        }
 
-let touchStartX = 0;
-let touchEndX = 0;
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
 
-function handleSwipe() {
-    if (showingModal) return;
-    const swipeThreshold = 50;
-    if (touchEndX < touchStartX - swipeThreshold) {
-        nextPage();
-    } else if (touchEndX > touchStartX + swipeThreshold) {
-        previousPage();
-    }
-}
-
-document.addEventListener('touchstart', e => {
-    touchStartX = e.changedTouches[0].screenX;
-}, { passive: true });
-
-document.addEventListener('touchend', e => {
-    touchEndX = e.changedTouches[0].screenX;
-    handleSwipe();
-}, { passive: true });
-  </script>
+        document.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+    </script>
 </body>
 </html>

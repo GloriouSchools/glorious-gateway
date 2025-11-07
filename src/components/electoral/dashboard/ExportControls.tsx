@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Download, FileSpreadsheet, FileJson, FileText, Printer } from "lucide-react";
+import { Download, FileText, Printer } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 interface ExportControlsProps {
-  onExport: (format: "excel" | "csv" | "json" | "pdf" | "print") => void;
+  onExport: (format: "csv" | "pdf" | "print") => void;
 }
 
 export function ExportControls({ onExport }: ExportControlsProps) {
@@ -21,17 +21,9 @@ export function ExportControls({ onExport }: ExportControlsProps) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => onExport("excel")}>
-          <FileSpreadsheet className="mr-2 h-4 w-4" />
-          Export as Excel
-        </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onExport("csv")}>
           <FileText className="mr-2 h-4 w-4" />
           Export as CSV
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onExport("json")}>
-          <FileJson className="mr-2 h-4 w-4" />
-          Export as JSON
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onExport("pdf")}>
           <FileText className="mr-2 h-4 w-4" />

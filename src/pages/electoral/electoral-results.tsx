@@ -15,23 +15,47 @@ const ElectoralResults = () => {
   const touchEndXRef = useRef(0);
   const pageContainerRef = useRef(null);
 
-  // Load real electoral data from database
+  // Load real electoral data from JSON file and database
   useEffect(() => {
     const loadElectoralData = async () => {
       setIsLoading(true);
       
-      // Fetch all votes and candidates
-      const { data: votes, error: votesError } = await supabase
-        .from('electoral_votes')
-        .select('*')
-        .eq('vote_status', 'valid');
+      // Try fetching votes from JSON; fallback to DB if missing/invalid
+      let votes: any[] = [];
+      try {
+        const votesUrl = '/electoral_votes.json';
+        const votesResponse = await fetch(votesUrl, { cache: 'no-store' });
+        if (!votesResponse.ok) throw new Error(`Failed to load ${votesUrl} (${votesResponse.status})`);
+        const contentType = votesResponse.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) throw new Error(`Invalid content-type: ${contentType}`);
+        const allVotes = await votesResponse.json();
+        votes = Array.isArray(allVotes) ? allVotes : [];
+      } catch (err) {
+        console.warn('electoral-results: Falling back to DB votes due to JSON issue:', err);
+        const { data: dbVotes, error: votesError } = await supabase
+          .from('electoral_votes')
+          .select('*')
+          .eq('vote_status', 'valid')
+          .limit(100000);
+        if (votesError) {
+          console.error('Failed to load votes from DB:', votesError);
+          setIsLoading(false);
+          return;
+        }
+        votes = dbVotes || [];
+      }
+
+      // Only count valid votes
+      votes = votes.filter(vote => vote.vote_status === 'valid');
       
+      // Fetch candidates from database
       const { data: candidates, error: candidatesError } = await supabase
         .from('electoral_applications')
         .select('*')
-        .eq('status', 'confirmed');
+        .eq('status', 'confirmed')
+        .limit(100000);
       
-      if (votesError || candidatesError || !votes || !candidates) {
+      if (candidatesError || !votes || !candidates) {
         setIsLoading(false);
         return;
       }
@@ -100,17 +124,9 @@ const ElectoralResults = () => {
 
     loadElectoralData();
 
-    // Set up real-time subscription with proper status handling
+    // Set up real-time subscription for candidates only
     const channel = supabase
       .channel('electoral-results-changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'electoral_votes' },
-        (payload) => {
-          console.log('Electoral votes changed:', payload);
-          loadElectoralData();
-        }
-      )
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'electoral_applications' },

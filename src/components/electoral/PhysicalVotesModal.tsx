@@ -55,7 +55,7 @@ export function PhysicalVotesModal({
           notes: notes || null,
           added_at: new Date().toISOString()
         });
-
+      
       if (error) throw error;
 
       toast({
