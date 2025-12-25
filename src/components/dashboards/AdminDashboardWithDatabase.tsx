@@ -12,6 +12,9 @@ import { PhotoJumbotron, PhotoJumbotronRef } from "@/components/ui/photo-jumbotr
 import { QuoteModal } from "@/components/ui/quote-modal";
 import { formatGreetingName, getTimeBasedGreeting } from "@/utils/greetingUtils";
 import { getQuoteOfTheDay, getRandomPhotoQuote, PhotoQuote } from "@/utils/photoQuotes";
+import { buildFolderStructure } from "@/utils/galleryUtils";
+import { videoData } from "@/data/videoData";
+import { movieData } from "@/data/movieData";
 import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import { 
@@ -65,6 +68,12 @@ interface DatabaseStats {
   totalStreams: number;
 }
 
+interface MediaCounts {
+  photoCount: number;
+  videoCount: number;
+  movieCount: number;
+}
+
 export function AdminDashboard() {
   const { userName, isVerified, personalEmail, user, isLoading } = useAuth();
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
@@ -77,11 +86,25 @@ export function AdminDashboard() {
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
   const photoJumbotronRef = useRef<PhotoJumbotronRef>(null);
   const [isShuffling, setIsShuffling] = useState(false);
+  const [mediaCounts, setMediaCounts] = useState<MediaCounts>({ photoCount: 0, videoCount: videoData.length, movieCount: movieData.length });
   const navigate = useNavigate();
 
   // Load quote on mount
   useEffect(() => {
     getQuoteOfTheDay().then(setCurrentQuote);
+  }, []);
+
+  // Fetch photo count from gallery
+  useEffect(() => {
+    const fetchPhotoCount = async () => {
+      try {
+        const folderStructure = await buildFolderStructure();
+        setMediaCounts(prev => ({ ...prev, photoCount: folderStructure.count }));
+      } catch (error) {
+        console.error('Error fetching photo count:', error);
+      }
+    };
+    fetchPhotoCount();
   }, []);
 
   // Get time-based greeting on component mount
@@ -185,7 +208,7 @@ export function AdminDashboard() {
       description: 'Browse and manage photo gallery',
       icon: Image,
       color: 'from-orange-400 to-red-400',
-      stats: 'Photo Management',
+      stats: `${mediaCounts.photoCount.toLocaleString()} Photos`,
       action: 'Manage Gallery',
       route: '/admin/gallery'
     },
@@ -205,7 +228,7 @@ export function AdminDashboard() {
       description: 'Manage educational video content',
       icon: Video,
       color: 'from-red-400 to-pink-400',
-      stats: '100+ Educational Videos',
+      stats: `${mediaCounts.videoCount.toLocaleString()} Educational Videos`,
       action: 'Manage Videos',
       route: '/admin/e-learning'
     },
@@ -215,7 +238,7 @@ export function AdminDashboard() {
       description: 'Browse movies & entertainment content',
       icon: Film,
       color: 'from-purple-400 to-indigo-400',
-      stats: '50+ Movies Available',
+      stats: `${mediaCounts.movieCount.toLocaleString()} Movies Available`,
       action: 'Browse Movies',
       route: '/admin/entertainment'
     },
