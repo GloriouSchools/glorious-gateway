@@ -1,7 +1,7 @@
 import os
 import json
 
-folder_path = r"C:\Users\Fresh Teacher\Pictures\Sent"
+folder_path = r"e:/uganda-education-hub/public"
 
 all_files = os.listdir(folder_path)
 image_extensions = ('.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff')
