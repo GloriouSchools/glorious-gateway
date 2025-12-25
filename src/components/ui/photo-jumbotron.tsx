@@ -118,7 +118,7 @@ export const PhotoJumbotron = forwardRef<PhotoJumbotronRef, PhotoJumbotronProps>
             <img
               src={photo.src}
               alt={photo.alt}
-              className="w-full h-full object-contain"
+              className="w-full h-full object-cover"
               loading={index === 0 ? 'eager' : 'lazy'}
             />
             {/* Professional gradient overlay */}
